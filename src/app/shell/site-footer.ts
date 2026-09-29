@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'fl-site-footer',
   template: `
-    <div class="page footer">
+    <footer class="page footer">
       <p>
         Earthquake data from the
         <a href="https://earthquake.usgs.gov/earthquakes/feed/" rel="external"
@@ -15,7 +15,7 @@ import { Component } from '@angular/core';
       <p>
         Nothing here is an alert. For warnings, follow your national seismic or tsunami authority.
       </p>
-    </div>
+    </footer>
   `,
   styles: `
     :host {

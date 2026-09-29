@@ -15,7 +15,7 @@ const THEME_LABEL: Record<ThemePreference, string> = {
   selector: 'fl-top-bar',
   imports: [RouterLink, DatePipe, Wordmark],
   template: `
-    <div class="bar page">
+    <header class="bar page">
       <a class="home" routerLink="/" aria-label="Faultline, live seismograph">
         <ui-wordmark />
       </a>
@@ -35,7 +35,7 @@ const THEME_LABEL: Record<ThemePreference, string> = {
           {{ label() }}
         </button>
       </div>
-    </div>
+    </header>
   `,
   styleUrl: './top-bar.css',
 })
