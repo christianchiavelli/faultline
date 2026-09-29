@@ -5,3 +5,6 @@ public/maps
 pnpm-lock.yaml
 .playwright-mcp
 src/styles/fonts.css
+test-results
+playwright-report
+blob-report

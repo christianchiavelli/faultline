@@ -45,3 +45,8 @@ Thumbs.db
 
 # Local browser automation artefacts
 /.playwright-mcp
+
+# Playwright
+/test-results
+/playwright-report
+/blob-report

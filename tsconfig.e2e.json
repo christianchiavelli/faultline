@@ -1,0 +1,8 @@
+/* The Playwright suite and its config. Playwright compiles them itself; this is only for `pnpm typecheck`. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["e2e/**/*.ts", "playwright.config.ts"]
+}
