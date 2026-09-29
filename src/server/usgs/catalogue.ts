@@ -1,9 +1,9 @@
 import type { FeedWindow, QuakeDetailResponse, RecentQuakesResponse } from '@shared/api/contracts';
-import { byTimeDescending, type Quake } from '@shared/domain/quake';
+import { byTimeDescending, type QuakeSummary } from '@shared/domain/quake';
 import { serverConfig } from '../config';
 import { createSwrCache } from '../http/swr-cache';
 import { getJson, UpstreamError } from '../http/upstream';
-import { preferredProduct, toOriginQuality, toQuake } from './map';
+import { preferredProduct, toOriginQuality, toQuake, toSummary } from './map';
 import { detailSchema, featureSchema, feedSchema } from './schema';
 
 /** The USGS regenerates the summary feeds once a minute; asking more often returns the same file. */
@@ -23,7 +23,7 @@ const detailCache = createSwrCache<QuakeDetailResponse | EventGone>({
 interface FeedSnapshot {
   readonly generatedAt: number;
   readonly skipped: number;
-  readonly quakes: readonly Quake[];
+  readonly quakes: readonly QuakeSummary[];
 }
 
 export interface EventGone {
@@ -48,13 +48,13 @@ async function fetchFeed(window: FeedWindow): Promise<FeedSnapshot> {
     throw new UpstreamError(`USGS feed answered ${response.status}`, response.status);
 
   const feed = feedSchema.parse(response.body);
-  const quakes: Quake[] = [];
+  const quakes: QuakeSummary[] = [];
   let skipped = 0;
 
   for (const raw of feed.features) {
     const parsed = featureSchema.safeParse(raw);
     const quake = parsed.success ? toQuake(parsed.data) : null;
-    if (quake) quakes.push(quake);
+    if (quake) quakes.push(toSummary(quake));
     else if (!parsed.success) skipped++;
   }
 

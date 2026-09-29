@@ -1,7 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { magnitudeScale } from '@shared/domain/magnitude';
-import { isNotable, type Quake } from '@shared/domain/quake';
+import { isNotable, type QuakeSummary } from '@shared/domain/quake';
 import {
   HOUR_MS,
   ROW_HEIGHT,
@@ -30,7 +30,7 @@ interface Marker {
   styleUrl: './helicorder.css',
 })
 export class Helicorder {
-  readonly quakes = input.required<readonly Quake[]>();
+  readonly quakes = input.required<readonly QuakeSummary[]>();
   readonly now = input.required<number>();
 
   /**

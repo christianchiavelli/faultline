@@ -1,14 +1,14 @@
 import { radiatedEnergy } from './magnitude';
-import { isEarthquake, isNotable, type Quake } from './quake';
+import { isEarthquake, isNotable, type QuakeSummary } from './quake';
 
-export interface QuakeSummary {
+export interface QuakeStats {
   readonly total: number;
   readonly earthquakes: number;
   /** Quarry blasts, explosions, ice quakes, landslides: seismic, but not earthquakes. */
   readonly otherEvents: number;
   readonly notable: number;
   /** Largest earthquake by magnitude. Other event kinds never qualify. */
-  readonly largest: Quake | null;
+  readonly largest: QuakeSummary | null;
   /**
    * Share of all earthquake energy radiated by `largest`, 0 to 1. Because
    * energy grows ~32x per magnitude step, this is usually most of the day.
@@ -18,12 +18,12 @@ export interface QuakeSummary {
   readonly reviewedShare: number | null;
 }
 
-export function summarise(quakes: readonly Quake[]): QuakeSummary {
+export function summarise(quakes: readonly QuakeSummary[]): QuakeStats {
   let earthquakes = 0;
   let notable = 0;
   let reviewed = 0;
   let totalEnergy = 0;
-  let largest: Quake | null = null;
+  let largest: QuakeSummary | null = null;
 
   for (const quake of quakes) {
     if (quake.review === 'reviewed') reviewed++;

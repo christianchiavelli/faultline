@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { magnitudeScale } from '@shared/domain/magnitude';
-import { EARTHQUAKE_KIND, type Quake } from '@shared/domain/quake';
+import { EARTHQUAKE_KIND, type QuakeSummary } from '@shared/domain/quake';
 import { capitalise } from '@ui/text';
 
 export const MAGNITUDE_FILTERS = [
@@ -21,7 +21,7 @@ export function parseMagnitudeFilter(value: string | null | undefined): Magnitud
   return MAGNITUDE_FILTERS.find((filter) => filter.value === value)?.value ?? '2.5';
 }
 
-function passes(quake: Quake, min: number | null): boolean {
+function passes(quake: QuakeSummary, min: number | null): boolean {
   return min === null || (quake.magnitude?.value ?? -Infinity) >= min;
 }
 
@@ -32,7 +32,7 @@ function passes(quake: Quake, min: number | null): boolean {
   styleUrl: './event-log.css',
 })
 export class EventLog {
-  readonly quakes = input.required<readonly Quake[]>();
+  readonly quakes = input.required<readonly QuakeSummary[]>();
   readonly filter = input.required<MagnitudeFilter>();
 
   readonly filters = computed(() =>
@@ -77,7 +77,7 @@ interface Row {
   readonly reviewed: boolean;
 }
 
-function toRow(quake: Quake): Row {
+function toRow(quake: QuakeSummary): Row {
   const scale = quake.magnitude ? magnitudeScale(quake.magnitude.type) : null;
   const depth = quake.location.depthKm;
   return {

@@ -1,4 +1,4 @@
-import type { Quake } from '../domain/quake';
+import type { Quake, QuakeSummary } from '../domain/quake';
 
 /**
  * The contract between the BFF and the app. The browser never sees the USGS
@@ -19,8 +19,8 @@ export interface RecentQuakesResponse {
   readonly stale: boolean;
   /** Records dropped at the boundary because they failed validation. */
   readonly skipped: number;
-  /** Newest first. */
-  readonly quakes: readonly Quake[];
+  /** Newest first. The detail endpoint has the rest of each record. */
+  readonly quakes: readonly QuakeSummary[];
 }
 
 export interface QuakeDetailResponse {

@@ -1,5 +1,5 @@
 import type { OriginQuality } from '@shared/api/contracts';
-import type { Quake, ReviewStatus } from '@shared/domain/quake';
+import type { Quake, QuakeSummary, ReviewStatus } from '@shared/domain/quake';
 import type { UsgsFeature, UsgsProduct } from './schema';
 
 /**
@@ -30,6 +30,33 @@ export function toQuake(feature: UsgsFeature): Quake | null {
     significance: p.sig,
     url: p.url,
   };
+}
+
+/**
+ * The list form of an event. Coordinates keep three decimals, about 110 m:
+ * finer than that is noise next to the kilometres of location error on any
+ * event in the feed, and it halves the bytes of the upstream floats.
+ */
+export function toSummary(quake: Quake): QuakeSummary {
+  const { id, time, magnitude, place, location, review, kind } = quake;
+  return {
+    id,
+    time,
+    magnitude,
+    place,
+    location: {
+      latitude: round(location.latitude, 3),
+      longitude: round(location.longitude, 3),
+      depthKm: location.depthKm === null ? null : round(location.depthKm, 2),
+    },
+    review,
+    kind,
+  };
+}
+
+function round(value: number, decimals: number): number {
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
 }
 
 /**

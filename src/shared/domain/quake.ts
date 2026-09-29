@@ -1,14 +1,13 @@
 /**
- * A seismic event as the USGS catalogue describes it, normalised once at the
- * BFF boundary. Nothing downstream reads the upstream GeoJSON.
+ * What a list of events needs: enough to draw, count and link each one. The
+ * live page embeds the whole day for hydration, so every field here is paid
+ * for twice, once in the markup and once in the transfer state.
  */
-export interface Quake {
+export interface QuakeSummary {
   /** USGS event id: network code plus event code, e.g. `us7000q1ab`. */
   readonly id: string;
   /** Origin time, epoch milliseconds, UTC. */
   readonly time: number;
-  /** Last revision by any contributing network, epoch milliseconds. */
-  readonly updated: number;
   /** `null` until a network has computed one, which happens for fresh events. */
   readonly magnitude: Magnitude | null;
   /** Human description such as "12 km SSE of Ridgecrest, CA". Not always present. */
@@ -17,6 +16,15 @@ export interface Quake {
   readonly review: ReviewStatus;
   /** `earthquake`, `quarry blast`, `explosion`, `ice quake`… The feed mixes them. */
   readonly kind: string;
+}
+
+/**
+ * A seismic event as the USGS catalogue describes it, normalised once at the
+ * BFF boundary. Nothing downstream reads the upstream GeoJSON.
+ */
+export interface Quake extends QuakeSummary {
+  /** Last revision by any contributing network, epoch milliseconds. */
+  readonly updated: number;
   /** Contributing network, e.g. `us`, `ak`, `ci`. */
   readonly network: string;
   /** "Did You Feel It?" responses, `null` when nobody reported. */
@@ -56,7 +64,7 @@ export type AlertLevel = 'green' | 'yellow' | 'orange' | 'red';
 
 export const EARTHQUAKE_KIND = 'earthquake';
 
-export function isEarthquake(quake: Quake): boolean {
+export function isEarthquake(quake: Pick<QuakeSummary, 'kind'>): boolean {
   return quake.kind === EARTHQUAKE_KIND;
 }
 
@@ -66,11 +74,14 @@ export function isEarthquake(quake: Quake): boolean {
  */
 export const NOTABLE_MAGNITUDE = 4.5;
 
-export function isNotable(quake: Quake): boolean {
+export function isNotable(quake: QuakeSummary): boolean {
   return isEarthquake(quake) && (quake.magnitude?.value ?? -Infinity) >= NOTABLE_MAGNITUDE;
 }
 
 /** Newest first, the order a live log reads in. */
-export function byTimeDescending(a: Quake, b: Quake): number {
+export function byTimeDescending(
+  a: Pick<QuakeSummary, 'time'>,
+  b: Pick<QuakeSummary, 'time'>,
+): number {
   return b.time - a.time;
 }

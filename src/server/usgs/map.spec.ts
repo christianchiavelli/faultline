@@ -1,5 +1,5 @@
 import { featureSchema, type UsgsFeature } from './schema';
-import { preferredProduct, toOriginQuality, toQuake } from './map';
+import { preferredProduct, toOriginQuality, toQuake, toSummary } from './map';
 
 /** Shaped after a real record from the `all_day` feed. */
 function aFeature(
@@ -72,6 +72,24 @@ describe('toQuake', () => {
 
   it('degrades an alert level it does not know to none instead of rejecting the record', () => {
     expect(toQuake(aFeature({ properties: { alert: 'purple' } }))?.alert).toBeNull();
+  });
+});
+
+describe('toSummary', () => {
+  it('keeps only what a list draws, with coordinates rounded to about 110 m', () => {
+    const summary = toSummary(
+      toQuake(aFeature({ coordinates: [-122.762664794922, 38.7938346862793, 0.75] }))!,
+    );
+
+    expect(summary).toEqual({
+      id: 'nc75444182',
+      time: 1790660593450,
+      magnitude: { value: 1.31, type: 'md' },
+      place: '2 km NNW of The Geysers, CA',
+      location: { latitude: 38.794, longitude: -122.763, depthKm: 0.75 },
+      review: 'automatic',
+      kind: 'earthquake',
+    });
   });
 });
 

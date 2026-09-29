@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { MAP_HEIGHT, MAP_WIDTH, toMap } from '@shared/geo/equal-earth';
-import { isNotable, type Quake } from '@shared/domain/quake';
+import { isNotable, type QuakeSummary } from '@shared/domain/quake';
 
 /**
  * Dot radius in map units. Grows ~1.6x per magnitude step, so area grows ~2.6x:
@@ -25,7 +25,7 @@ interface Frame {
   styleUrl: './world-chart.css',
 })
 export class WorldChart {
-  readonly quakes = input.required<readonly Quake[]>();
+  readonly quakes = input.required<readonly QuakeSummary[]>();
   /** An event to ring, e.g. the one a detail page is about. */
   readonly focus = input<string | null>(null);
   /** Magnification around the focused event. 1 is the whole world. */
