@@ -1,6 +1,6 @@
 import { FEED_WINDOWS } from '@shared/api/contracts';
 import { z } from 'zod';
-import { UpstreamError } from '../http/upstream';
+import { UpstreamBusyError, UpstreamError } from '../http/upstream';
 import { json, problem, withEtag, type ApiResult } from '../http/result';
 import { isGone, quakeDetail, recentQuakes } from '../usgs/catalogue';
 
@@ -40,6 +40,17 @@ export async function handleApiRequest(
 
     return problem(404, 'No such endpoint');
   } catch (error) {
+    if (error instanceof UpstreamBusyError) {
+      const busy = problem(
+        503,
+        'Too many lookups right now',
+        'This server is pacing its requests to the USGS. Try again in a few seconds.',
+      );
+      return {
+        ...busy,
+        headers: { ...busy.headers, 'retry-after': String(error.retryAfterSeconds) },
+      };
+    }
     if (error instanceof UpstreamError) {
       console.warn(`[api] ${url.pathname}: ${error.message}`);
       return problem(

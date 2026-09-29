@@ -7,7 +7,9 @@ import {
 import compression from 'compression';
 import express from 'express';
 import { join } from 'node:path';
-import { apiHandler } from './server/api/express';
+import { apiHandler, clientRateLimit } from './server/api/express';
+import { serverConfig } from './server/config';
+import { createRateLimiter } from './server/http/rate-limit';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -15,10 +17,13 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 app.disable('x-powered-by');
+app.set('trust proxy', serverConfig.trustProxy);
+
+const clients = createRateLimiter(serverConfig.clientRate);
 
 /**
- * The page embeds the day's feed for hydration, so a render is ~230 kB of
- * HTML and ~40 kB compressed. A CDN in front would compress it too; this makes
+ * The page embeds the day's feed for hydration, so a render is ~190 kB of
+ * HTML and ~33 kB compressed. A CDN in front would compress it too; this makes
  * the server correct on its own rather than correct behind the right proxy.
  */
 app.use(compression());
@@ -33,7 +38,7 @@ app.use((_req, res, next) => {
 });
 
 /** The BFF. Pages rendered on this server reach it in-process, never over HTTP. */
-app.use('/api', apiHandler());
+app.use('/api', clientRateLimit(clients), apiHandler());
 
 /**
  * Only fingerprinted build output is immutable. Files copied from `public/`
@@ -54,6 +59,9 @@ app.use(
     },
   }),
 );
+
+// After the static files, so only page renders count against the limit.
+app.use(clientRateLimit(clients));
 
 app.use((req, res, next) => {
   angularApp

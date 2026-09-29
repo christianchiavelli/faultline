@@ -18,6 +18,17 @@ export class UpstreamError extends Error {
   }
 }
 
+/**
+ * This server has used up its budget of upstream calls. Not the USGS's fault,
+ * and not worth retrying before `retryAfterSeconds`.
+ */
+export class UpstreamBusyError extends Error {
+  constructor(readonly retryAfterSeconds: number) {
+    super('Upstream budget exhausted');
+    this.name = 'UpstreamBusyError';
+  }
+}
+
 export interface UpstreamOptions {
   readonly timeoutMs?: number;
   readonly retries?: number;

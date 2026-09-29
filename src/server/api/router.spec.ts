@@ -1,6 +1,6 @@
 import type { RecentQuakesResponse } from '@shared/api/contracts';
 import { aQuake } from '@shared/testing/quake-fixture';
-import { UpstreamError } from '../http/upstream';
+import { UpstreamBusyError, UpstreamError } from '../http/upstream';
 import { handleApiRequest, type Catalogue } from './router';
 
 const feed: RecentQuakesResponse = {
@@ -82,6 +82,16 @@ describe('handleApiRequest', () => {
 
     expect(result.status).toBe(502);
     expect(result.headers['cache-control']).toBe('no-store');
+  });
+
+  it('asks the client to come back when this server is pacing its USGS lookups', async () => {
+    const busy = catalogue({ quakeDetail: vi.fn().mockRejectedValue(new UpstreamBusyError(3)) });
+
+    const result = await handleApiRequest('GET', url('/api/quakes/us1'), null, busy);
+
+    expect(result.status).toBe(503);
+    expect(result.headers['retry-after']).toBe('3');
+    expect(result.body).toMatchObject({ title: 'Too many lookups right now' });
   });
 
   it('only reads', async () => {
