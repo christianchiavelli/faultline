@@ -2,6 +2,7 @@ import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { magnitudeScale } from '@shared/domain/magnitude';
 import { isNotable, type QuakeSummary } from '@shared/domain/quake';
+import { capitalise } from '@ui/text';
 import {
   HOUR_MS,
   ROW_HEIGHT,
@@ -80,12 +81,13 @@ export class Helicorder {
         // Anchored where the burst ends, which can be on the next row.
         const end = quake.time + burstDuration(magnitude.value) - first;
         const row = Math.min(rows.length - 1, Math.floor(end / HOUR_MS));
+        const place = quake.place ? capitalise(quake.place) : 'location not described';
         return {
           id: quake.id,
           left: Math.min(100, ((end - row * HOUR_MS) / HOUR_MS) * 100),
           top: ((row + 0.5) / rows.length) * 100,
           text: `M${magnitude.value.toFixed(1)}`,
-          label: `M${magnitude.value.toFixed(1)} ${scale.code}, ${quake.place ?? 'unknown location'}`,
+          label: `M${magnitude.value.toFixed(1)} ${scale.code}, ${place}`,
         };
       });
   });
