@@ -12,6 +12,7 @@ test('shows an event with the uncertainty of its solution', async ({ page }) => 
   await expect(readout(page, 'Epicentre')).toContainText('± 7.4 km horizontal uncertainty');
   await expect(readout(page, 'Solution')).toContainText('Stations surround it well');
   await expect(page.getByText('PAGER green')).toBeVisible();
+  await expect(page.getByText('40 minutes after the event')).toBeVisible();
 });
 
 test('says when a depth was fixed rather than measured, and when stations are lopsided', async ({

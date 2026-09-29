@@ -11,6 +11,7 @@ import { alertMeaning } from '@shared/domain/alert';
 import { magnitudeScale, radiatedEnergy } from '@shared/domain/magnitude';
 import { networkName } from '@shared/domain/network';
 import { AgoPipe } from '@ui/ago.pipe';
+import { formatDuration } from '@ui/duration';
 import { capitalise } from '@ui/text';
 import { WorldChart } from '../common/world-chart/world-chart';
 
@@ -56,7 +57,7 @@ export class QuakePage {
       depthAboveSea: depth !== null && depth < 0,
       depthFixed: origin?.depthType === 'operator assigned',
       wideGap: (origin?.azimuthalGapDeg ?? 0) > WIDE_GAP_DEG,
-      revisedAfterMs: quake.updated - quake.time,
+      revisedAfter: formatDuration(quake.updated - quake.time),
     };
   });
 

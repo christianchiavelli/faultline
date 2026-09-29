@@ -160,7 +160,7 @@
             <dt>Last revised</dt>
             <dd>
               <span class="mono">{{ view.quake.updated | date: 'd MMM, HH:mm' : 'UTC' }} UTC</span>,
-              {{ view.revisedAfterMs / 60000 | number: '1.0-0' }} min after the event
+              {{ view.revisedAfter }} after the event
             </dd>
           </div>
           <div>

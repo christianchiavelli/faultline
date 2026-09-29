@@ -42,12 +42,18 @@ async function render(respond: (http: HttpTestingController) => void) {
   return { element: fixture.nativeElement as HTMLElement, response };
 }
 
-const readout = (element: HTMLElement, label: string) =>
-  [...element.querySelectorAll('.readout')]
+const described = (items: NodeListOf<Element>, label: string) =>
+  [...items]
     .find((item) => item.querySelector('dt')?.textContent?.trim() === label)
     ?.querySelector('dd')
     ?.textContent?.replace(/\s+/g, ' ')
     .trim();
+
+const readout = (element: HTMLElement, label: string) =>
+  described(element.querySelectorAll('.readout'), label);
+
+const fact = (element: HTMLElement, label: string) =>
+  described(element.querySelectorAll('.facts > div'), label);
 
 describe('QuakePage', () => {
   it('leads with the magnitude and the scale it was measured on', async () => {
@@ -77,6 +83,15 @@ describe('QuakePage', () => {
 
     expect(readout(element, 'Energy')).toContain('7.9×1012J');
     expect(readout(element, 'Energy')).toContain('about 1,900 tonnes of TNT');
+  });
+
+  it('says in words how long after the event it was last revised', async () => {
+    const { element } = await render((http) =>
+      http.expectOne('/api/quakes/us6000ty57').flush(detail),
+    );
+
+    // 04:16:27 to 05:00:00, rounded down.
+    expect(fact(element, 'Last revised')).toBe('29 Sep, 05:00 UTC, 43 minutes after the event');
   });
 
   it('renders a missing event with the real status, for crawlers and monitors', async () => {
