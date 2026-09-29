@@ -99,6 +99,13 @@
     --tracking-label: 0.09em;
     --tracking-tight: -0.025em;
 
+    /* Reading measure. 45 to 75 characters is the comfortable range for
+       running text, and WCAG 1.4.8 caps it at 80. `ch` is the width of a zero,
+       and an Archivo zero is 1.3 average characters of English wide, so 52ch
+       holds about 68 characters and 46ch about 60. */
+    --measure: 52ch;
+    --measure-lede: 46ch;
+
     /* Space, on a 4px grid */
     --space-1: 0.25rem;
     --space-2: 0.5rem;

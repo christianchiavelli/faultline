@@ -33,7 +33,7 @@ import { Component } from '@angular/core';
     }
 
     p {
-      max-width: 92ch;
+      max-width: var(--measure);
     }
   `,
 })
