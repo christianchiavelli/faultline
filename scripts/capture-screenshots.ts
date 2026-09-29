@@ -2,7 +2,8 @@
  * Captures the README screenshots from a running production server:
  *
  *   pnpm build && pnpm preview    then, in another terminal:
- *   pnpm screenshots
+ *   pnpm screenshots              every shot
+ *   pnpm screenshots quake-paper  only the ones named
  *
  * The live page shows whatever the planet did today. The event page shows a
  * past event instead, which the USGS keeps for good, so that screenshot and
@@ -51,10 +52,14 @@ async function scrollThrough(page: Page): Promise<void> {
   });
 }
 
+const only = new Set(process.argv.slice(2));
+const unknown = [...only].filter((name) => !SHOTS.some((shot) => shot.name === name));
+if (unknown.length) throw new Error(`No such shot: ${unknown.join(', ')}`);
+
 await mkdir(OUT_DIR, { recursive: true });
 const browser = await chromium.launch();
 
-for (const shot of SHOTS) {
+for (const shot of SHOTS.filter(({ name }) => only.size === 0 || only.has(name))) {
   const context = await browser.newContext({
     viewport: shot.viewport ?? DESKTOP,
     colorScheme: shot.scheme,
