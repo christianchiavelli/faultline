@@ -13,7 +13,7 @@ Notes gathered by probing the live USGS services on 29 September 2026. This file
 | Caching headers | `max-age=60`, `Last-Modified`, no `ETag` | `max-age=60`, `Last-Modified` |
 | An unknown event | simply absent | 404, as plain text |
 | A deleted event | simply absent | 409, as plain text |
-| A search that fails | n/a | 400 past 20,000 matches |
+| A search too large | n/a | 400 past 20,000 matches, unless paged |
 
 The live page reads the day feed, which holds everything it draws. The event page reads the FDSN service, because only there does an event carry the error of its location and how its depth was found.
 
@@ -56,9 +56,9 @@ An event can carry origins from more than one network. The one with the highest 
 
 The BFF maps 404 and 204 to a 404 for the app and 409 to a 410, so a deleted event reads differently from one that never existed, and both reach crawlers with the right status.
 
-## Searches stop at 20,000 events
+## The 20,000 limit is per request, not per search
 
-A search that matches more is refused outright rather than truncated:
+Without `limit`, a search that matches more than 20,000 events is refused outright rather than truncated:
 
 ```
 GET /fdsnws/event/1/query?format=geojson&starttime=2026-01-01&minmagnitude=0
@@ -69,7 +69,76 @@ GET /fdsnws/event/1/count?format=geojson&starttime=2026-01-01&minmagnitude=0
  -> 200  {"count":101002,"maxAllowed":20000,"error":"..."}
 ```
 
-`/count` answers the same question without running the search, so any historical query should count first. A search wide enough never gets its 400 at all: our probe of every event since 2000 got a 504 from the gateway instead.
+With `limit`, the same kind of search is answered a page at a time, and `offset` walks past the 20,000th event. `offset` counts from 1.
+
+```
+GET /query?starttime=2026-07-01&endtime=2026-09-29T19:00:00          (34,348 matches)
+    &limit=10                  -> 200, 10 events
+    &limit=10&offset=20001     -> 200, 10 events
+    &limit=20001               -> 400  Valid values are 0 <= limit <= 20000
+```
+
+A page carries no total, since `metadata.count` is absent, so the total comes from `/count`, which answers without running the search. Offsets drift when events land in the window or leave it while a search is being paged, as automatic solutions do, so a long export should page by time instead: `orderby=time-asc` with a fixed `endtime`, each page starting at the time of the last event of the one before, and the duplicates at the seam dropped by id.
+
+Counting is not free on wide searches: M4.5 and up since 2000 took ten seconds to count, and every event since 2000 got a 504 from the gateway instead of an answer.
+
+## How much the catalogue holds
+
+The whole world, counted on 29 September 2026:
+
+| Search                    | Events  | Count took |
+| ------------------------- | ------- | ---------- |
+| Last 7 days               | 1,927   | 0.6 s      |
+| Last 30 days              | 10,628  | 1.3 s      |
+| Last 30 days, M2.5 and up | 1,974   | 1.8 s      |
+| Since 1 July, 90 days     | 34,348  | 1.8 s      |
+| Last year, M2.5 and up    | 28,640  | 2.8 s      |
+| Last year, M4.5 and up    | 7,695   | 1.6 s      |
+| Since 1900, M7 and up     | 1,618   | 0.6 s      |
+| Since 1900, M6 and up     | 14,526  | 1.2 s      |
+| Since 1900, M5 and up     | 107,347 | 4.4 s      |
+| Since 2000, M4.5 and up   | 187,394 | 9.9 s      |
+
+So one request holds about eight weeks of every magnitude, about eight months of M2.5 and up, and the whole instrumental record of M6 and up.
+
+## Search parameters the WADL leaves out
+
+`application.wadl` lists 35 parameters for `/query`. These work as well and are missing from it: `format`, `orderby`, `reviewstatus`, `alertlevel`, `producttype`, `maxradiuskm`, `includedeleted` and `jsonerror`. On one day, 28 September:
+
+| Filter                                | Events   |
+| ------------------------------------- | -------- |
+| none                                  | 326      |
+| `reviewstatus=reviewed` / `automatic` | 245 / 81 |
+| `eventtype=earthquake` / `explosion`  | 317 / 7  |
+| `producttype=moment-tensor`           | 8        |
+| `producttype=shakemap`                | 5        |
+| `includedeleted=true`                 | 328      |
+
+`jsonerror=true` returns errors as GeoJSON, with the message in `metadata.error`, instead of plain text.
+
+## Formats
+
+`csv`, `geojson`, `text` (the pipe-separated FDSN text), `quakeml` or `xml`, `kml` and `kmlraw` all answer; `cap` is a 400. The default is QuakeML.
+
+The CSV has 22 columns and, unlike the summary feed, carries the location and magnitude errors:
+
+```
+time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,type,
+horizontalError,depthError,magError,magNst,status,locationSource,magSource
+```
+
+It has no `depth-type`, so a fixed depth still cannot be told from a measured one. Neither format sends a `Content-Disposition`, so a link straight to the service opens the file in the tab instead of downloading it.
+
+Thirty days of every magnitude, 10,628 events, came to 2.1 MB as CSV (815 kB gzipped) and 7.6 MB as GeoJSON (1.2 MB gzipped), both in about two and a half seconds: roughly 200 bytes an event as CSV and 720 as GeoJSON.
+
+`orderby` takes `time`, the default and newest first, `time-asc`, `magnitude` and `magnitude-asc`. Magnitudes go below zero: the smallest of 28 September was −1.14.
+
+## Places and times
+
+- A rectangle is `minlatitude`, `maxlatitude`, `minlongitude` and `maxlongitude`. `minlongitude` must be less than `maxlongitude`, so a box across the antimeridian, where Fiji and Tonga sit, is written with longitudes past 180: `minlongitude=170&maxlongitude=190` returned 94 events, exactly the 20 of `170` to `180` plus the 74 of `-180` to `-170`.
+- A circle is `latitude`, `longitude` and `maxradiuskm`, up to 20,001.6 km, half the planet; or `maxradius` in degrees, up to 180.
+- Times are UTC unless they carry an offset, and an offset such as `-03:00` is honoured. Without dates, a search covers the last 30 days.
+- Dates are parsed leniently: `starttime=yesterday` is accepted and means UTC midnight yesterday. The BFF has to validate dates itself, or a typo becomes a different search instead of an error.
 
 ## Caching and etiquette
 
