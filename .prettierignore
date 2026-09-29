@@ -4,3 +4,4 @@ coverage
 public/maps
 pnpm-lock.yaml
 .playwright-mcp
+src/styles/fonts.css

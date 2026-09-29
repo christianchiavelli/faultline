@@ -5,6 +5,7 @@
  */
 @layer reset, tokens, base, layout, components, utilities;
 
+@import './fonts.css';
 @import './reset.css';
 @import './tokens.css';
 @import './base.css';

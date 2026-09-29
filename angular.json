@@ -29,11 +29,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "node_modules/@fontsource-variable/archivo/standard.css",
-              "node_modules/@fontsource-variable/martian-mono/standard.css",
-              "src/styles/main.css"
-            ],
+            "styles": ["src/styles/main.css"],
             "server": "src/main.server.ts",
             "outputMode": "server",
             "security": {

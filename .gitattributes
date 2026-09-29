@@ -14,3 +14,4 @@
 # Generated. Collapsed in review and excluded from language statistics.
 pnpm-lock.yaml linguist-generated=true -diff
 public/maps/*.svg linguist-generated=true -diff
+src/styles/fonts.css linguist-generated=true
