@@ -1,5 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { RESPONSE_INIT } from '@angular/core';
 import { DeferBlockBehavior, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import type { RecentQuakesResponse } from '@shared/api/contracts';
@@ -24,8 +25,14 @@ const feed: RecentQuakesResponse = {
 };
 
 async function render(respond: (http: HttpTestingController) => void) {
+  const response: ResponseInit = {};
   TestBed.configureTestingModule({
-    providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+    providers: [
+      provideRouter([]),
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      { provide: RESPONSE_INIT, useValue: response },
+    ],
     // The map and the log are deferred until they scroll into view; the readouts are enough here.
     deferBlockBehavior: DeferBlockBehavior.Manual,
   });
@@ -33,7 +40,7 @@ async function render(respond: (http: HttpTestingController) => void) {
   TestBed.tick();
   respond(TestBed.inject(HttpTestingController));
   await fixture.whenStable();
-  return fixture.nativeElement as HTMLElement;
+  return { element: fixture.nativeElement as HTMLElement, response };
 }
 
 const readout = (element: HTMLElement, label: string) =>
@@ -50,7 +57,7 @@ const recent = (http: HttpTestingController) =>
 
 describe('LivePage', () => {
   it('reads the day out: counts, largest event, energy share and review share', async () => {
-    const element = await render((http) => recent(http).flush(feed));
+    const { element, response } = await render((http) => recent(http).flush(feed));
 
     expect(readout(element, 'Events')).toBe('3 2 earthquakes · 1 explosion');
     expect(readout(element, 'Largest')).toContain('M5.4Mww');
@@ -59,10 +66,11 @@ describe('LivePage', () => {
     expect(readout(element, 'Energy')).toMatch(/^100%/);
     expect(readout(element, 'Reviewed')).toMatch(/^33%/);
     expect(element.querySelectorAll('fl-helicorder path.ink')).toHaveLength(24);
+    expect(response.status).toBeUndefined();
   });
 
   it('says so when the BFF is serving an old copy', async () => {
-    const element = await render((http) => recent(http).flush({ ...feed, stale: true }));
+    const { element } = await render((http) => recent(http).flush({ ...feed, stale: true }));
 
     expect(element.querySelector('.callout')?.textContent).toContain(
       'The USGS feed is not answering',
@@ -70,8 +78,8 @@ describe('LivePage', () => {
     expect(element.querySelector('.status')?.textContent).toContain('Feed delayed');
   });
 
-  it('offers a retry when there is nothing to show', async () => {
-    const element = await render((http) =>
+  it('offers a retry when there is nothing to show, and answers with the failure status', async () => {
+    const { element, response } = await render((http) =>
       recent(http).flush(
         { title: 'The USGS did not answer' },
         { status: 502, statusText: 'Bad Gateway' },
@@ -82,5 +90,6 @@ describe('LivePage', () => {
       'The USGS feed did not answer',
     );
     expect(element.querySelector('[role="alert"] button')?.textContent?.trim()).toBe('Try again');
+    expect(response.status).toBe(502);
   });
 });

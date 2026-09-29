@@ -1,5 +1,6 @@
 import { DatePipe, PercentPipe } from '@angular/common';
-import { Component, computed, inject, input } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, RESPONSE_INIT, computed, effect, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { recentQuakesResource } from '@core/api/quakes';
 import { Clock } from '@core/clock';
@@ -63,6 +64,13 @@ export class LivePage {
 
   constructor() {
     pollWhileVisible(this.recent, FEED_REFRESH_MS);
+
+    // A page rendered without its data says so in its status, so monitors see the outage.
+    const response = inject(RESPONSE_INIT, { optional: true });
+    effect(() => {
+      const error = this.recent.error();
+      if (response && error instanceof HttpErrorResponse) response.status = error.status;
+    });
   }
 }
 
