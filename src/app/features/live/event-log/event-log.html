@@ -1,0 +1,86 @@
+<section class="log" aria-labelledby="log-title">
+  <header class="log__header">
+    <h2 class="section-title" id="log-title">Every event</h2>
+    <nav class="filters" aria-label="Minimum magnitude">
+      @for (filter of filters(); track filter.value) {
+        <a
+          class="filter"
+          [routerLink]="[]"
+          [queryParams]="{ min: filter.value }"
+          queryParamsHandling="merge"
+          [attr.aria-current]="filter.current ? 'true' : null"
+        >
+          {{ filter.label }} <span class="filter__count mono">{{ filter.count }}</span>
+        </a>
+      }
+    </nav>
+  </header>
+
+  @if (days().length) {
+    <table class="ledger">
+      <caption class="visually-hidden">
+        Seismic events in the last 24 hours, newest first.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">UTC</th>
+          <th scope="col" class="numeric">Mag</th>
+          <th scope="col">Where</th>
+          <th scope="col" class="numeric">Depth km</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      @for (day of days(); track day.day) {
+        <tbody>
+          <tr class="day">
+            <th scope="rowgroup" colspan="5">{{ day.day | date: 'EEEE d MMMM' : 'UTC' }}</th>
+          </tr>
+          @for (row of day.rows; track row.id) {
+            <tr>
+              <td class="mono time">{{ row.time | date: 'HH:mm:ss' : 'UTC' }}</td>
+              <td class="numeric">
+                @if (row.magnitude; as magnitude) {
+                  <span class="mono magnitude">{{ magnitude }}</span>
+                  <abbr class="scale" [title]="row.scale!.title">{{ row.scale!.code }}</abbr>
+                } @else {
+                  <span class="missing" title="No magnitude computed yet">—</span>
+                }
+              </td>
+              <td class="place">
+                <a [routerLink]="['/quakes', row.id]">{{ row.place }}</a>
+                @if (row.kind; as kind) {
+                  <span class="tag kind">{{ kind }}</span>
+                }
+              </td>
+              <td class="mono numeric">
+                @if (row.depth; as depth) {
+                  <span [attr.title]="row.depthTitle">{{ depth }}</span>
+                } @else {
+                  <span class="missing">—</span>
+                }
+              </td>
+              <td>
+                @if (row.reviewed) {
+                  <span class="tag tag--solid">Reviewed</span>
+                } @else {
+                  <span class="tag tag--dashed">Automatic</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      }
+    </table>
+
+    <p class="note">
+      Magnitudes come on different scales, named next to each value; hover one for what it measures.
+      Automatic events were located by software and can still move, change size or be deleted.
+      @if (hasNegativeDepth()) {
+        Negative depths are above sea level: shallow events under mountains and volcanoes are
+        located relative to the sea, not the ground.
+      }
+    </p>
+  } @else {
+    <p class="empty">Nothing at this magnitude in the last 24 hours.</p>
+  }
+</section>

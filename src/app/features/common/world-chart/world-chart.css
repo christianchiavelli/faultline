@@ -1,0 +1,99 @@
+:host {
+  display: block;
+}
+
+.chart {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.map {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* A window onto the map rather than the whole of it: clipped and framed like the trace. */
+.map--zoomed {
+  overflow: hidden;
+  background: var(--surface-chart);
+  border-block: var(--hairline) solid var(--rule-strong);
+}
+
+.sphere {
+  fill: var(--surface-chart);
+  stroke: var(--rule);
+  stroke-width: 1px;
+}
+
+.graticule {
+  fill: none;
+  stroke: var(--grid-minor);
+  stroke-width: 1px;
+}
+
+.land {
+  fill: var(--land);
+}
+
+.plates {
+  fill: none;
+  stroke: var(--plate);
+  stroke-width: 1px;
+  stroke-dasharray: 3 2.5;
+  opacity: 0.8;
+}
+
+.dot,
+.focus-ring {
+  vector-effect: non-scaling-stroke;
+}
+
+.dot {
+  fill: color-mix(in oklch, var(--trace-ink) 16%, transparent);
+  stroke: color-mix(in oklch, var(--trace-ink) 62%, transparent);
+  stroke-width: 0.6px;
+}
+
+.dot--notable {
+  fill: color-mix(in oklch, var(--trace-pen) 26%, transparent);
+  stroke: var(--trace-pen);
+  stroke-width: 1px;
+}
+
+.focus-ring {
+  fill: none;
+  stroke: var(--trace-pen);
+  stroke-width: 1.5px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  font-size: var(--text-xs);
+  color: var(--content-tertiary);
+}
+
+.legend__sizes {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.legend__size {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-2xs);
+}
+
+.legend__plates::before {
+  content: '';
+  display: inline-block;
+  width: 1.5rem;
+  margin-inline-end: var(--space-2);
+  vertical-align: middle;
+  border-top: 1px dashed var(--plate);
+}

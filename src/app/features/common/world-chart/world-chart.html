@@ -1,0 +1,48 @@
+<figure class="chart">
+  <svg
+    class="map"
+    [class.map--zoomed]="zoom() > 1"
+    [attr.viewBox]="viewBox()"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <use class="sphere" href="/maps/earth.svg#sphere" />
+    <use class="graticule" href="/maps/earth.svg#graticule" />
+    <use class="land" href="/maps/earth.svg#land" />
+    <use class="plates" href="/maps/earth.svg#plates" />
+    @for (dot of dots(); track dot.id) {
+      <circle
+        class="dot"
+        [class.dot--notable]="dot.notable"
+        [attr.cx]="dot.x"
+        [attr.cy]="dot.y"
+        [attr.r]="dot.r * dotScale()"
+      />
+    }
+    @if (focused(); as dot) {
+      <circle
+        class="focus-ring"
+        [attr.cx]="dot.x"
+        [attr.cy]="dot.y"
+        [attr.r]="(dot.r + 7) * dotScale()"
+      />
+    }
+  </svg>
+
+  @if (showLegend()) {
+    <figcaption class="legend">
+      <span class="legend__sizes" aria-hidden="true">
+        @for (item of legend; track item.magnitude) {
+          <span class="legend__size">
+            <svg [attr.width]="item.r * 2 + 2" [attr.height]="item.r * 2 + 2">
+              <circle class="dot" [attr.cx]="item.r + 1" [attr.cy]="item.r + 1" [attr.r]="item.r" />
+            </svg>
+            <span class="mono">M{{ item.magnitude }}</span>
+          </span>
+        }
+      </span>
+      <span>Dots are compressed like the trace: an M7 is not drawn 1,000× an M5.</span>
+      <span class="legend__plates">Plate boundaries, where almost all of them happen.</span>
+    </figcaption>
+  }
+</figure>

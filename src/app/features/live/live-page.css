@@ -1,0 +1,83 @@
+:host {
+  display: block;
+}
+
+.live {
+  display: grid;
+  gap: var(--space-8);
+  padding-block-start: var(--space-10);
+}
+
+.intro {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 64rem;
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--content-secondary);
+}
+
+.status__dot {
+  width: 0.5rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--trace-pen);
+  animation: blink 2.4s steps(1) infinite;
+}
+
+.status__dot--stale {
+  background: var(--content-tertiary);
+  animation: none;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.status__sep {
+  color: var(--rule);
+}
+
+.trace {
+  margin-block-start: var(--space-2);
+}
+
+.where {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.section-header {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.chart-placeholder {
+  aspect-ratio: 1000 / 487;
+  background: var(--surface-sunken);
+}
+
+.log-placeholder {
+  min-height: 40rem;
+}
+
+.failure {
+  justify-items: start;
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  min-height: 30rem;
+  border-block: var(--hairline) solid var(--rule-strong);
+  background: var(--surface-chart);
+}

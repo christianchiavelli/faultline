@@ -1,0 +1,71 @@
+<figure class="helicorder">
+  <div class="scale mono" aria-hidden="true">
+    <span class="scale__corner">UTC</span>
+    <span style="--at: 0%">:00</span>
+    <span style="--at: 25%">:15</span>
+    <span style="--at: 50%">:30</span>
+    <span style="--at: 75%">:45</span>
+    <span style="--at: 100%">:60</span>
+  </div>
+
+  <div class="drum">
+    <ol class="hours mono" role="list" aria-hidden="true">
+      @for (hour of hourLabels(); track hour.start) {
+        <li [class.hours__current]="hour.current">{{ hour.text }}</li>
+      }
+    </ol>
+
+    <div class="paper">
+      <svg
+        class="trace"
+        [attr.viewBox]="viewBox"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <g class="grid">
+          @for (x of gridLines; track x) {
+            <line
+              [attr.x1]="x"
+              [attr.x2]="x"
+              y1="0"
+              [attr.y2]="height"
+              [class.grid__major]="x % quarterHour === 0"
+            />
+          }
+        </g>
+        @for (row of rows(); track row.start) {
+          <path class="ink" [attr.d]="row.ink" />
+          @for (segment of row.pen; track $index) {
+            <path class="pen" [attr.d]="segment" />
+          }
+        }
+      </svg>
+
+      @for (marker of markers(); track marker.id) {
+        <a
+          class="marker mono"
+          [routerLink]="['/quakes', marker.id]"
+          [style.left.%]="marker.left"
+          [style.top.%]="marker.top"
+          [attr.aria-label]="marker.label"
+          >{{ marker.text }}</a
+        >
+      }
+
+      <span class="pen-head" [style.left.%]="pen().left" [style.top.%]="pen().top"></span>
+    </div>
+  </div>
+
+  <figcaption class="legend">
+    <span class="legend__item">One line per hour, read left to right, top to bottom.</span>
+    <span class="legend__item">
+      Each spike is one event. Height grows about 3× per magnitude step, a compressed scale: ground
+      motion really grows 10×.
+    </span>
+    <span class="legend__item legend__item--pen">Red: M4.5 and above.</span>
+    <span class="legend__item">
+      A synthetic record drawn from the USGS catalogue, not a waveform from any station.
+    </span>
+  </figcaption>
+</figure>
