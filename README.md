@@ -1,8 +1,10 @@
 # Faultline
 
-A live seismograph of the planet. Every event the [USGS](https://earthquake.usgs.gov/earthquakes/feed/) catalogued in the last 24 hours, drawn the way a drum seismograph draws it: one line per hour, one burst per event.
+A live seismograph of the planet, on top of the [USGS earthquake catalogue](https://earthquake.usgs.gov/earthquakes/feed/), which gathers what the global and US regional seismic networks locate: around two hundred events on an ordinary day.
 
-Angular 22 (zoneless, signals, SSR with incremental hydration) and an Express backend-for-frontend, on public-domain data with no API key.
+Read the last 24 hours the way a drum seismograph draws them, one line per hour and one burst per event, filter the log by magnitude, then open any event for its magnitude scale, how its depth was found, the uncertainty of its location and the energy it released.
+
+Angular 22, zoneless with signals, SSR with incremental hydration, and an Express backend-for-frontend.
 
 ![The live page: a 24-hour helicorder with the day's largest events labelled in red](docs/screenshots/live-paper.png)
 
@@ -13,9 +15,19 @@ Angular 22 (zoneless, signals, SSR with incremental hydration) and an Express ba
 
 ![The helicorder in the dark theme: a light trace on a dark photographic record](docs/screenshots/live-film.png)
 
+**The whole page: readouts, the map and every event**
+
+![The full live page: the helicorder, the day's readouts, an Equal Earth map with plate boundaries and the event log](docs/screenshots/live-full-paper.png)
+
 **One event, with its uncertainty**
 
 ![An M5.4 north of Svalbard: magnitude scale, depth fixed by the analyst, location error and energy](docs/screenshots/quake-paper.png)
+
+**On a phone, dark theme**
+
+![The live page on a phone in the dark theme, the helicorder narrowed to the screen](docs/screenshots/live-phone-film.png)
+
+Regenerate with `pnpm run screenshots` against a production build.
 
 </details>
 
@@ -23,25 +35,23 @@ Angular 22 (zoneless, signals, SSR with incremental hydration) and an Express ba
 
 ## Setup
 
-Any Node.js recent enough to start pnpm, and pnpm itself. No API key, no account, no `.env`.
+Node.js 22.13 or newer and pnpm. No API key or account.
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-The app runs on Node.js 24.15 or newer, which the Angular 22 CLI requires. It is pinned in `package.json` under `devEngines`: the first install downloads that exact runtime, checked against the lockfile, and every script runs on it.
+The app itself runs on Node.js 24.15 or newer, which the Angular 22 CLI requires, pinned in `package.json` under `devEngines`. The first install downloads that exact version, checked against the hash in the lockfile, and every script runs on it, so the Node on the machine only has to start pnpm.
 
 To run the production server:
 
 ```bash
 pnpm build
-NG_ALLOWED_HOSTS=faultline.example.com PORT=4000 pnpm preview
+NG_ALLOWED_HOSTS=faultline.example.com pnpm preview
 ```
 
-Angular's server refuses requests for hostnames it was not told about, as protection against server-side request forgery. `localhost` is allowed in `angular.json`; anything else comes from `NG_ALLOWED_HOSTS`.
-
-Everything else has a default:
+Angular's server refuses requests for hostnames it was not told about, as protection against server-side request forgery. `localhost` is allowed in `angular.json`; anything else comes from `NG_ALLOWED_HOSTS`. Everything else has a default:
 
 | Variable | Default | What it is for |
 | --- | --- | --- |
@@ -57,42 +67,36 @@ Everything else has a default:
 
 ## Why this data set
 
-The USGS feed is live, public domain and regenerated every minute, and it is honest about how unsure it is. That is the point of using it: most of the work here is in not flattening that uncertainty into a tidy dashboard.
+The USGS catalogue is live, public domain and regenerated every minute, and it is honest about how unsure it is. That was the point of picking it. Most of what is interesting in this repository comes from carrying that uncertainty through to the page instead of flattening it into a tidy dashboard.
 
-- **Magnitude is not one scale.** A week of the feed mixes eight or more (`ML`, `Md`, `mb`, `Mww`…), measured from different parts of the seismogram and valid over different sizes. Every value carries its scale, and the scale explains itself.
-- **A third or more of the feed is provisional**, the newest events most of all. Automatic solutions can still move, change size or be deleted. Reviewed and automatic events look different everywhere they appear, and the day's reviewed share is a headline number.
-- **Depths lie in two directions.** Many are fixed by an analyst when the data cannot constrain them, often at exactly 10 km, and some are negative: shallow events under high ground are located relative to sea level. The detail page says which, instead of printing a number.
-- **The feed mixes event kinds.** Quarry blasts and explosions are seismic events but not earthquakes; they are counted and labelled, and never become "the largest earthquake of the day".
-- **Energy is logarithmic.** Each whole magnitude step is about 32 times the energy, so one event usually dominates the day. The page states that share outright rather than letting a bar chart imply otherwise.
+Magnitude is not one scale. A single day of the feed mixes six of them, measured from different parts of the seismogram and valid over different sizes, so a 3.1 from a Californian network and a 3.1 from the global one are not the same statement. Every value here carries its scale, and the scale explains itself. About half of the same day is still provisional: automatic solutions can move, change size or be deleted, so reviewed and automatic events look different everywhere they appear.
+
+Depths are unsure in two directions. Many are fixed by an analyst when the data cannot constrain them, typically at 10 km, and some are negative, because shallow events under high ground are located relative to sea level. The event page says which, instead of printing a number as if it had been measured.
+
+---
+
+## Screens
+
+| Route | What it is |
+| --- | --- |
+| `/` | The last 24 hours: the helicorder, the day's readouts, the map and every event |
+| `/?min=4.5` | The same page with the log at another threshold: `all`, `2.5` (the default) or `4.5` |
+| `/quakes/:id` | One event: magnitude and its scale, depth and how it was found, location uncertainty, energy, impact alert |
 
 ---
 
 ## How it is built
 
-- **A BFF, not a proxy.** Express routes, mounted in the Angular SSR server, fetch the USGS once per minute however many people are reading, validate every record with Zod at the boundary, and hand the app one contract (`src/shared/api/contracts.ts`). A malformed record costs one row, not the feed, and the response says how many were skipped.
+- **A BFF, not a proxy.** Express routes, mounted in the Angular SSR server, read two USGS services that answer the same questions differently, validate every record with Zod at the boundary, and hand the app one contract (`src/shared/api/contracts.ts`). A malformed record costs one row, not the feed, and the response says how many were skipped.
+- **The domain comes first.** `src/shared/domain` owes nothing to the feed's field names. Magnitude scales follow the USGS's own definitions, energy is computed from magnitude, about 32 times more per whole step, and an explosion is counted as a seismic event but never ranked as the largest earthquake of the day.
 - **SSR never calls itself over HTTP.** During a server render, `HttpClient` requests to `/api/*` are answered in-process by the same router Express uses, through a replacement `HttpBackend`. Behind a load balancer, the alternative is every page render leaving the machine to ask the same process for data it already holds. Because the swap happens below the interceptors, Angular's transfer cache still hands the response to the browser, which does not refetch on hydration. That cache drops error responses, so a small interceptor hands those over too: a missing event or a feed outage hydrates as it was rendered, with the status it was rendered with.
-- **Stale-while-revalidate, single-flight, and honest about failure.** Concurrent misses share one upstream call. When the USGS stops answering, the last good copy is served and flagged, and the page says how old it is.
-- **Rate limited on both sides.** Each client address gets a token bucket, bursts of 60 and then one request a second. Behind it, event lookups the cache cannot answer share one budget for the whole process, so however many addresses a script rotates through, the USGS sees at most ten lookups at once and two a second after that.
-- **Fonts are part of the build.** Archivo and Martian Mono are self-hosted under content-hashed names, preloaded, and backed by local fallbacks whose metrics are matched with Capsize, so the swap does not move the layout. `pnpm fonts` regenerates them.
+- **Cached, paced and honest about failure.** Each feed is fetched at most once a minute however many people are reading, and concurrent misses share one upstream call. When the USGS stops answering, the last good copy is served and flagged, and the page says how old it is. Each client address gets a token bucket, bursts of 60 and then one request a second, and event lookups the cache cannot answer share one budget for the whole process, so however many addresses a script rotates through, the USGS sees at most ten lookups at once and two a second after that.
 - **The helicorder is synthetic, deterministic and says so.** No station hears the whole planet and the feed carries no waveforms, so each event becomes a burst placed at its origin time and sized from its magnitude, on a compressed scale the legend states. The paths are a pure function of the events and the clock, so the server and the browser draw the same thing.
 - **The map is a file, not a library.** Coastlines and plate boundaries are projected to Equal Earth once, by `pnpm basemap`, into a static SVG the page references with `<use>`: cached once, outside the JavaScript bundle, and coloured by the theme through CSS. Equal Earth keeps every region at its true area, which Mercator would not for Alaska, the busiest corner of the feed.
-- **Filter state lives in the URL.** `?min=4.5` is a link, bound to the page through the router; the back button and sharing work with nothing written for them.
-- **The design system is tokens and cascade layers.** Colours are OKLCH, declared once each with `light-dark()`, so a theme is nothing more than a `color-scheme`. The theme is a cookie the server reads, so the first paint is already right, with no inline script.
+- **Filter state lives in the URL.** `?min=4.5` is a link, bound to the page through the router. No store, no watcher. Sharing, bookmarking and the back button work with nothing written for them, and changing the filter keeps the reader where they were instead of throwing them back to the top.
+- **Missing data is a value, never a zero.** A magnitude not computed yet shows an em-dash, a depth fixed by an analyst says so instead of posing as a measurement, and every uncertainty sits next to the number it qualifies.
+- **The design system is tokens and cascade layers.** Colours are OKLCH, declared once each with `light-dark()`, so a theme is nothing more than a `color-scheme`. The theme is a cookie the server reads, so the first paint is already right, with no inline script. Archivo and Martian Mono are self-hosted under content-hashed names, preloaded, and backed by local fallbacks whose metrics are matched with Capsize, so the swap does not move the layout.
 - **Boundaries are enforced, not agreed.** ESLint rejects imports that cross layers: `src/shared` is framework-free, `src/server` never imports Angular, `src/app/ui` knows nothing about earthquakes, and the browser code only reaches the BFF over HTTP.
-
-```
-src/
-  shared/    domain, contracts and the projection; plain TypeScript
-  server/    the BFF: USGS client, cache, API router, Express adapter
-  app/
-    core/    data access, clock, theme, polling
-    ui/      design system components, no domain knowledge
-    shell/   top bar and footer
-    features/
-  styles/    tokens, reset, base, layout and component layers
-e2e/         Playwright suite and the USGS stub it runs against
-scripts/     basemap and font generation
-```
 
 ---
 
@@ -100,14 +104,20 @@ scripts/     basemap and font generation
 
 ```bash
 pnpm run ci    # format, lint, types, and the unit specs with coverage
-pnpm e2e       # production build, then Playwright on desktop and mobile Chrome
+pnpm run e2e   # Playwright across two viewports, on a production build
 ```
 
-Vitest, through the Angular CLI's own runner. The domain, the USGS mapping, the cache, the API router and the helicorder geometry are tested as plain functions; components are tested through the DOM they render.
-
-The end-to-end suite runs the production server against a stub of the USGS (`e2e/support/usgs-stub.ts`) serving a small, awkward day: mixed magnitude scales, a depth above sea level, an explosion, an event with no magnitude yet and a record that fails validation. It checks that the page is complete before any script runs, that hydrating makes no API call (error pages included), that a filter keeps the reader where they were, the real 404, 410 and 502 statuses, and an outage, served by a second server pointed at nothing. Every page is audited with axe against WCAG 2.2 AA in both themes.
+The suites divide by what they can see. Vitest covers the domain, the USGS mapping, the cache, the API router and the helicorder geometry as plain functions, and components through the DOM they render. Playwright owns what only a browser and the real server can answer: whether the page is complete before any script runs, whether hydration asks the API again, which status a crawler gets for a missing event, and what an outage looks like. It runs the production server against a stub of the USGS serving a small, awkward day, and audits every page with axe against WCAG 2.2 AA in both themes. Two of those were broken until the suite caught them: error pages refetched while hydrating, and the top bar and footer sat outside any landmark.
 
 The first run needs the browser: `pnpm exec playwright install chromium`.
+
+---
+
+## Reading further
+
+[docs/upstream-api.md](docs/upstream-api.md) compares the two USGS services the BFF reads, the summary feeds and the FDSN event service, gathered by probing the live endpoints, because they signal the same things in different ways: an event that never existed, one deleted since, and a search that matched nothing all answer differently.
+
+Everything else is documented where it applies: a trap is a comment on the line that works around it, and the rules for changing the code are in [CLAUDE.md](CLAUDE.md).
 
 ---
 
