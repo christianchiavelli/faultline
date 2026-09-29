@@ -5,6 +5,7 @@ import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { quakeDetailResource } from '@core/api/quakes';
 import { Clock } from '@core/clock';
+import { pageTitle } from '@core/page-title';
 import type { Problem } from '@shared/api/contracts';
 import { alertMeaning } from '@shared/domain/alert';
 import { magnitudeScale, radiatedEnergy } from '@shared/domain/magnitude';
@@ -76,9 +77,9 @@ export class QuakePage {
       const problem = this.problem();
       if (view) {
         const magnitude = view.magnitude ? `M${view.magnitude} ` : '';
-        title.setTitle(`${magnitude}${view.place} · Faultline`);
+        title.setTitle(pageTitle(`${magnitude}${view.place}`));
       } else if (problem) {
-        title.setTitle(`${problem.title} · Faultline`);
+        title.setTitle(pageTitle(problemPageName(problem.status)));
         // Server-rendered error pages carry the real status, so crawlers and
         // monitors see a 404 for a missing event rather than a 200 page.
         if (response) response.status = problem.status;
@@ -100,6 +101,13 @@ function describeEnergy(joules: number) {
         ? { value: significant(tonnes), unit: 'tonnes' }
         : { value: significant(tonnes * 1000), unit: 'kg' },
   };
+}
+
+/** The heading says what happened; the tab only names the page, plainly. */
+function problemPageName(status: number): string {
+  if (status === 404) return 'Event not found';
+  if (status === 410) return 'Event deleted';
+  return 'Event unavailable';
 }
 
 function isProblem(value: unknown): value is Problem {

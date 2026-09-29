@@ -6,6 +6,7 @@ import {
   withIncrementalHydration,
 } from '@angular/platform-browser';
 import {
+  TitleStrategy,
   provideRouter,
   withComponentInputBinding,
   withInMemoryScrolling,
@@ -14,6 +15,7 @@ import {
 } from '@angular/router';
 import { routes } from './app.routes';
 import { transferApiErrors } from './core/api/transfer-errors';
+import { PageTitleStrategy } from './core/page-title';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -31,6 +33,7 @@ export const appConfig: ApplicationConfig = {
         },
       }),
     ),
+    { provide: TitleStrategy, useClass: PageTitleStrategy },
     provideHttpClient(withFetch(), withInterceptors([transferApiErrors])),
     provideClientHydration(withEventReplay(), withIncrementalHydration()),
   ],

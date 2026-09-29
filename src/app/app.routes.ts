@@ -2,8 +2,8 @@ import type { Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
+    // No title: the home page is the product itself, see `core/page-title.ts`.
     path: '',
-    title: 'Faultline · a live seismograph of the planet',
     loadComponent: () => import('./features/live/live-page').then((m) => m.LivePage),
   },
   {
@@ -13,7 +13,7 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    title: 'Nothing recorded here · Faultline',
+    title: 'Page not found',
     loadComponent: () => import('./features/not-found/not-found-page').then((m) => m.NotFoundPage),
   },
 ];

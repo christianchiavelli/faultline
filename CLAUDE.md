@@ -30,6 +30,7 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - Honest data: a missing value renders as `—`, never as zero; provisional and reviewed values must look different; scales and uncertainties are shown next to the numbers they qualify.
 - Comments explain why, at the line that needs it. No comments that restate the code.
 - UI copy is English (British spelling, as in the rest of the app).
+- Tab titles read `<page> | Faultline`, and the home page just `Faultline`. Static pages set the route `title`; pages titled by their data call `pageTitle()` from `core/page-title.ts`. Never write the suffix by hand.
 
 ## Gotchas
 

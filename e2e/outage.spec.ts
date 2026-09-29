@@ -26,4 +26,5 @@ test('reports an event it cannot look up as a gateway failure, not a missing eve
 
   expect(response?.status()).toBe(502);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('The USGS did not answer');
+  await expect(page).toHaveTitle('Event unavailable | Faultline');
 });

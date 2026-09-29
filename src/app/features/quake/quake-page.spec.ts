@@ -58,7 +58,7 @@ describe('QuakePage', () => {
     expect(element.querySelector('.numeral')?.textContent).toContain('5.4');
     expect(element.querySelector('.scale')?.textContent).toContain('Moment W-phase magnitude');
     expect(element.querySelector('h1')?.textContent).toBe('North of Svalbard');
-    expect(TestBed.inject(Title).getTitle()).toBe('M5.4 North of Svalbard · Faultline');
+    expect(TestBed.inject(Title).getTitle()).toBe('M5.4 North of Svalbard | Faultline');
   });
 
   it('says when the depth was fixed by the analyst rather than measured', async () => {
@@ -90,6 +90,7 @@ describe('QuakePage', () => {
     );
 
     expect(element.querySelector('h1')?.textContent).toBe('No such event');
+    expect(TestBed.inject(Title).getTitle()).toBe('Event not found | Faultline');
     expect(response.status).toBe(404);
   });
 });

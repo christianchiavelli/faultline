@@ -24,6 +24,7 @@ test('opens a labelled event straight from the trace', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/quakes\/us7000big$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('South of the Fiji Islands');
+  await expect(page).toHaveTitle('M6.2 South of the Fiji Islands | Faultline');
 });
 
 test('filters the log through the address bar and keeps the reader in place', async ({ page }) => {
