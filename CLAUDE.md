@@ -9,6 +9,8 @@ A live seismograph of the planet: Angular 22 with SSR, an Express BFF over the U
 - `pnpm e2e` — production build, then Playwright (desktop and mobile) against a USGS stub, with an axe audit of every page in both themes. Must pass before any change to a page is done.
 - `pnpm build` then `pnpm preview` — production build served by the real Express server on :4000
 - `pnpm basemap` — regenerates `public/maps/earth.svg` from Natural Earth and PB2002
+- `pnpm screenshots` — recaptures `docs/screenshots` from a running production server (`pnpm build`, then `pnpm preview`)
+- `docs/upstream-api.md` — how the two USGS services really behave, probed live. Read it before touching `src/server/usgs`, and update it when a probe says otherwise
 
 Node is pinned by `devEngines` (24.15+, required by the Angular 22 CLI). Always run through `pnpm`, never a bare `ng` or `node`, or the machine's older Node is used.
 
