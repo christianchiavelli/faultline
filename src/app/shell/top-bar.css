@@ -1,0 +1,89 @@
+:host {
+  display: block;
+  border-bottom: var(--hairline) solid var(--rule-strong);
+  background: var(--surface-page);
+  view-transition-name: top-bar;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  min-height: 3.75rem;
+}
+
+.home {
+  color: var(--content-primary);
+  text-decoration: none;
+}
+
+.tagline {
+  font-size: var(--text-xs);
+  font-stretch: var(--width-condensed);
+  font-weight: 560;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--content-tertiary);
+  padding-inline-start: var(--space-5);
+  border-inline-start: var(--hairline) solid var(--rule);
+}
+
+.instruments {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-inline-start: auto;
+}
+
+.clock {
+  font-size: var(--text-sm);
+  color: var(--content-secondary);
+  white-space: nowrap;
+}
+
+.clock__zone {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--content-tertiary);
+}
+
+.theme {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 5.5rem;
+  padding: var(--space-1) var(--space-3);
+  border: var(--hairline) solid var(--rule-strong);
+  border-radius: var(--radius-tag);
+  background: none;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-stretch: var(--width-condensed);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  &:hover {
+    background: var(--surface-sunken);
+  }
+}
+
+/* Half paper, half film: the current scheme on the left, its opposite on the right */
+.theme__swatch {
+  width: 0.75rem;
+  aspect-ratio: 1;
+  border: var(--hairline) solid var(--content-primary);
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--surface-page) 50%, var(--content-primary) 50%);
+}
+
+@media (width < 48rem) {
+  .tagline {
+    display: none;
+  }
+}
+
+@media (width < 30rem) {
+  .clock__zone {
+    display: none;
+  }
+}
