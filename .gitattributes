@@ -1,0 +1,16 @@
+# Normalise line endings in the repository regardless of the contributor's OS.
+# Without this, a Windows checkout commits CRLF and every subsequent diff on a
+# Linux machine shows the whole file as changed.
+* text=auto eol=lf
+
+# Binary: never normalise, never diff as text.
+*.png binary
+*.jpg binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff2 binary
+
+# Generated. Collapsed in review and excluded from language statistics.
+pnpm-lock.yaml linguist-generated=true -diff
+public/maps/*.svg linguist-generated=true -diff

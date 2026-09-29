@@ -1,0 +1,17 @@
+# Dependency build scripts are opt-in (pnpm 10+, `allowBuilds` map since 11).
+#
+# esbuild ships its native binary through an install script, and the Angular
+# build pipeline is esbuild underneath, so without it `ng build` fails at first
+# use rather than at install.
+#
+# The other three are denied on purpose. Their scripts only compile a native
+# addon from source when no prebuilt binary matches the platform, and every
+# platform we build on gets one from an optional dependency
+# (`@lmdb/lmdb-win32-x64` and friends), loaded at require time without the
+# script. A postinstall is arbitrary code execution at `pnpm install` time, and
+# none of these has earned it.
+allowBuilds:
+  esbuild: true
+  '@parcel/watcher': false
+  lmdb: false
+  msgpackr-extract: false
