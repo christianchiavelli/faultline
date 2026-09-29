@@ -1,4 +1,4 @@
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideBrowserGlobalErrorListeners, type ApplicationConfig } from '@angular/core';
 import {
   provideClientHydration,
@@ -13,6 +13,7 @@ import {
   type ActivatedRouteSnapshot,
 } from '@angular/router';
 import { routes } from './app.routes';
+import { transferApiErrors } from './core/api/transfer-errors';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -30,7 +31,7 @@ export const appConfig: ApplicationConfig = {
         },
       }),
     ),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([transferApiErrors])),
     provideClientHydration(withEventReplay(), withIncrementalHydration()),
   ],
 };
