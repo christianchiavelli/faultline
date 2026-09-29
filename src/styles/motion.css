@@ -1,0 +1,20 @@
+/*
+ * Route changes cross-fade through the View Transitions API. The shell keeps
+ * its own transition name so the top bar stays put while the page underneath
+ * changes, instead of the whole window blinking.
+ */
+@layer base {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--duration-base);
+    animation-timing-function: var(--ease-out);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+}

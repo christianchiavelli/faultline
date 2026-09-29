@@ -1,0 +1,13 @@
+/*
+ * Cascade layers, lowest priority first. Component styles emitted by Angular
+ * are unlayered, so they always win over everything declared here without a
+ * specificity contest.
+ */
+@layer reset, tokens, base, layout, components, utilities;
+
+@import './reset.css';
+@import './tokens.css';
+@import './base.css';
+@import './layout.css';
+@import './ui.css';
+@import './motion.css';

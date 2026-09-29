@@ -1,0 +1,137 @@
+/*
+ * Design tokens, in three tiers:
+ *
+ *   primitives  raw values, named for what they are: paper, ink, the pen
+ *   semantic    what a value is for: surface, content, rule, trace
+ *   component   declared inside a component, only where it needs a knob
+ *
+ * Components read semantic tokens only. A primitive used directly in a
+ * component is a review comment.
+ *
+ * Colour is OKLCH so that lightness steps are perceptual: ten points of L look
+ * like the same step in the red as in the ink. Themes swap through
+ * `light-dark()`, so each semantic token is declared once, with both values
+ * side by side, and a theme is nothing more than a `color-scheme`.
+ */
+@layer tokens {
+  :root {
+    /* Paper: the drum of a seismograph. Warm, barely chromatic. */
+    --paper-50: oklch(98.4% 0.006 85);
+    --paper-100: oklch(96.3% 0.011 84);
+    --paper-200: oklch(93.4% 0.015 82);
+    --paper-300: oklch(88.6% 0.02 80);
+    --paper-400: oklch(81% 0.024 78);
+
+    /* Ink. A warm near-black; nothing here is #000. */
+    --ink-500: oklch(50.5% 0.014 62);
+    --ink-700: oklch(37% 0.014 62);
+    --ink-900: oklch(22% 0.012 62);
+
+    /* The pen. One red, reserved for what the reader should see first. */
+    --pen-100: oklch(93.5% 0.032 30);
+    --pen-500: oklch(56.5% 0.19 29);
+    --pen-600: oklch(50.5% 0.185 28);
+
+    /* Film: photographic drum paper, a light trace on a dark record. */
+    --film-950: oklch(15.8% 0.006 70);
+    --film-900: oklch(18.9% 0.008 70);
+    --film-800: oklch(23.5% 0.01 70);
+    --film-700: oklch(30.5% 0.012 70);
+    --film-600: oklch(39% 0.013 70);
+    --chalk-100: oklch(93.5% 0.012 85);
+    --chalk-300: oklch(79% 0.012 80);
+    --chalk-500: oklch(64.5% 0.012 75);
+    --pen-film-100: oklch(29% 0.07 30);
+    --pen-film-500: oklch(69% 0.165 32);
+
+    /* Surfaces */
+    --surface-page: light-dark(var(--paper-100), var(--film-950));
+    --surface-chart: light-dark(var(--paper-50), var(--film-900));
+    --surface-sunken: light-dark(var(--paper-200), var(--film-800));
+    --surface-inverse: light-dark(var(--ink-900), var(--chalk-100));
+    --surface-accent: light-dark(var(--pen-100), var(--pen-film-100));
+
+    /* Content. Tertiary is the lightest text allowed: 5:1 on every surface. */
+    --content-primary: light-dark(var(--ink-900), var(--chalk-100));
+    --content-secondary: light-dark(var(--ink-700), var(--chalk-300));
+    --content-tertiary: light-dark(var(--ink-500), var(--chalk-500));
+    --content-inverse: light-dark(var(--paper-50), var(--film-950));
+    --content-accent: light-dark(var(--pen-600), var(--pen-film-500));
+
+    /* Rules: the printed lines of a form */
+    --rule-faint: light-dark(var(--paper-300), var(--film-800));
+    --rule: light-dark(var(--paper-400), var(--film-700));
+    --rule-strong: var(--content-primary);
+
+    /* Instruments */
+    --trace-ink: light-dark(oklch(27% 0.014 62), oklch(90% 0.012 85));
+    --trace-pen: light-dark(var(--pen-500), var(--pen-film-500));
+    --grid-minor: light-dark(oklch(91.5% 0.02 72), oklch(24% 0.009 70));
+    --grid-major: light-dark(oklch(85.5% 0.028 68), oklch(30% 0.011 70));
+    --land: light-dark(oklch(90.5% 0.017 80), oklch(25.5% 0.01 70));
+    --plate: light-dark(oklch(60% 0.07 42), oklch(55% 0.06 38));
+
+    --focus-ring: var(--content-primary);
+
+    /* Type. Archivo carries the words, with its width axis doing the work of
+       a second family: condensed for instrument labels, expanded for the
+       wordmark. Martian Mono carries every number. */
+    --font-sans: 'Archivo Variable', 'Archivo', ui-sans-serif, system-ui, sans-serif;
+    --font-mono:
+      'Martian Mono Variable', 'Martian Mono', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+
+    --width-condensed: 72%;
+    --width-normal: 100%;
+    --width-expanded: 118%;
+
+    --text-2xs: 0.6875rem;
+    --text-xs: 0.75rem;
+    --text-sm: 0.8125rem;
+    --text-md: 0.9375rem;
+    --text-lg: 1.125rem;
+    --text-xl: clamp(1.375rem, 1.15rem + 0.9vw, 1.75rem);
+    --text-2xl: clamp(2rem, 1.3rem + 2.8vw, 3.5rem);
+    --text-display: clamp(4.5rem, 2.4rem + 8.5vw, 9.5rem);
+
+    --leading-tight: 1.02;
+    --leading-snug: 1.25;
+    --leading-body: 1.55;
+    --tracking-label: 0.09em;
+    --tracking-tight: -0.025em;
+
+    /* Space, on a 4px grid */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-20: 5rem;
+
+    --page-gutter: clamp(1rem, 0.3rem + 3vw, 3rem);
+    --page-max: 86rem;
+
+    /* Paper has no rounded corners and casts no shadows. */
+    --radius-tag: 2px;
+    --hairline: 1px;
+
+    --ease-out: cubic-bezier(0.22, 0.8, 0.26, 1);
+    --duration-fast: 120ms;
+    --duration-base: 220ms;
+    --duration-slow: 480ms;
+
+    color-scheme: light dark;
+  }
+
+  :root[data-theme='paper'] {
+    color-scheme: light;
+  }
+
+  :root[data-theme='film'] {
+    color-scheme: dark;
+  }
+}

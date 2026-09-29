@@ -1,0 +1,277 @@
+/*
+ * The design system's global vocabulary: typographic roles and the handful of
+ * patterns that are markup rather than components (a readout is a `<dl>`, a
+ * log is a `<table>`, and wrapping either in a component would only hide the
+ * semantics). Components with behaviour live in `app/ui`.
+ */
+@layer components {
+  /* Typographic roles */
+
+  .eyebrow {
+    font-size: var(--text-2xs);
+    font-weight: 620;
+    font-stretch: var(--width-condensed);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--content-secondary);
+  }
+
+  .title {
+    font-size: var(--text-2xl);
+    font-weight: 720;
+    font-stretch: var(--width-normal);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .section-title {
+    font-size: var(--text-lg);
+    font-weight: 680;
+    letter-spacing: -0.01em;
+  }
+
+  .lede {
+    font-size: var(--text-lg);
+    line-height: 1.5;
+    color: var(--content-secondary);
+    max-width: 58ch;
+  }
+
+  .note {
+    font-size: var(--text-sm);
+    color: var(--content-tertiary);
+    max-width: 72ch;
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+    font-stretch: 87.5%;
+    font-variant-numeric: tabular-nums slashed-zero;
+    letter-spacing: -0.01em;
+  }
+
+  /* Readouts: an instrument panel, label above value, divided by rules */
+
+  .readouts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    border-block: var(--hairline) solid var(--rule-strong);
+  }
+
+  .readout {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    align-content: start;
+    gap: var(--space-2);
+    padding: var(--space-4) 0 var(--space-5);
+
+    & + & {
+      border-top: var(--hairline) solid var(--rule);
+    }
+
+    & dt {
+      font-size: var(--text-2xs);
+      font-weight: 620;
+      font-stretch: var(--width-condensed);
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--content-secondary);
+    }
+
+    & dd {
+      display: grid;
+      gap: var(--space-1);
+      margin: 0;
+    }
+  }
+
+  /* Two columns, then four: rules follow the grid rather than the source order. */
+  @media (width >= 36rem) {
+    .readouts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .readout {
+      & + & {
+        border-top: 0;
+      }
+
+      &:nth-child(2n) {
+        border-inline-start: var(--hairline) solid var(--rule);
+        padding-inline-start: var(--space-5);
+      }
+
+      &:nth-child(2n + 1) {
+        padding-inline-end: var(--space-5);
+      }
+
+      &:nth-child(n + 3) {
+        border-top: var(--hairline) solid var(--rule);
+      }
+    }
+  }
+
+  @media (width >= 64rem) {
+    .readouts {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .readout {
+      &:nth-child(n) {
+        border-top: 0;
+        padding-inline: var(--space-5);
+      }
+
+      &:not(:first-child) {
+        border-inline-start: var(--hairline) solid var(--rule);
+      }
+
+      &:first-child {
+        padding-inline-start: 0;
+      }
+
+      &:last-child {
+        padding-inline-end: 0;
+      }
+    }
+  }
+
+  .readout__value {
+    font-family: var(--font-mono);
+    font-size: var(--text-xl);
+    font-weight: 460;
+    font-stretch: 87.5%;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums slashed-zero;
+    letter-spacing: -0.03em;
+  }
+
+  .readout__unit {
+    font-size: 0.6em;
+    color: var(--content-tertiary);
+    letter-spacing: 0;
+    margin-inline-start: 0.2em;
+  }
+
+  .readout__hint {
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    color: var(--content-secondary);
+  }
+
+  /* Tags: how sure the catalogue is. A solid rule once reviewed, dashed while provisional */
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    padding: 0.1em 0.5em 0.15em;
+    border: var(--hairline) solid currentColor;
+    border-radius: var(--radius-tag);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    font-stretch: var(--width-condensed);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .tag--solid {
+    color: var(--content-primary);
+  }
+
+  .tag--dashed {
+    border-style: dashed;
+    color: var(--content-secondary);
+  }
+
+  .tag--accent {
+    color: var(--content-accent);
+  }
+
+  /* The log: a ledger, not a data grid */
+
+  .ledger {
+    width: 100%;
+    font-size: var(--text-sm);
+
+    & th {
+      padding: var(--space-2) var(--space-3);
+      border-bottom: var(--hairline) solid var(--rule-strong);
+      font-size: var(--text-2xs);
+      font-weight: 620;
+      font-stretch: var(--width-condensed);
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      text-align: start;
+      color: var(--content-secondary);
+      white-space: nowrap;
+    }
+
+    & td {
+      padding: var(--space-2) var(--space-3);
+      border-bottom: var(--hairline) solid var(--rule-faint);
+      vertical-align: baseline;
+    }
+
+    & th:first-child,
+    & td:first-child {
+      padding-inline-start: 0;
+    }
+
+    & th:last-child,
+    & td:last-child {
+      padding-inline-end: 0;
+    }
+
+    & tbody tr {
+      transition: background-color var(--duration-fast) var(--ease-out);
+    }
+
+    & tbody tr:has(a:hover, a:focus-visible) {
+      background: var(--surface-sunken);
+    }
+
+    & .numeric {
+      text-align: end;
+    }
+  }
+
+  /* A plain text button, for the rare action that is not navigation */
+
+  .text-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) 0;
+    border: 0;
+    background: none;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: var(--hairline);
+    text-underline-offset: 0.22em;
+  }
+
+  /* Callout: what the reader must know before trusting the page */
+
+  .callout {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    border-inline-start: 3px solid var(--content-accent);
+    background: var(--surface-sunken);
+    font-size: var(--text-sm);
+  }
+}
+
+@layer utilities {
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+  }
+}

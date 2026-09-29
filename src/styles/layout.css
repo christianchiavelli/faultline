@@ -1,0 +1,12 @@
+@layer layout {
+  .page {
+    width: min(100% - 2 * var(--page-gutter), var(--page-max));
+    margin-inline: auto;
+  }
+
+  .stack {
+    display: grid;
+    gap: var(--stack-gap, var(--space-4));
+    align-content: start;
+  }
+}
