@@ -1,0 +1,276 @@
+<ui-dialog [(open)]="open" heading="Export events" eyebrow="USGS catalogue" [lede]="lede()">
+  <form class="fields" novalidate (submit)="$event.preventDefault()">
+    @if (anchor()) {
+      <fieldset class="field">
+        <legend class="label">Where</legend>
+        <div class="controls">
+          <div class="segmented">
+            <label class="segmented__item">
+              <input class="visually-hidden" type="radio" value="world" [formField]="form.area" />
+              The whole world
+            </label>
+            <label class="segmented__item">
+              <input class="visually-hidden" type="radio" value="near" [formField]="form.area" />
+              Near this event
+            </label>
+          </div>
+          @if (model().area === 'near') {
+            <fieldset class="nested">
+              <legend class="visually-hidden">Distance from the epicentre</legend>
+              <div class="segmented">
+                @for (choice of radii; track choice.value) {
+                  <label class="segmented__item">
+                    <input
+                      class="visually-hidden"
+                      type="radio"
+                      [value]="choice.value"
+                      [formField]="form.radiusKm"
+                    />
+                    {{ choice.label }}
+                  </label>
+                }
+              </div>
+            </fieldset>
+            <p class="hint">Distance from the epicentre.</p>
+          }
+        </div>
+      </fieldset>
+    }
+
+    <fieldset class="field">
+      <legend class="label">Period</legend>
+      <div class="controls">
+        <div class="segmented">
+          @for (choice of periods(); track choice.value) {
+            <label class="segmented__item">
+              <input
+                class="visually-hidden"
+                type="radio"
+                [value]="choice.value"
+                [formField]="form.period"
+              />
+              {{ choice.label }}
+            </label>
+          }
+        </div>
+        @if (model().period === 'custom') {
+          <div class="dates">
+            <label class="date">
+              <span>From</span>
+              <input
+                type="date"
+                [formField]="form.custom.from"
+                [attr.aria-describedby]="fromError() ? 'export-from-error' : null"
+              />
+            </label>
+            <label class="date">
+              <span>To</span>
+              <input
+                type="date"
+                [formField]="form.custom.to"
+                [attr.aria-describedby]="toError() ? 'export-to-error' : null"
+              />
+            </label>
+          </div>
+          @if (fromError(); as error) {
+            <p class="error" id="export-from-error">{{ error }}</p>
+          }
+          @if (toError(); as error) {
+            <p class="error" id="export-to-error">{{ error }}</p>
+          }
+        } @else {
+          <p class="hint">{{ periodText() }}</p>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend class="label">Smallest magnitude</legend>
+      <div class="controls">
+        <div class="segmented">
+          @for (choice of magnitudes; track choice.value) {
+            <label class="segmented__item">
+              <input
+                class="visually-hidden"
+                type="radio"
+                [value]="choice.value"
+                [formField]="form.magnitude"
+              />
+              {{ choice.label }}
+            </label>
+          }
+        </div>
+        <p class="hint">
+          Magnitudes come on different scales; the file names the scale of each one.
+        </p>
+      </div>
+    </fieldset>
+
+    @if (!anchor()) {
+      <div class="field">
+        <p class="label">Where</p>
+        <div class="controls">
+          <p>The whole world</p>
+          <p class="hint">Open an event to export the events around it.</p>
+        </div>
+      </div>
+    }
+
+    <fieldset class="field">
+      <legend class="label">Review</legend>
+      <div class="controls">
+        <div class="segmented">
+          @for (choice of reviews; track choice.value) {
+            <label class="segmented__item">
+              <input
+                class="visually-hidden"
+                type="radio"
+                [value]="choice.value"
+                [formField]="form.review"
+              />
+              {{ choice.label }}
+            </label>
+          }
+        </div>
+        <p class="hint">
+          Automatic events were placed by software and can still move, change size or be deleted.
+        </p>
+      </div>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend class="label">Kind of event</legend>
+      <div class="controls">
+        <div class="segmented">
+          @for (choice of kinds; track choice.value) {
+            <label class="segmented__item">
+              <input
+                class="visually-hidden"
+                type="radio"
+                [value]="choice.value"
+                [formField]="form.kind"
+              />
+              {{ choice.label }}
+            </label>
+          }
+        </div>
+        <p class="hint">
+          All seismic events include explosions and quarry blasts; the file says which is which.
+        </p>
+      </div>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend class="label">File</legend>
+      <div class="controls">
+        <div class="files">
+          <label class="file">
+            <input class="visually-hidden" type="radio" value="csv" [formField]="form.format" />
+            <b>Spreadsheet</b>
+            <span class="hint"
+              >CSV, {{ columns }} columns, with the location and magnitude errors</span
+            >
+          </label>
+          <label class="file">
+            <input class="visually-hidden" type="radio" value="geojson" [formField]="form.format" />
+            <b>Map data</b>
+            <span class="hint">GeoJSON, one point per event, the same fields</span>
+          </label>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+
+  <div
+    uiDialogFooter
+    class="result"
+    aria-live="polite"
+    [attr.aria-busy]="count.isFetching() ? 'true' : null"
+  >
+    @switch (footer().kind) {
+      @case ('invalid') {
+        <p class="hint">Fix the dates above to count the events.</p>
+        <div class="actions">
+          <button type="button" class="text-button" (click)="close()">Cancel</button>
+        </div>
+      }
+      @case ('counting') {
+        <p class="counting">Counting the events…</p>
+        <div class="actions">
+          <button type="button" class="text-button" (click)="close()">Cancel</button>
+        </div>
+      }
+      @case ('error') {
+        <p class="hint">The USGS did not answer the count.</p>
+        <div class="actions">
+          <button type="button" class="text-button" (click)="close()">Cancel</button>
+          <button type="button" class="button" (click)="count.refetch()">Try again</button>
+        </div>
+      }
+      @default {
+        @let result = footer();
+        @if ('count' in result) {
+          @if (result.kind === 'over') {
+            <div class="over">
+              <p class="value">
+                {{ result.count | number }}<small>{{ result.count | i18nPlural: events }}</small>
+              </p>
+              <p class="hint">
+                More than one file holds. An export stops at {{ limit | number }} events, about 26
+                MB as CSV. Narrow it to fit:
+              </p>
+              @if (suggestions().length) {
+                <div class="suggestions">
+                  @for (suggestion of suggestions(); track suggestion.label) {
+                    @let count = suggestion.count;
+                    <button type="button" class="suggestion" (click)="apply(suggestion)">
+                      {{ suggestion.label }}
+                      <span>{{ count | number }} {{ count | i18nPlural: events }}</span>
+                    </button>
+                  }
+                </div>
+              }
+              <div class="actions">
+                <button type="button" class="text-button" (click)="close()">Cancel</button>
+                <a
+                  class="hint"
+                  href="https://earthquake.usgs.gov/earthquakes/search/"
+                  rel="external"
+                >
+                  Or search the whole catalogue on earthquake.usgs.gov<ui-icon
+                    class="trailing-icon"
+                    name="arrow-up-right-from-square"
+                  />
+                </a>
+              </div>
+            </div>
+          } @else {
+            <div class="count" [class.count--settling]="!result.settled">
+              <p class="value">
+                {{ result.count | number }}<small>{{ result.count | i18nPlural: events }}</small>
+              </p>
+              <p class="hint">
+                @if (!result.settled) {
+                  Counting…
+                } @else if (result.kind === 'empty') {
+                  Nothing matches. Try a longer period or a smaller magnitude.
+                } @else {
+                  {{ fileText() }}
+                }
+              </p>
+            </div>
+            <div class="actions">
+              <button type="button" class="text-button" (click)="close()">Cancel</button>
+              @if (result.kind === 'ready' && result.settled && downloadUrl(); as url) {
+                <a class="button" [href]="url" download (click)="close()">
+                  <ui-icon name="download" />
+                  Download {{ result.count | number }} {{ result.count | i18nPlural: events }}
+                </a>
+              }
+            </div>
+          }
+        }
+      }
+    }
+  </div>
+</ui-dialog>

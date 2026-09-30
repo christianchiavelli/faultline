@@ -130,7 +130,9 @@
     </section>
 
     @defer (on viewport; hydrate on viewport) {
-      <fl-event-log [quakes]="feed.quakes" [filter]="filter()" />
+      <fl-event-log [quakes]="feed.quakes" [filter]="filter()">
+        <fl-export-button [minMagnitude]="filter()" />
+      </fl-event-log>
     } @placeholder {
       <div class="log-placeholder" aria-hidden="true"></div>
     }

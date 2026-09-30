@@ -136,6 +136,7 @@
     <div class="context">
       <section class="where" aria-labelledby="where-title">
         <h2 class="section-title" id="where-title">Where</h2>
+        <p class="export"><fl-export-button [event]="view.quake" /></p>
         <fl-world-chart
           [quakes]="[view.quake]"
           [focus]="view.quake.id"
@@ -187,7 +188,11 @@
           </div>
         </dl>
         <p>
-          <a [href]="view.quake.url" rel="external">The full event page on earthquake.usgs.gov</a>
+          <a [href]="view.quake.url" rel="external"
+            >The full event page on earthquake.usgs.gov<ui-icon
+              class="trailing-icon"
+              name="arrow-up-right-from-square"
+          /></a>
         </p>
       </section>
     </div>

@@ -1,0 +1,217 @@
+/* One row per choice: its label in a narrow column, the controls beside it. */
+.field {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: var(--space-4) 0;
+  border: 0;
+  border-bottom: var(--hairline) solid var(--rule);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.label {
+  float: inline-start;
+  padding: 0.4rem 0 0;
+  font-size: var(--text-2xs);
+  font-weight: 650;
+  font-stretch: var(--width-condensed);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--content-secondary);
+}
+
+.controls {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  font-size: var(--text-sm);
+}
+
+.nested {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.hint {
+  font-size: var(--text-xs);
+  color: var(--content-tertiary);
+}
+
+.error {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--content-accent);
+}
+
+.dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.date {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--content-secondary);
+
+  & input {
+    padding: var(--space-1) var(--space-2);
+    border: var(--hairline) solid var(--rule-strong);
+    background: var(--surface-page);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--content-primary);
+    color-scheme: inherit;
+  }
+
+  & input[aria-describedby] {
+    border-color: var(--content-accent);
+  }
+}
+
+.files {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.file {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: var(--hairline) solid var(--rule);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface-sunken);
+  }
+
+  &:has(:checked) {
+    border-color: var(--content-primary);
+    box-shadow: inset 0 0 0 1px var(--content-primary);
+  }
+
+  &:has(:focus-visible) {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-6);
+}
+
+.count {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  line-height: 1;
+  transition: color var(--duration-fast) var(--ease-out);
+
+  & small {
+    margin-inline-start: var(--space-2);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--content-tertiary);
+  }
+}
+
+/*
+ * The last count stays up while the next one loads, visibly provisional. In a
+ * lighter ink rather than faded: at the opacity that reads as provisional,
+ * the label and the "Counting…" beside it fall below AA contrast.
+ */
+.count--settling .value {
+  color: var(--content-tertiary);
+}
+
+.counting {
+  font-size: var(--text-sm);
+  color: var(--content-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.over {
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+
+  & > .hint {
+    max-width: var(--measure);
+    font-size: var(--text-sm);
+    color: var(--content-secondary);
+  }
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.suggestion {
+  display: grid;
+  gap: 0.15rem;
+  padding: var(--space-2) var(--space-4);
+  border: var(--hairline) solid var(--content-primary);
+  background: var(--surface-page);
+  text-align: start;
+  font-size: var(--text-sm);
+  font-weight: 600;
+
+  & span {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 400;
+    color: var(--content-secondary);
+  }
+
+  &:hover {
+    background: var(--surface-sunken);
+  }
+}
+
+@media (max-width: 40rem) {
+  .field {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .label {
+    padding: 0;
+  }
+
+  .files {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: space-between;
+
+    & .button {
+      flex: 1;
+    }
+  }
+}

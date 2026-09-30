@@ -95,6 +95,11 @@
   gap: var(--space-4);
 }
 
+/* Set a little apart from the heading above and the map it exports from. */
+.export {
+  margin-block: var(--space-2) var(--space-3);
+}
+
 .facts {
   display: grid;
   gap: var(--space-4);

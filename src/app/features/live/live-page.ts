@@ -10,6 +10,7 @@ import { summarise } from '@shared/domain/summary';
 import { AgoPipe } from '@ui/ago.pipe';
 import { capitalise } from '@ui/text';
 import { WorldChart } from '../common/world-chart/world-chart';
+import { ExportButton } from '../export/export-button';
 import { EventLog, parseMagnitudeFilter } from './event-log/event-log';
 import { Helicorder } from './helicorder/helicorder';
 
@@ -23,7 +24,16 @@ const FEED_LATE_MS = 5 * 60_000;
 
 @Component({
   selector: 'fl-live-page',
-  imports: [RouterLink, DatePipe, PercentPipe, AgoPipe, Helicorder, WorldChart, EventLog],
+  imports: [
+    RouterLink,
+    DatePipe,
+    PercentPipe,
+    AgoPipe,
+    Helicorder,
+    WorldChart,
+    EventLog,
+    ExportButton,
+  ],
   templateUrl: './live-page.html',
   styleUrl: './live-page.css',
 })

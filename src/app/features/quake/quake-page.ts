@@ -12,8 +12,10 @@ import { magnitudeScale, radiatedEnergy } from '@shared/domain/magnitude';
 import { networkName } from '@shared/domain/network';
 import { AgoPipe } from '@ui/ago.pipe';
 import { formatDuration } from '@ui/duration';
+import { Icon } from '@ui/icon';
 import { capitalise } from '@ui/text';
 import { WorldChart } from '../common/world-chart/world-chart';
+import { ExportButton } from '../export/export-button';
 
 /** Above this the epicentre is poorly constrained: stations only see it from one side. */
 const WIDE_GAP_DEG = 180;
@@ -23,7 +25,7 @@ const TNT_TONNE_J = 4.184e9;
 
 @Component({
   selector: 'fl-quake-page',
-  imports: [RouterLink, DatePipe, DecimalPipe, AgoPipe, WorldChart],
+  imports: [RouterLink, DatePipe, DecimalPipe, AgoPipe, Icon, WorldChart, ExportButton],
   templateUrl: './quake-page.html',
   styleUrl: './quake-page.css',
 })
