@@ -26,10 +26,11 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 ## Conventions
 
 - Angular 22 idioms: standalone components (never set `standalone`), OnPush is the default (never set it), `input()`/`output()`, signals and `computed()`, `@if`/`@for`, `inject()`, `@Service()` for new singletons, host bindings in `host: {}`.
-- Data: `httpResource` via `core/api/quakes.ts`; read values behind `hasValue()`. No stores: URL state goes through router input binding. Server state that needs a client cache, like the export's live count, is TanStack Query, provided through `QUERY_CLIENT` in the lazy chunk that uses it, never in the app config.
+- Data: `httpResource` via `core/api/quakes.ts`; read values behind `hasValue()`. No stores: URL state goes through router input binding. The log's is one `LogQuery` (`event-log/log-query.ts`): a parameter per filter, named after what it sets, holding a word that reads on its own, defaults left out and the rest written in one order. Server state that needs a client cache, like the export's live count, is TanStack Query, provided through `QUERY_CLIENT` in the lazy chunk that uses it, never in the app config.
 - Styles: component CSS reads semantic tokens only (`src/styles/tokens.css`). New colours are added as primitives and exposed through a semantic token with `light-dark()`. No Tailwind, no component library.
 - Selectors: `fl-` for app components, `ui-` for design-system components.
 - Dialogs: `ui-dialog`, on the native `<dialog>`; never a hand-built overlay. A dialog's code is its own chunk, rendered with `@defer (when open(); prefetch on idle)`.
+- Filters that are links show the count their view would hold, the other filters kept (see `facets.ts`); an option that would empty the list is text, not a link.
 - Live lists never move under the reader: an arrival waits behind a count while the list is on screen or scrolled past, and comes in when asked for (see `event-log.ts`).
 - Charts: SVG drawn by a pure module beside the component (`trace.ts`, `distribution.ts`), so the server and the browser draw the same thing. The drawing is `aria-hidden`, and what it says is also in text: a caption, and where the numbers matter a visually hidden table.
 - Icons: drawn for the app, no icon library. Each is one path in `ui/icons.ts`, the centre line of its strokes on a 16 px grid inside a two-unit margin; `ui-icon` strokes it with the wordmark's square ends. Beside a word an icon is decoration; a control that has only an icon, like a dialog's close button, carries an `aria-label`. A standalone link to another site ends with the external-link icon; a link inside running text does not.
@@ -52,6 +53,9 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - A visually hidden `<table>` still widens the page, since a table grows to fit its cells whatever width it is given: hide a wrapper `div` instead (see `magnitude-chart.html`).
 - The trace is a target of its own, so every label on it is a target beside another, and WCAG 2.5.8 then wants it 24 px tall. The labels keep their look by masking only the band behind their text (see `helicorder.css`).
 - The initial bundle budget is tight on purpose, 400 kB to warn and 450 kB to fail. A library that drags all of Angular into the first load shows up there first: find the cause with `pnpm build --stats-json` rather than raise the budget.
+- A library pipe or directive used only inside a `@defer` block is imported through its package's whole namespace, which keeps every export of it in the first load. Put the block's content in a component of the app instead (see `log-sheet.ts`).
+- A `<table>` restyled with `display: grid` or `block` loses its semantics in some browsers. The log's spells out its roles in the markup so the phone layout can restyle it (see `event-log.html`).
+- A USGS place name is a locality, then the region after the last comma; the Californian networks write `CA` and `MX`, and a remote event has only a Flinn–Engdahl region. Read it with `splitPlace()` in `shared/domain/place.ts`, never by hand.
 - In a unit spec, a TanStack query in flight is a pending task, so `whenStable()` waits for an answer the spec has yet to give. Render with `TestBed.tick()` instead (see `export-dialog.spec.ts`).
 
 ## Design changes

@@ -77,6 +77,25 @@ const SHOTS: readonly Shot[] = [
   // M5.4 north of Svalbard: reviewed, depth fixed by the analyst, full uncertainty.
   { name: 'quake-paper', path: '/quakes/us6000ty57', scheme: 'light' },
   { name: 'live-phone-film', path: '/', scheme: 'dark', viewport: PHONE },
+  // Every Californian event of the day, largest first: the facets counted, the order in the heading.
+  {
+    name: 'log-film',
+    path: '/?mag=any&region=california&sort=largest',
+    scheme: 'dark',
+    area: 'fl-event-log',
+  },
+  // The filters of a phone, in their sheet over the log they filter.
+  {
+    name: 'log-phone-paper',
+    path: '/?depth=shallow',
+    scheme: 'light',
+    viewport: PHONE,
+    prepare: async (page) => {
+      await page.locator('fl-event-log').evaluate((log) => log.scrollIntoView({ block: 'start' }));
+      await page.getByRole('button', { name: /^Filters/ }).click();
+      await page.getByRole('dialog', { name: 'Filters' }).waitFor();
+    },
+  },
   // The M7.8 near Ende, 14 August 2026, and its aftershocks since.
   {
     name: 'export-paper',
