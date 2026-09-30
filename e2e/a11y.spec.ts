@@ -37,6 +37,16 @@ for (const theme of THEMES) {
       });
     }
 
+    test('the trace, read from the keyboard, meets WCAG 2.2 AA', async ({ page }) => {
+      await page.goto('/');
+      await waitForHydration(page);
+      await page.getByRole('slider', { name: 'Events on the trace' }).focus();
+      await page.keyboard.press('ArrowLeft');
+      await expect(page.locator('fl-helicorder .card')).toBeVisible();
+
+      expect(await audit(page)).toEqual([]);
+    });
+
     for (const { path, button, period } of DIALOGS) {
       test(`the export dialog on ${path} meets WCAG 2.2 AA`, async ({ page }) => {
         await page.goto(path);

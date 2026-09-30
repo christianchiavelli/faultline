@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { readout } from './support/page';
+import { readout, traceOrigin, waitForHydration } from './support/page';
 
 test('renders the whole day on the server, before any script runs', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
@@ -87,4 +87,82 @@ test('keeps a label at the very end of its hour inside the trace, on any screen'
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     page.viewportSize()!.width,
   );
+});
+
+test('reads any event off the trace, even one too small to draw, and opens it', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'A phone has no pointer to hover with');
+  await page.goto('/');
+  await waitForHydration(page);
+  const card = page.locator('fl-helicorder .card');
+  const origin = await traceOrigin(page, 'hv0001');
+
+  await page.mouse.move(origin.x + 2, origin.y - 2);
+
+  await expect(card).toContainText('M2.6ML');
+  await expect(card).toContainText('6 km SW of Pāhala, Hawaii');
+  await expect(card).toContainText('1.2 km above sea level');
+  await expect(card).toContainText('Reviewed');
+
+  await page.mouse.move(origin.x + 2, origin.y + 200);
+  await expect(card).toBeHidden();
+
+  // Content shown on hover can be dismissed without moving the pointer.
+  await page.mouse.move(origin.x + 2, origin.y - 2);
+  await expect(card).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(card).toBeHidden();
+
+  await page.mouse.click(origin.x + 2, origin.y - 2);
+  await expect(page).toHaveURL(/\/quakes\/hv0001$/);
+});
+
+test('reads a tapped event without leaving the page, and opens it from its card', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'A tap');
+  await page.goto('/');
+  await waitForHydration(page);
+  const card = page.locator('fl-helicorder .card');
+  const origin = await traceOrigin(page, 'ak0001');
+
+  // A finger lands wide of a burst this small, and still means it.
+  await page.touchscreen.tap(origin.x + 12, origin.y + 6);
+
+  await expect(card).toContainText('12 km NW of Anchorage, Alaska');
+  await expect(page).toHaveURL(/\/$/);
+
+  await card.locator('a').tap();
+  await expect(page).toHaveURL(/\/quakes\/ak0001$/);
+});
+
+test('steps through the trace from the keyboard, as through a slider', async ({ page }) => {
+  await page.goto('/');
+  await waitForHydration(page);
+  const trace = page.getByRole('slider', { name: 'Events on the trace' });
+  const card = page.locator('fl-helicorder .card');
+
+  // Tabbed into, the way a keyboard reader arrives.
+  for (let i = 0; i < 20 && !(await trace.evaluate((el) => el === document.activeElement)); i++) {
+    await page.keyboard.press('Tab');
+  }
+  await expect(trace).toBeFocused();
+  await expect(trace).toHaveAttribute('aria-valuetext', /^M1\.3 Md, 2 km NNW of The Geysers, CA,/);
+  await expect(card).toContainText('Other events');
+
+  await page.keyboard.press('ArrowLeft');
+  await expect(trace).toHaveAttribute(
+    'aria-valuetext',
+    /^M2\.8 Md, 8 km S of Guánica, Puerto Rico,/,
+  );
+  await expect(card).toContainText('8 km S of Guánica, Puerto Rico');
+
+  await page.keyboard.press('Escape');
+  await expect(card).toBeHidden();
+
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/quakes\/pr0001$/);
 });

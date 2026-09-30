@@ -49,3 +49,30 @@ export async function settled(locator: Locator): Promise<void> {
     ),
   );
 }
+
+const HOUR = 3_600_000;
+
+/**
+ * Where an event's origin sits on the helicorder, in page coordinates: the
+ * point a reader would move a pointer to, or tap. The drum's lines are read
+ * off the page itself, so an hour turning mid-test cannot shift them.
+ */
+export async function traceOrigin(page: Page, id: string): Promise<{ x: number; y: number }> {
+  const time = await page.evaluate(async (id) => {
+    const body = await (await fetch('/api/quakes/recent?window=day')).json();
+    return (body.quakes as { id: string; time: number }[]).find((quake) => quake.id === id)!.time;
+  }, id);
+  const current = Number(await page.locator('fl-helicorder .hours__current').textContent());
+  let last = Math.floor(Date.now() / HOUR) * HOUR;
+  if (new Date(last).getUTCHours() !== current) last -= HOUR;
+
+  const paper = page.locator('fl-helicorder .paper');
+  await paper.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+  const box = (await paper.boundingBox())!;
+  const since = time - (last - 23 * HOUR);
+  const row = Math.floor(since / HOUR);
+  return {
+    x: box.x + ((since - row * HOUR) / HOUR) * box.width,
+    y: box.y + ((row + 0.5) / 24) * box.height,
+  };
+}

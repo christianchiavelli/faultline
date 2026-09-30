@@ -64,8 +64,10 @@
 }
 
 .paper {
+  /* Between a line and its card: the pick bridges it, and the card's hover area covers it. */
+  --gap: 0.35rem;
   position: relative;
-  /* What the markers measure the room left on their line against. */
+  /* What the markers and the card measure the room left on their line against. */
   container-type: inline-size;
   background: var(--surface-chart);
   border-block: var(--hairline) solid var(--rule-strong);
@@ -116,13 +118,18 @@
  * the line ends first: then it moves back just enough to end at the edge.
  * Hanging past it, a label near the end of an hour widened the page on a
  * phone, and the browser zoomed the whole page out to fit it.
+ *
+ * A 24 px target, as WCAG 2.5.8 asks of one beside another, and the trace
+ * under it is one. Only the band behind the text masks the trace, so the
+ * lines above and below still show through the rest.
  */
 .marker {
+  --mask: var(--surface-chart);
   position: absolute;
   left: calc(var(--at) * 1%);
   translate: min(0.3rem, (100 - var(--at)) * 1cqi - 100%) -50%;
-  padding: 0 0.3rem;
-  background: var(--surface-chart);
+  padding: calc((1.5rem - 1.4em) / 2) 0.3rem;
+  background: linear-gradient(var(--mask) 0 0) center / 100% 1.4em no-repeat;
   font-size: var(--text-2xs);
   font-weight: 600;
   line-height: 1.4;
@@ -132,8 +139,183 @@
 
   &:hover,
   &:focus-visible {
-    background: var(--surface-accent);
+    --mask: var(--surface-accent);
   }
+}
+
+/* Reading an event: the line lit, a pick at the origin, and a card that names it. */
+
+.hours .hours__read {
+  color: var(--content-primary);
+  font-weight: 600;
+}
+
+.band,
+.pick,
+.origin,
+.pen-head {
+  pointer-events: none;
+}
+
+.band {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--top) * 1%);
+  height: calc(var(--line) * 1%);
+  background: var(--surface-sunken);
+}
+
+/* Over the whole paper, under the labels: what the pointer and the keyboard read with. */
+.reader {
+  position: absolute;
+  inset: 0;
+}
+
+.reader--over {
+  cursor: pointer;
+}
+
+.pick {
+  position: absolute;
+  left: calc(var(--at) * 1%);
+  top: calc(var(--top) * 1% - var(--gap));
+  height: calc(var(--line) * 1% + var(--gap));
+  border-inline-start: 1.5px solid var(--content-primary);
+  translate: -0.75px 0;
+}
+
+.pick--below {
+  top: calc(var(--top) * 1%);
+}
+
+.pick--pen {
+  border-color: var(--content-accent);
+}
+
+.origin {
+  position: absolute;
+  left: calc(var(--at) * 1%);
+  top: calc((var(--top) + var(--line) / 2) * 1%);
+  width: 0.45rem;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--content-primary);
+  box-shadow: 0 0 0 2px var(--surface-chart);
+}
+
+.origin--pen {
+  background: var(--content-accent);
+}
+
+/* Centred on the pick, and held inside the paper at either end, as the labels are. */
+.card {
+  --shift: clamp(var(--at) * -1cqi, -50%, (100 - var(--at)) * 1cqi - 100%);
+  position: absolute;
+  left: calc(var(--at) * 1%);
+  top: calc(var(--top) * 1% - var(--gap));
+  display: grid;
+  gap: 0.2rem;
+  width: max-content;
+  max-width: min(19rem, 100cqi);
+  padding: var(--space-2) var(--space-3);
+  border: var(--hairline) solid var(--rule-strong);
+  background: var(--surface-page);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  translate: var(--shift) -100%;
+
+  /* Moving up from the line into the card crosses the gap, not the line above. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: var(--gap);
+  }
+}
+
+.card--below {
+  top: calc((var(--top) + var(--line)) * 1% + var(--gap));
+  translate: var(--shift) 0;
+
+  &::after {
+    top: auto;
+    bottom: 100%;
+  }
+}
+
+.card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-5);
+}
+
+.card__magnitude {
+  font-size: var(--text-md);
+  font-weight: 600;
+
+  & abbr {
+    margin-inline-start: 0.3em;
+    font-size: 0.72em;
+    font-weight: 500;
+    color: var(--content-tertiary);
+  }
+}
+
+.card--pen .card__magnitude {
+  color: var(--content-accent);
+}
+
+.card__time {
+  font-size: var(--text-xs);
+  color: var(--content-secondary);
+}
+
+.card__place {
+  font-weight: 600;
+  text-decoration-color: currentColor;
+}
+
+.card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--content-tertiary);
+}
+
+.card__kind {
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--content-secondary);
+}
+
+.card__keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin-block-start: var(--space-1);
+  padding-block-start: var(--space-2);
+  border-top: var(--hairline) solid var(--rule-faint);
+  font-size: var(--text-2xs);
+  color: var(--content-tertiary);
+
+  & kbd {
+    margin-inline-end: 0.3em;
+    padding: 0 0.35em;
+    border: var(--hairline) solid var(--rule);
+    border-radius: var(--radius-tag);
+    font-family: var(--font-mono);
+    color: var(--content-secondary);
+  }
+}
+
+.missing {
+  color: var(--content-tertiary);
 }
 
 .pen-head {

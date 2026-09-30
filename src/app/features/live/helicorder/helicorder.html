@@ -11,11 +11,17 @@
   <div class="drum">
     <ol class="hours mono" role="list" aria-hidden="true">
       @for (hour of hourLabels(); track hour.start) {
-        <li [class.hours__current]="hour.current">{{ hour.text }}</li>
+        <li [class.hours__current]="hour.current" [class.hours__read]="reading()?.row === $index">
+          {{ hour.text }}
+        </li>
       }
     </ol>
 
-    <div class="paper">
+    <div class="paper" #paper (pointerleave)="leave($event)">
+      @if (reading(); as reading) {
+        <div class="band" [style.--top]="reading.top" [style.--line]="line"></div>
+      }
+
       <svg
         class="trace"
         [attr.viewBox]="viewBox"
@@ -42,6 +48,45 @@
         }
       </svg>
 
+      @if (placed().length) {
+        <div
+          class="reader"
+          [class.reader--over]="reading()?.source === 'pointer'"
+          role="slider"
+          tabindex="0"
+          aria-label="Events on the trace"
+          aria-valuemin="1"
+          [attr.aria-valuemax]="placed().length"
+          [attr.aria-valuenow]="position() + 1"
+          [attr.aria-valuetext]="positionText()"
+          [attr.aria-describedby]="hintId"
+          (pointermove)="hover($event)"
+          (pointerdown)="press($event)"
+          (click)="open($event)"
+          (keydown)="key($event)"
+          (focus)="focused($event)"
+          (blur)="blurred()"
+        ></div>
+      }
+
+      @if (reading(); as reading) {
+        <span
+          class="pick"
+          [class.pick--pen]="reading.pen"
+          [class.pick--below]="reading.below"
+          [style.--at]="reading.at"
+          [style.--top]="reading.top"
+          [style.--line]="line"
+        ></span>
+        <span
+          class="origin"
+          [class.origin--pen]="reading.pen"
+          [style.--at]="reading.at"
+          [style.--top]="reading.top"
+          [style.--line]="line"
+        ></span>
+      }
+
       @for (marker of markers(); track marker.id) {
         <a
           class="marker mono"
@@ -49,13 +94,71 @@
           [style.--at]="marker.left"
           [style.top.%]="marker.top"
           [attr.aria-label]="marker.label"
+          (pointerenter)="readMarker($event, marker.id)"
           >{{ marker.text }}</a
         >
       }
 
       <span class="pen-head" [style.left.%]="pen().left" [style.top.%]="pen().top"></span>
+
+      <!-- Seen, not heard: the slider's value says the same to a screen reader. -->
+      @if (reading(); as reading) {
+        <div
+          class="card"
+          [class.card--pen]="reading.pen"
+          [class.card--below]="reading.below"
+          [style.--at]="reading.at"
+          [style.--top]="reading.top"
+          [style.--line]="line"
+          aria-hidden="true"
+        >
+          <p class="card__head">
+            @if (reading.magnitude; as magnitude) {
+              <span class="card__magnitude mono"
+                >M{{ magnitude
+                }}<abbr [title]="reading.scale!.title">{{ reading.scale!.code }}</abbr></span
+              >
+            } @else {
+              <span class="card__magnitude mono missing">—</span>
+            }
+            <span class="card__time mono">{{ reading.time | date: 'HH:mm:ss' : 'UTC' }} UTC</span>
+          </p>
+          <a class="card__place" [routerLink]="['/quakes', reading.id]" tabindex="-1">{{
+            reading.place
+          }}</a>
+          <p class="card__meta">
+            @if (reading.depth; as depth) {
+              <span
+                ><span class="mono">{{ depth.km }} km</span>
+                {{ depth.above ? 'above sea level' : 'deep' }}</span
+              >
+            } @else {
+              <span>Depth <span class="missing">—</span></span>
+            }
+            @if (reading.kind; as kind) {
+              <span class="tag card__kind">{{ kind }}</span>
+            }
+            @if (reading.reviewed) {
+              <span class="tag tag--solid">Reviewed</span>
+            } @else {
+              <span class="tag tag--dashed">Automatic</span>
+            }
+          </p>
+          @if (reading.source === 'keyboard') {
+            <p class="card__keys">
+              <span><kbd>←</kbd><kbd>→</kbd>Other events</span>
+              <span><kbd>Enter</kbd>Open</span>
+              <span><kbd>Esc</kbd>Close</span>
+            </p>
+          }
+        </div>
+      }
     </div>
   </div>
+
+  <p class="visually-hidden" [id]="hintId">
+    The arrow keys go from event to event, and Enter opens the one read.
+  </p>
 
   <figcaption class="legend">
     <span class="legend__item">One line per hour, read left to right, top to bottom.</span>
