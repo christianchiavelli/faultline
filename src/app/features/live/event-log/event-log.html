@@ -44,24 +44,32 @@
         </caption>
         <thead>
           <tr>
-            <th scope="col">UTC</th>
-            <th scope="col" class="numeric">Mag</th>
-            <th scope="col">Where</th>
-            <th scope="col" class="numeric">Depth km</th>
-            <th scope="col">Status</th>
+            <th scope="col" class="col-time">UTC</th>
+            <th scope="col" class="col-mag numeric">Mag</th>
+            <th scope="col" class="col-where">Where</th>
+            <th scope="col" class="col-region">Region</th>
+            <th scope="col" class="col-position numeric">Lat, lon</th>
+            <th scope="col" class="col-depth numeric">Depth km</th>
+            <th scope="col" class="col-status">Status</th>
           </tr>
         </thead>
         @for (day of days(); track day.day) {
           <tbody>
             <tr class="day">
-              <th scope="rowgroup" colspan="5">{{ day.day | date: 'EEEE d MMMM' : 'UTC' }}</th>
+              <th scope="rowgroup" colspan="7">{{ day.day | date: 'EEEE d MMMM' : 'UTC' }}</th>
             </tr>
             @for (row of day.rows; track row.id) {
               <tr [class.row--fresh]="row.fresh">
-                <td class="mono time">{{ row.time | date: 'HH:mm:ss' : 'UTC' }}</td>
-                <td class="numeric">
+                <td class="time">
+                  <time class="mono" [attr.datetime]="row.iso">{{
+                    row.time | date: 'HH:mm:ss' : 'UTC'
+                  }}</time>
+                  <span class="ago">{{ row.time | ago: now() }}</span>
+                </td>
+                <td class="numeric magnitude" [class.magnitude--notable]="row.notable">
                   @if (row.magnitude; as magnitude) {
-                    <span class="mono magnitude">{{ magnitude }}</span>
+                    <span class="dot" aria-hidden="true" [style.--dot.px]="row.dot"></span>
+                    <span class="mono value">{{ magnitude }}</span>
                     <abbr class="scale" [title]="row.scale!.title">{{ row.scale!.code }}</abbr>
                   } @else {
                     <span class="missing" title="No magnitude computed yet">—</span>
@@ -73,13 +81,27 @@
                     class="ledger__link"
                     [routerLink]="['/quakes', row.id]"
                     [attr.data-id]="row.id"
-                    >{{ row.place }}</a
+                    >{{ row.where }}</a
                   >
+                  @if (row.inlineRegion; as region) {
+                    <span class="place__region">, {{ region }}</span>
+                  }
                   @if (row.kind; as kind) {
                     <span class="tag kind">{{ kind }}</span>
                   }
                 </td>
-                <td class="mono numeric">
+                <td class="region">
+                  @if (row.region; as region) {
+                    {{ region }}
+                  } @else {
+                    <span class="missing">—</span>
+                  }
+                </td>
+                <td class="mono numeric position">
+                  <span>{{ row.latitude }}</span
+                  >&ngsp;<span>{{ row.longitude }}</span>
+                </td>
+                <td class="mono numeric depth">
                   @if (row.depth; as depth) {
                     <span [attr.title]="row.depthTitle">{{ depth }}</span>
                   } @else {

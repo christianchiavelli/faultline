@@ -46,26 +46,119 @@
   }
 }
 
+/* Seven columns sharing the width, so no single one opens a gap across the middle of the row. */
+.ledger {
+  & .col-time {
+    width: 12%;
+  }
+
+  & .col-mag {
+    width: 8%;
+  }
+
+  & .col-where {
+    width: 30%;
+  }
+
+  & .col-region {
+    width: 16%;
+  }
+
+  & .col-position {
+    width: 14%;
+  }
+
+  & .col-depth {
+    width: 9%;
+  }
+
+  & .col-status {
+    width: 11%;
+  }
+}
+
 .time {
   color: var(--content-secondary);
   white-space: nowrap;
 }
 
-.magnitude {
-  font-weight: 560;
-}
-
-.scale {
-  margin-inline-start: 0.35em;
+.ago {
+  margin-inline-start: var(--space-2);
   font-size: var(--text-2xs);
   color: var(--content-tertiary);
 }
 
-.place {
-  width: 100%;
+.magnitude {
+  white-space: nowrap;
+}
 
-  & a {
-    text-decoration-color: transparent;
+/*
+ * The map's symbol for the same event: its size tells the magnitude, and the
+ * pen marks what is notable. Centred in a fixed box, so the values line up.
+ */
+.dot {
+  --box: 16px;
+
+  display: inline-block;
+  width: var(--dot);
+  height: var(--dot);
+  margin-inline: calc((var(--box) - var(--dot)) / 2)
+    calc((var(--box) - var(--dot)) / 2 + var(--space-2));
+  /* Its centre on the middle of the digits rather than of the lowercase letters. */
+  vertical-align: calc(0.36em - var(--dot) / 2);
+  border-radius: 50%;
+  background: color-mix(in oklch, var(--trace-ink) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--trace-ink) 62%, transparent);
+}
+
+.value {
+  font-weight: 560;
+}
+
+.magnitude--notable {
+  & .dot {
+    background: color-mix(in oklch, var(--trace-pen) 26%, transparent);
+    box-shadow: inset 0 0 0 1px var(--trace-pen);
+  }
+
+  & .value {
+    color: var(--content-accent);
+  }
+}
+
+.scale {
+  display: inline-block;
+  min-width: 1.8em;
+  margin-inline-start: 0.35em;
+  font-size: var(--text-2xs);
+  text-align: start;
+  color: var(--content-tertiary);
+}
+
+.place a {
+  text-decoration-color: transparent;
+}
+
+/* On a phone the region has no column of its own, so it follows the locality. */
+.place__region {
+  display: none;
+}
+
+.region {
+  color: var(--content-secondary);
+}
+
+.position {
+  white-space: nowrap;
+  color: var(--content-tertiary);
+
+  & span {
+    display: inline-block;
+    min-width: 8.5ch;
+  }
+
+  & span + span {
+    min-width: 9.5ch;
   }
 }
 
@@ -151,9 +244,23 @@
   max-width: none;
 }
 
-@media (width < 44rem) {
-  .ledger th:nth-child(4),
-  .ledger td:nth-child(4) {
+@media (width < 64rem) {
+  .ledger .col-position,
+  .ledger .position {
     display: none;
+  }
+}
+
+@media (width < 44rem) {
+  .ledger .col-region,
+  .ledger .region,
+  .ledger .col-depth,
+  .ledger .depth,
+  .ago {
+    display: none;
+  }
+
+  .place__region {
+    display: inline;
   }
 }

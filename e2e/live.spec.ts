@@ -80,7 +80,7 @@ test('is upfront about the awkward records', async ({ page }) => {
   await expect(log.getByText('explosion', { exact: true })).toBeVisible();
   await expect(log.getByTitle('1.2 km above sea level')).toHaveText('−1.2');
   await expect(log.getByTitle('No magnitude computed yet')).toBeVisible();
-  await expect(log.getByRole('link', { name: '6 km SW of Pāhala, Hawaii' })).toBeVisible();
+  await expect(log.getByRole('link', { name: '6 km SW of Pāhala' })).toBeVisible();
   await expect(
     page.getByText('1 record from the USGS failed validation and is not shown.'),
   ).toBeVisible();
@@ -243,19 +243,19 @@ test('holds a new event that lands while the log is in view, and shows it on req
   const log = page.getByRole('region', { name: 'Every event' });
   const first = log.locator('tbody tr:not(.day)').first();
   await waitForHydrationOf(page.locator('fl-event-log'));
-  await expect(first).toContainText('2 km NNW of The Geysers, CA');
+  await expect(first).toContainText('2 km NNW of The Geysers');
 
   await arrive(page, { id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
 
   const waiting = log.getByRole('status');
   await expect(waiting).toContainText('1 new event');
   // The list the reader is looking at stays put, counts included.
-  await expect(first).toContainText('2 km NNW of The Geysers, CA');
+  await expect(first).toContainText('2 km NNW of The Geysers');
   await expect(log.locator('.more')).toContainText('The latest 10 of 14');
 
   await waiting.getByRole('button', { name: 'Show it' }).click();
 
-  await expect(first).toContainText('4 km E of Cobb, CA');
+  await expect(first).toContainText('4 km E of Cobb');
   await expect(first.getByRole('link')).toBeFocused();
   await expect(log.locator('.more')).toContainText('The latest 10 of 15');
 });
@@ -273,6 +273,6 @@ test('lets a new event straight in while the log is below the fold', async ({ pa
   await arrive(page, { id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
   await log.scrollIntoViewIfNeeded();
 
-  await expect(log.locator('tbody tr:not(.day)').first()).toContainText('4 km E of Cobb, CA');
+  await expect(log.locator('tbody tr:not(.day)').first()).toContainText('4 km E of Cobb');
   await expect(log.getByRole('status')).toHaveText('');
 });

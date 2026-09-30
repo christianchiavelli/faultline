@@ -23,6 +23,7 @@ async function render(query: LogQuery) {
   const fixture = TestBed.createComponent(EventLog);
   fixture.componentRef.setInput('quakes', quakes);
   fixture.componentRef.setInput('query', query);
+  fixture.componentRef.setInput('now', quakes[0]!.time + 2 * 3_600_000);
   await fixture.whenStable();
   return fixture.nativeElement as HTMLElement;
 }
@@ -41,6 +42,30 @@ describe('EventLog', () => {
       ),
     ).toEqual(['All 4', 'M2.5+ 2', 'M4.5+ 1']);
     expect(element.querySelector('[aria-current="true"]')?.textContent).toContain('M2.5+');
+  });
+
+  it('splits the place into locality and region, and gives the position', async () => {
+    const element = await render(at('any'));
+    const row = element.querySelector('tbody tr:not(.day)')!;
+    const cell = (name: string) =>
+      row.querySelector(name)?.textContent?.replace(/\s+/g, ' ').trim();
+
+    expect(cell('.place a')).toBe('South of the Fiji Islands');
+    expect(cell('.region')).toBe('South of the Fiji Islands');
+    expect(cell('.position')).toBe('58.10° S 25.40° W');
+    expect(cell('.ago')).toBe('2 h ago');
+    expect(row.querySelector('time')?.getAttribute('datetime')).toBe('2026-09-29T04:16:27.000Z');
+  });
+
+  it('draws the magnitude with the dot the map uses, in the pen when notable', async () => {
+    const element = await render(at('any'));
+    const [big, mid] = [...element.querySelectorAll('tbody tr:not(.day) .magnitude')];
+
+    expect(big?.classList).toContain('magnitude--notable');
+    expect(mid?.classList).not.toContain('magnitude--notable');
+    const size = (cell: Element | undefined) =>
+      parseFloat(cell!.querySelector<HTMLElement>('.dot')!.style.getPropertyValue('--dot'));
+    expect(size(big)).toBeGreaterThan(size(mid));
   });
 
   it('capitalises places written to follow a magnitude', async () => {
@@ -78,6 +103,7 @@ async function renderLog(
   const fixture = TestBed.createComponent(EventLog);
   fixture.componentRef.setInput('quakes', day);
   fixture.componentRef.setInput('query', at(magnitude, unfolded));
+  fixture.componentRef.setInput('now', NOW);
   await fixture.whenStable();
   const element = fixture.nativeElement as HTMLElement;
   const text = (selector: string) =>

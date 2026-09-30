@@ -16,8 +16,11 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { magnitudeScale } from '@shared/domain/magnitude';
-import { EARTHQUAKE_KIND, type QuakeSummary } from '@shared/domain/quake';
+import { splitPlace } from '@shared/domain/place';
+import { EARTHQUAKE_KIND, isNotable, type QuakeSummary } from '@shared/domain/quake';
+import { AgoPipe } from '@ui/ago.pipe';
 import { capitalise } from '@ui/text';
+import { dotRadius } from '../../common/world-chart/world-chart';
 import { MAGNITUDE_FLOORS, logParams, minimumMagnitude, type LogQuery } from './log-query';
 
 /**
@@ -35,13 +38,14 @@ function passes(quake: QuakeSummary, min: number | null): boolean {
 
 @Component({
   selector: 'fl-event-log',
-  imports: [RouterLink, DatePipe, I18nPluralPipe],
+  imports: [RouterLink, DatePipe, I18nPluralPipe, AgoPipe],
   templateUrl: './event-log.html',
   styleUrl: './event-log.css',
 })
 export class EventLog {
   readonly quakes = input.required<readonly QuakeSummary[]>();
   readonly query = input.required<LogQuery>();
+  readonly now = input.required<number>();
 
   protected readonly unfolded = computed(() => this.query().unfolded);
 
@@ -216,9 +220,19 @@ export class EventLog {
 interface Row {
   readonly id: string;
   readonly time: number;
+  readonly iso: string;
   readonly magnitude: string | null;
   readonly scale: { readonly code: string; readonly title: string } | null;
-  readonly place: string;
+  /** The map's dot for this magnitude, in pixels across. */
+  readonly dot: number;
+  readonly notable: boolean;
+  /** The locality, or the whole place name when the USGS gives only a region. */
+  readonly where: string;
+  readonly region: string | null;
+  /** The region again, after the locality, where a narrow screen has no column for it. */
+  readonly inlineRegion: string | null;
+  readonly latitude: string;
+  readonly longitude: string;
   readonly kind: string | null;
   readonly depth: string | null;
   readonly depthTitle: string | null;
@@ -228,13 +242,22 @@ interface Row {
 
 function toRow(quake: QuakeSummary, fresh: boolean): Row {
   const scale = quake.magnitude ? magnitudeScale(quake.magnitude.type) : null;
-  const depth = quake.location.depthKm;
+  const { latitude, longitude, depthKm: depth } = quake.location;
+  const { locality, region } = splitPlace(quake.place);
+  const where = locality ?? quake.place;
   return {
     id: quake.id,
     time: quake.time,
+    iso: new Date(quake.time).toISOString(),
     magnitude: quake.magnitude ? quake.magnitude.value.toFixed(1) : null,
     scale: scale ? { code: scale.code, title: `${scale.name}. ${scale.summary}` } : null,
-    place: quake.place ? capitalise(quake.place) : 'Location not described',
+    dot: dotSize(quake.magnitude?.value ?? null),
+    notable: isNotable(quake),
+    where: where ? capitalise(where) : 'Location not described',
+    region: region ? capitalise(region) : null,
+    inlineRegion: locality && region ? capitalise(region) : null,
+    latitude: degrees(latitude, 'N', 'S'),
+    longitude: degrees(longitude, 'E', 'W'),
     kind: quake.kind === EARTHQUAKE_KIND ? null : quake.kind,
     depth: depth === null ? null : depth.toFixed(1).replace('-', '−'),
     depthTitle:
@@ -242,4 +265,14 @@ function toRow(quake: QuakeSummary, fresh: boolean): Row {
     reviewed: quake.review === 'reviewed',
     fresh,
   };
+}
+
+/** The map's dot, grown by the same law and held to what fits beside a line of text. */
+function dotSize(magnitude: number | null): number {
+  return Math.round(Math.min(16, Math.max(4, dotRadius(magnitude))) * 10) / 10;
+}
+
+/** "52.32° N": to a hundredth of a degree, about a kilometre, finer than most locations are known. */
+function degrees(value: number, positive: string, negative: string): string {
+  return `${Math.abs(value).toFixed(2)}° ${value < 0 ? negative : positive}`;
 }
