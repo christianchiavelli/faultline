@@ -85,7 +85,7 @@ export async function* searchEvents(
       timeoutMs: 60_000,
     });
 
-    // No match at all is a 204 in some formats and an empty file in others.
+    // No match is the header alone in CSV, and a 204 in some other formats.
     if (response.status === 204) return;
     if (response.status !== 200)
       throw new UpstreamError(`USGS search answered ${response.status}`, response.status);

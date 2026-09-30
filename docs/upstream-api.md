@@ -4,7 +4,7 @@ Notes gathered by probing the live USGS services on 29 September 2026. This file
 
 ## Two upstreams, two contracts
 
-| Concern | Summary feeds `/earthquakes/feed/v1.0/summary/*.geojson` | FDSN event service `/fdsnws/event/1/query` |
+| Concern | Summary feeds `/earthquakes/feed/v1.0/summary/*.geojson` | FDSN event service `/fdsnws/event/1/query` and `/count` |
 | --- | --- | --- |
 | What it is | Static files, regenerated every minute | A search over the whole catalogue |
 | Scope | Fixed windows: past hour, day, week, month | Any time range, area or magnitude |
@@ -15,7 +15,7 @@ Notes gathered by probing the live USGS services on 29 September 2026. This file
 | A deleted event | simply absent | 409, as plain text |
 | A search too large | n/a | 400 past 20,000 matches, unless paged |
 
-The live page reads the day feed, which holds everything it draws. The event page reads the FDSN service, because only there does an event carry the error of its location and how its depth was found.
+The live page reads the day feed, which holds everything it draws. The event page reads the FDSN service, because only there does an event carry the error of its location and how its depth was found. The export reads it too: `/count` for the number the dialog shows as a search is narrowed, and `/query` as CSV, oldest first and 20,000 events at a time, for the file.
 
 ## Field-level hazards
 
@@ -53,6 +53,7 @@ An event can carry origins from more than one network. The one with the highest 
 | `eventid=aka2026thwdfh` (deleted since) | 409 | `The requested event has been deleted.`, as text |
 | a search with no match, `format=geojson` | 200 | a `FeatureCollection` with `count: 0` and no `features` |
 | the same search, in the default QuakeML format | 204 | empty |
+| the same search, `format=csv` | 200 | the header row alone |
 
 The BFF maps 404 and 204 to a 404 for the app and 409 to a 410, so a deleted event reads differently from one that never existed, and both reach crawlers with the right status.
 
