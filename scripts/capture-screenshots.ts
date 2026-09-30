@@ -27,6 +27,8 @@ interface Shot {
   readonly scheme: 'light' | 'dark';
   readonly viewport?: { readonly width: number; readonly height: number };
   readonly fullPage?: boolean;
+  /** Captures only this element, across the full width, scrolled into view before `prepare`. */
+  readonly area?: string;
   /** Brings the page to the state shown, once it has rendered and hydrated. */
   readonly prepare?: (page: Page) => Promise<void>;
 }
@@ -38,10 +40,40 @@ async function openExport(page: Page, button: string): Promise<Locator> {
   return dialog;
 }
 
+/** Points at a small event mid-drum, the kind the card is for: its burst barely moves the line. */
+async function readSmallEvent(page: Page): Promise<void> {
+  const target = await page.locator('fl-helicorder .paper').evaluate(async (paper) => {
+    const body = await (await fetch('/api/quakes/recent?window=day')).json();
+    const quakes = body.quakes as { time: number; magnitude: { value: number } | null }[];
+    const hour = 3_600_000;
+    const first = Math.floor(Date.now() / hour) * hour - 23 * hour;
+    const box = paper.getBoundingClientRect();
+    for (const { time, magnitude } of quakes) {
+      const row = Math.floor((time - first) / hour);
+      const at = (time - first) / hour - row;
+      if (magnitude && magnitude.value < 3 && row >= 8 && row <= 16 && at > 0.25 && at < 0.75) {
+        return { x: box.x + at * box.width, y: box.y + ((row + 0.5) / 24) * box.height };
+      }
+    }
+    return null;
+  });
+  if (!target) throw new Error('No small event mid-drum to read today; try again later.');
+  await page.mouse.move(target.x, target.y);
+  await page.locator('fl-helicorder .card').waitFor();
+}
+
 const SHOTS: readonly Shot[] = [
   { name: 'live-paper', path: '/', scheme: 'light' },
   { name: 'live-film', path: '/', scheme: 'dark' },
   { name: 'live-full-paper', path: '/', scheme: 'light', fullPage: true },
+  {
+    name: 'live-reading-paper',
+    path: '/',
+    scheme: 'light',
+    area: 'fl-helicorder',
+    prepare: readSmallEvent,
+  },
+  { name: 'sizes-film', path: '/', scheme: 'dark', area: 'section.sizes' },
   // M5.4 north of Svalbard: reviewed, depth fixed by the analyst, full uncertainty.
   { name: 'quake-paper', path: '/quakes/us6000ty57', scheme: 'light' },
   { name: 'live-phone-film', path: '/', scheme: 'dark', viewport: PHONE },
@@ -120,12 +152,22 @@ for (const shot of SHOTS.filter(({ name }) => only.size === 0 || only.has(name))
     await document.fonts.ready;
   });
   await page.waitForLoadState('networkidle');
+  const area = shot.area ? page.locator(shot.area) : null;
+  // Before `prepare`: scrolling afterwards would move the page under a pointer it placed.
+  await area?.evaluate((element) => element.scrollIntoView({ block: 'center' }));
   if (shot.prepare) {
     await shot.prepare(page);
     await page.waitForLoadState('networkidle');
   }
 
-  await page.screenshot({ path: `${OUT_DIR}/${shot.name}.png`, fullPage: shot.fullPage ?? false });
+  const box = await area?.boundingBox();
+  await page.screenshot({
+    path: `${OUT_DIR}/${shot.name}.png`,
+    fullPage: shot.fullPage ?? false,
+    clip: box
+      ? { x: 0, y: box.y - 32, width: page.viewportSize()!.width, height: box.height + 64 }
+      : undefined,
+  });
   console.log(`captured ${shot.name}`);
 
   await context.close();
