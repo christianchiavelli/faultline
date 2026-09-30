@@ -12,7 +12,7 @@
  * Theme comes from the emulated colour scheme: the app follows the system
  * until a reader picks one, so `dark` is the film theme.
  */
-import { chromium, type Page } from '@playwright/test';
+import { chromium, type Locator, type Page } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 
 const BASE_URL = process.env['SCREENSHOT_BASE_URL'] ?? 'http://localhost:4000';
@@ -27,6 +27,15 @@ interface Shot {
   readonly scheme: 'light' | 'dark';
   readonly viewport?: { readonly width: number; readonly height: number };
   readonly fullPage?: boolean;
+  /** Brings the page to the state shown, once it has rendered and hydrated. */
+  readonly prepare?: (page: Page) => Promise<void>;
+}
+
+async function openExport(page: Page, button: string): Promise<Locator> {
+  await page.getByRole('button', { name: button }).click();
+  const dialog = page.getByRole('dialog', { name: 'Export events' });
+  await dialog.waitFor();
+  return dialog;
 }
 
 const SHOTS: readonly Shot[] = [
@@ -36,6 +45,32 @@ const SHOTS: readonly Shot[] = [
   // M5.4 north of Svalbard: reviewed, depth fixed by the analyst, full uncertainty.
   { name: 'quake-paper', path: '/quakes/us6000ty57', scheme: 'light' },
   { name: 'live-phone-film', path: '/', scheme: 'dark', viewport: PHONE },
+  // The M7.8 near Ende, 14 August 2026, and its aftershocks since.
+  {
+    name: 'export-paper',
+    path: '/quakes/us6000tkt2',
+    scheme: 'light',
+    prepare: async (page) => {
+      const dialog = await openExport(page, 'Export the events near this one…');
+      await dialog.locator('a[download]').waitFor({ timeout: 60_000 });
+    },
+  },
+  // A fixed past range, so the counts, and the suggestions made from them, hold still.
+  {
+    name: 'export-too-many-film',
+    path: '/',
+    scheme: 'dark',
+    prepare: async (page) => {
+      const dialog = await openExport(page, 'Export…');
+      await dialog.locator('label').filter({ hasText: 'Custom' }).click();
+      await dialog.locator('label').filter({ hasText: '4.5+' }).click();
+      const [from, to] = await dialog.locator('input[type=date]').all();
+      await from!.fill('2000-01-01');
+      await to!.fill('2025-12-31');
+      await to!.blur();
+      await dialog.locator('.suggestion').nth(1).waitFor({ timeout: 60_000 });
+    },
+  },
 ];
 
 /**
@@ -85,6 +120,10 @@ for (const shot of SHOTS.filter(({ name }) => only.size === 0 || only.has(name))
     await document.fonts.ready;
   });
   await page.waitForLoadState('networkidle');
+  if (shot.prepare) {
+    await shot.prepare(page);
+    await page.waitForLoadState('networkidle');
+  }
 
   await page.screenshot({ path: `${OUT_DIR}/${shot.name}.png`, fullPage: shot.fullPage ?? false });
   console.log(`captured ${shot.name}`);
