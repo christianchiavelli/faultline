@@ -15,6 +15,7 @@ function catalogue(overrides: Partial<Catalogue> = {}): Catalogue {
   return {
     recentQuakes: vi.fn().mockResolvedValue(feed),
     quakeDetail: vi.fn().mockResolvedValue({ quake: aQuake(), origin: null }),
+    countEvents: vi.fn().mockResolvedValue(236),
     ...overrides,
   };
 }
@@ -92,6 +93,34 @@ describe('handleApiRequest', () => {
     expect(result.status).toBe(503);
     expect(result.headers['retry-after']).toBe('3');
     expect(result.body).toMatchObject({ title: 'Too many lookups right now' });
+  });
+
+  it('counts what an export would hold, with the limit it has to fit', async () => {
+    const countEvents = vi.fn().mockResolvedValue(236);
+    const result = await handleApiRequest(
+      'GET',
+      url('/api/quakes/count?from=2026-08-14T21:58:00Z&to=2026-09-29T19:30:00Z&minmag=2.5'),
+      null,
+      catalogue({ countEvents }),
+    );
+
+    expect(result.status).toBe(200);
+    expect(result.body).toEqual({ count: 236, limit: 100_000 });
+    expect(countEvents).toHaveBeenCalledWith(expect.objectContaining({ minMagnitude: 2.5 }));
+  });
+
+  it('says why a count was refused, rather than asking the USGS something else', async () => {
+    const countEvents = vi.fn();
+    const result = await handleApiRequest(
+      'GET',
+      url('/api/quakes/count?from=yesterday&to=2026-09-29T19:30:00Z'),
+      null,
+      catalogue({ countEvents }),
+    );
+
+    expect(result.status).toBe(400);
+    expect(result.body).toMatchObject({ detail: 'Expected an ISO time in UTC.' });
+    expect(countEvents).not.toHaveBeenCalled();
   });
 
   it('only reads', async () => {

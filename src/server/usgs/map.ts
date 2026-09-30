@@ -1,6 +1,7 @@
 import type { OriginQuality } from '@shared/api/contracts';
+import type { ExportEvent } from '@shared/api/export';
 import type { Quake, QuakeSummary, ReviewStatus } from '@shared/domain/quake';
-import type { UsgsFeature, UsgsProduct } from './schema';
+import type { CsvEvent, UsgsFeature, UsgsProduct } from './schema';
 
 /**
  * USGS feature to domain event. `null` means "do not show": the feature is
@@ -65,6 +66,11 @@ function round(value: number, decimals: number): number {
  */
 function toReview(status: string): ReviewStatus {
   return status === 'reviewed' ? 'reviewed' : 'automatic';
+}
+
+/** A search row as an export writes it, linked back to the record it came from. */
+export function toExportEvent(row: CsvEvent): ExportEvent {
+  return { ...row, url: `https://earthquake.usgs.gov/earthquakes/eventpage/${row.id}` };
 }
 
 /** Several networks can publish an origin; the preferred one has the highest weight. */

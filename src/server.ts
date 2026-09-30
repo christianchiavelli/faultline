@@ -7,7 +7,7 @@ import {
 import compression from 'compression';
 import express from 'express';
 import { join } from 'node:path';
-import { apiHandler, clientRateLimit } from './server/api/express';
+import { apiHandler, clientRateLimit, exportHandler } from './server/api/express';
 import { serverConfig } from './server/config';
 import { createRateLimiter } from './server/http/rate-limit';
 
@@ -38,6 +38,7 @@ app.use((_req, res, next) => {
 });
 
 /** The BFF. Pages rendered on this server reach it in-process, never over HTTP. */
+app.get('/api/quakes/export', clientRateLimit(clients), exportHandler());
 app.use('/api', clientRateLimit(clients), apiHandler());
 
 /**

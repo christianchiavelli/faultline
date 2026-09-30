@@ -1,8 +1,10 @@
 import { FEED_WINDOWS } from '@shared/api/contracts';
+import { EXPORT_LIMIT, exportQuerySchema, type ExportCount } from '@shared/api/export';
 import { z } from 'zod';
-import { UpstreamBusyError, UpstreamError } from '../http/upstream';
 import { json, problem, withEtag, type ApiResult } from '../http/result';
 import { isGone, quakeDetail, recentQuakes } from '../usgs/catalogue';
+import { countEvents } from '../usgs/search';
+import { issuesDetail, upstreamProblem } from './problems';
 
 const windowSchema = z.enum(FEED_WINDOWS).default('day');
 
@@ -12,9 +14,10 @@ const EVENT_PATH = /^\/api\/quakes\/([a-z0-9]{2,32})$/i;
 export interface Catalogue {
   readonly recentQuakes: typeof recentQuakes;
   readonly quakeDetail: typeof quakeDetail;
+  readonly countEvents: typeof countEvents;
 }
 
-const usgs: Catalogue = { recentQuakes, quakeDetail };
+const usgs: Catalogue = { recentQuakes, quakeDetail, countEvents };
 
 /**
  * Every `/api/*` request, whatever carried it. Transport-free so that the
@@ -34,33 +37,15 @@ export async function handleApiRequest(
 
   try {
     if (url.pathname === '/api/quakes/recent') return await recent(catalogue, url, ifNoneMatch);
+    // Before the event path, which "count" would otherwise match as an id.
+    if (url.pathname === '/api/quakes/count') return await count(catalogue, url);
 
     const event = EVENT_PATH.exec(url.pathname);
     if (event?.[1]) return await detail(catalogue, event[1].toLowerCase(), ifNoneMatch);
 
     return problem(404, 'No such endpoint');
   } catch (error) {
-    if (error instanceof UpstreamBusyError) {
-      const busy = problem(
-        503,
-        'Too many lookups right now',
-        'This server is pacing its requests to the USGS. Try again in a few seconds.',
-      );
-      return {
-        ...busy,
-        headers: { ...busy.headers, 'retry-after': String(error.retryAfterSeconds) },
-      };
-    }
-    if (error instanceof UpstreamError) {
-      console.warn(`[api] ${url.pathname}: ${error.message}`);
-      return problem(
-        502,
-        'The USGS did not answer',
-        'Try again in a minute; the feed usually recovers on its own.',
-      );
-    }
-    console.error(`[api] ${url.pathname}`, error);
-    return problem(500, 'Something went wrong on our side');
+    return upstreamProblem(error, url.pathname);
   }
 }
 
@@ -80,6 +65,15 @@ async function recent(
     `feed-${feed.window}-${feed.generatedAt}-${feed.stale ? 's' : 'f'}`,
     ifNoneMatch,
   );
+}
+
+/** How many events an export would hold, so the dialog can say so before anything downloads. */
+async function count(catalogue: Catalogue, url: URL): Promise<ApiResult> {
+  const query = exportQuerySchema.safeParse(Object.fromEntries(url.searchParams));
+  if (!query.success) return problem(400, 'Invalid search', issuesDetail(query.error));
+
+  const body: ExportCount = { count: await catalogue.countEvents(query.data), limit: EXPORT_LIMIT };
+  return json(200, body, { 'cache-control': 'public, max-age=60' });
 }
 
 async function detail(
