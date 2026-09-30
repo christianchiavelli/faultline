@@ -2,7 +2,7 @@
 
 A live seismograph of the planet, on top of the [USGS earthquake catalogue](https://earthquake.usgs.gov/earthquakes/feed/), which gathers what the global and US regional seismic networks locate: around two hundred events on an ordinary day.
 
-Read the last 24 hours the way a drum seismograph draws them, one line per hour and one burst per event, filter the log by magnitude, then open any event for its magnitude scale, how its depth was found, the uncertainty of its location and the energy it released. Any search of the catalogue, an event's aftershocks included, exports as a spreadsheet or as map data.
+Read the last 24 hours the way a drum seismograph draws them, one line per hour and one burst per event, and point at any burst, even one too small to see, for what it was. Set the day's sizes against an average day on Earth, filter the log by magnitude, then open any event for its magnitude scale, how its depth was found, the uncertainty of its location and the energy it released. Any search of the catalogue, an event's aftershocks included, exports as a spreadsheet or as map data.
 
 Angular 22, zoneless with signals, SSR with incremental hydration, and an Express backend-for-frontend.
 
@@ -17,7 +17,15 @@ Angular 22, zoneless with signals, SSR with incremental hydration, and an Expres
 
 **The whole page: readouts, the map and every event**
 
-![The full live page: the helicorder, the day's readouts, an Equal Earth map with plate boundaries and the event log](docs/screenshots/live-full-paper.png)
+![The full live page: the helicorder, the day's readouts, an Equal Earth map with plate boundaries, the day's sizes and the event log](docs/screenshots/live-full-paper.png)
+
+**Reading an event off the trace**
+
+![A card on the helicorder naming a small event whose burst barely shows: its magnitude and scale, place, time, depth and review](docs/screenshots/live-reading-paper.png)
+
+**The day's sizes against an average day on Earth, dark theme**
+
+![The day's earthquakes by magnitude on semi-log paper, the Gutenberg–Richter law dashed across them and the hatched stretch the catalogue mostly misses](docs/screenshots/sizes-film.png)
 
 **One event, with its uncertainty**
 
@@ -87,7 +95,7 @@ Depths are unsure in two directions. Many are fixed by an analyst when the data 
 
 | Route | What it is |
 | --- | --- |
-| `/` | The last 24 hours: the helicorder, the day's readouts, the map and every event, and an export of any search |
+| `/` | The last 24 hours: the helicorder, the day's readouts, the map, the day's sizes against an average day, every event, and an export of any search |
 | `/?min=4.5` | The same page with the log at another threshold: `all`, `2.5` (the default) or `4.5` |
 | `/quakes/:id` | One event: magnitude and its scale, depth and how it was found, location uncertainty, energy, impact alert, and an export of the events around it |
 
@@ -101,6 +109,8 @@ Depths are unsure in two directions. Many are fixed by an analyst when the data 
 - **Cached, paced and honest about failure.** Each feed is fetched at most once a minute however many people are reading, and concurrent misses share one upstream call. When the USGS stops answering, the last good copy is served and flagged, and the page says how old it is. Each client address gets a token bucket, bursts of 60 and then one request a second, and every USGS call the cache cannot answer, event lookups, counts and export pages alike, shares one budget for the whole process, so however many addresses a script rotates through, the USGS sees at most ten calls at once and two a second after that.
 - **An export holds every match, or it does not start.** The dialog counts a search as it is narrowed, and one past 100,000 events is refused before the first byte, with two narrower searches that fit, each counted before it is offered. The file streams from the BFF as the USGS pages arrive, keyed by time rather than offset, since events landing mid-export would shift every offset after them, and a failure halfway cuts the connection, so a truncated file never passes for a whole one. The CSV opens in Excel with its accents intact, and a cell that starts like a formula is written as text.
 - **The helicorder is synthetic, deterministic and says so.** No station hears the whole planet and the feed carries no waveforms, so each event becomes a burst placed at its origin time and sized from its magnitude, on a compressed scale the legend states. The paths are a pure function of the events and the clock, so the server and the browser draw the same thing.
+- **Any burst can be read, by pointer, finger or keyboard.** The trace is one path per hour, so there is nothing on it to hover. A point is matched to the nearest burst instead, anywhere along its length and within a reach that grows for a finger, which is the only way to find most small events: they barely move the line. The card stays up while the pointer moves onto it and closes with Escape, as WCAG 1.4.13 asks of content shown on hover. To the keyboard the trace is a slider over the day's events, whose value names the event read, so a screen reader hears what the card shows.
+- **The day's sizes are set against the law, not just counted.** On its own, a day of the feed holds fewer M3s than M4.5s, as if the planet made few of them. Drawn on semi-log paper against the Gutenberg–Richter law, anchored on the counted rate of M5s, the chart shows what the catalogue can hear: every earthquake from about M4.5, the NEIC's goal for the world, and below that only what a dense regional network caught, named by region. The stretch between is hatched, with how many it holds against how many an average day brings.
 - **The map is a file, not a library.** Coastlines and plate boundaries are projected to Equal Earth once, by `pnpm basemap`, into a static SVG the page references with `<use>`: cached once, outside the JavaScript bundle, and coloured by the theme through CSS. Equal Earth keeps every region at its true area, which Mercator would not for Alaska, the busiest corner of the feed.
 - **Dialogs are the platform's.** `ui-dialog` is the native `<dialog>`, opened with `showModal()`: the page behind is inert, Escape and a click outside close it, and focus returns to the button that opened it, none of it reimplemented. It fades in with `@starting-style`, fills the screen on a phone with its actions under the thumb, and its code is a separate chunk, fetched when the browser is idle and rendered on the first click.
 - **Server state is TanStack Query, only where it is used.** The live count is one query per search, so going back to a choice answers from memory, and the last count stays up, marked provisional, while the next one loads. The query client is provided inside the dialog's chunk through an injection token, not in the app config, so the library never reaches the first load. The custom period is a Signal Form checked by the same Zod schema the BFF applies, imported as `zod/mini`, because the classic API cannot be tree-shaken.
@@ -119,7 +129,7 @@ pnpm run ci    # format, lint, types, and the unit specs with coverage
 pnpm run e2e   # Playwright across two viewports, on a production build
 ```
 
-The suites divide by what they can see. Vitest covers the domain, the USGS mapping, the cache, the API router, the export's paging and CSV, and the helicorder geometry as plain functions, and components through the DOM they render. Playwright owns what only a browser and the real server can answer: whether the page is complete before any script runs, whether hydration asks the API again, which status a crawler gets for a missing event, what an outage looks like, and what a downloaded file really holds. It runs the production server against a stub of the USGS serving a small, awkward day, searchable and exportable like the real service, and audits every page and the export dialog with axe against WCAG 2.2 AA in both themes. Three things were broken until the suite caught them: error pages refetched while hydrating, the top bar and footer sat outside any landmark, and the Export button lost a press that landed while its section was hydrating.
+The suites divide by what they can see. Vitest covers the domain, the USGS mapping, the cache, the API router, the export's paging and CSV, the helicorder geometry, what a point on the trace means and the day's distribution of sizes as plain functions, and components through the DOM they render. Playwright owns what only a browser and the real server can answer: whether the page is complete before any script runs, whether hydration asks the API again, which status a crawler gets for a missing event, what an outage looks like, what a downloaded file really holds, and whether a burst can be read by mouse, by finger and from the keyboard. It runs the production server against a stub of the USGS serving a small, awkward day, searchable and exportable like the real service, and audits every page, the export dialog and a card read off the trace with axe against WCAG 2.2 AA in both themes. Five things were broken until the suite caught them: error pages refetched while hydrating, the top bar and footer sat outside any landmark, the Export button lost a press that landed while its section was hydrating, the chart's hidden table widened the page on a phone, and the trace's labels were too small as targets once the trace under them became one.
 
 The first run needs the browser: `pnpm exec playwright install chromium`.
 
