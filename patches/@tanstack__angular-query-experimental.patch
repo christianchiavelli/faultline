@@ -1,0 +1,58 @@
+diff --git a/dist/pending-tasks-compat.mjs b/dist/pending-tasks-compat.mjs
+index 7c05e6d2b3a9775abf7b57d10592f4fb3d37ce21..b64dcdb8b226cf6a3b687119db0fb7de894b854d 100644
+--- a/dist/pending-tasks-compat.mjs
++++ b/dist/pending-tasks-compat.mjs
+@@ -1,11 +1,10 @@
+-import * as ng from "@angular/core";
+-import { InjectionToken, inject } from "@angular/core";
+-import { noop } from "@tanstack/query-core";
++import { InjectionToken, PendingTasks, inject } from "@angular/core";
+ //#region src/pending-tasks-compat.ts
++// Patched: the original reads `PendingTasks` off the `@angular/core` namespace,
++// which keeps every export of Angular in the bundle. It is public since 19.
+ const PENDING_TASKS = new InjectionToken("PENDING_TASKS", { factory: () => {
+-	const token = Reflect.get(ng, "PendingTasks");
+-	const svc = token ? inject(token, { optional: true }) : null;
+-	return { add: svc ? () => svc.add() : () => noop };
++	const svc = inject(PendingTasks);
++	return { add: () => svc.add() };
+ } });
+ //#endregion
+ export { PENDING_TASKS };
+diff --git a/src/pending-tasks-compat.ts b/src/pending-tasks-compat.ts
+index c16422728c8fbf0ee0c406e19fea123d8b6fc184..4d69d03430825526bd07b70943cd60dbb11f572b 100644
+--- a/src/pending-tasks-compat.ts
++++ b/src/pending-tasks-compat.ts
+@@ -1,27 +1,17 @@
+-import { InjectionToken, inject } from '@angular/core'
+-import * as ng from '@angular/core'
+-import { noop } from '@tanstack/query-core'
++import { InjectionToken, PendingTasks, inject } from '@angular/core'
+ 
+ type PendingTasksCompat = { add: () => PendingTaskRef }
+ 
+ export type PendingTaskRef = () => void
+ 
++// Patched: the original reads `PendingTasks` off the `@angular/core` namespace,
++// which keeps every export of Angular in the bundle. It is public since 19.
+ export const PENDING_TASKS = new InjectionToken<PendingTasksCompat>(
+   'PENDING_TASKS',
+   {
+     factory: (): PendingTasksCompat => {
+-      // Access via Reflect so bundlers stay quiet when the token is absent (Angular < 19).
+-      const token = Reflect.get(ng, 'PendingTasks') as unknown as
+-        Parameters<typeof inject>[0] | undefined
+-
+-      const svc: PendingTasksCompat | null = token
+-        ? (inject(token, { optional: true }) as PendingTasksCompat | null)
+-        : null
+-
+-      // Without PendingTasks we fall back to a stable no-op shim.
+-      return {
+-        add: svc ? () => svc.add() : () => noop,
+-      }
++      const svc = inject(PendingTasks)
++      return { add: () => svc.add() }
+     },
+   },
+ )

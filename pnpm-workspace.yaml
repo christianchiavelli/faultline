@@ -15,3 +15,12 @@ allowBuilds:
   '@parcel/watcher': false
   lmdb: false
   msgpackr-extract: false
+
+# TanStack Query looks `PendingTasks` up on the whole `@angular/core` namespace,
+# to support Angular 16 to 18, which lack it. A namespace used as a value
+# cannot be tree-shaken, so every export of Angular landed in the first load:
+# 160 kB more on every page, for a dialog most visits never open. The patch
+# imports it by name. It is keyed by package, not version, so an upgrade that
+# touches the file fails the install instead of dropping the fix unnoticed.
+patchedDependencies:
+  '@tanstack/angular-query-experimental': patches/@tanstack__angular-query-experimental.patch
