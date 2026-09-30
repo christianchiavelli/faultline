@@ -11,6 +11,11 @@
     accent-color: var(--content-accent);
   }
 
+  /* A modal makes the page inert, but a wheel over the backdrop would still scroll it. */
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
+
   body {
     font-size: var(--text-md);
     line-height: var(--leading-body);
