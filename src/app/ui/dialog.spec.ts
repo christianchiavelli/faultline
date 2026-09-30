@@ -21,6 +21,12 @@ class Host {
   readonly open = signal(false);
 }
 
+@Component({
+  imports: [Dialog],
+  template: `<ui-dialog heading="Filters" [sheet]="true"><p>Body</p></ui-dialog>`,
+})
+class Sheet {}
+
 function render() {
   polyfillDialog();
   const fixture = TestBed.createComponent(Host);
@@ -52,6 +58,18 @@ describe('Dialog', () => {
     expect(dialog.getAttribute('aria-labelledby')).toBe(heading.id);
     expect(heading.textContent).toBe('Export events');
     expect(dialog.querySelector('.foot')?.textContent).toContain('Download');
+  });
+
+  it('is a centred dialog unless asked to be a sheet', () => {
+    expect(render().dialog.classList).not.toContain('dialog--sheet');
+
+    TestBed.resetTestingModule();
+    const sheet = TestBed.createComponent(Sheet);
+    sheet.detectChanges();
+
+    expect((sheet.nativeElement as HTMLElement).querySelector('dialog')?.classList).toContain(
+      'dialog--sheet',
+    );
   });
 
   it('is described by its lede, which is read out with its name', () => {

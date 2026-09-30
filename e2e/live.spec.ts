@@ -36,7 +36,11 @@ test('opens a labelled event straight from the trace', async ({ page }) => {
   await expect(page).toHaveTitle('M6.2 South of the Fiji Islands | Faultline');
 });
 
-test('filters the log through the address bar and keeps the reader in place', async ({ page }) => {
+test('filters the log through the address bar and keeps the reader in place', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'A phone keeps its filters in a sheet');
   await page.goto('/');
   const log = page.getByRole('region', { name: 'Every event' });
   const filters = log.getByRole('group', { name: 'Magnitude' });
@@ -413,4 +417,46 @@ test('sorts the log by size or by depth from its headings', async ({ page, isMob
 
   await expect(page).toHaveURL(/\/\?mag=any$/);
   await expect(log.locator('tr.day')).toHaveCount(1);
+});
+
+test('filters the log on a phone from a sheet, its count on the way out', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'The phone layout');
+  await page.goto('/?mag=any');
+  await waitForHydration(page);
+  const log = page.getByRole('region', { name: 'Every event' });
+  await waitForHydrationOf(page.locator('fl-event-log'));
+
+  await log.getByRole('button', { name: 'Filters' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Filters' });
+  await sheet
+    .getByRole('group', { name: 'Region' })
+    .getByRole('link', { name: 'California 7 events' })
+    .click();
+
+  await expect(page).toHaveURL(/\/\?mag=any&region=california$/);
+  await expect(sheet.getByRole('button', { name: 'Show 7 events' })).toBeVisible();
+  await sheet.getByRole('button', { name: 'Show 7 events' }).click();
+
+  await expect(sheet).toBeHidden();
+  await expect(log.locator('tbody tr:not(.day)')).toHaveCount(7);
+  // Two filters away from their default: any magnitude, and the region.
+  await expect(log.getByRole('button', { name: 'Filters 2 on' })).toBeFocused();
+});
+
+test('sorts the log on a phone from a menu', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'The phone layout');
+  await page.goto('/?mag=any');
+  await waitForHydration(page);
+  const log = page.getByRole('region', { name: 'Every event' });
+  await waitForHydrationOf(page.locator('fl-event-log'));
+
+  await log.getByRole('combobox', { name: 'Order' }).selectOption('Largest first');
+
+  await expect(page).toHaveURL(/\/\?mag=any&sort=largest$/);
+  await expect(log.locator('tbody tr:not(.day)').first()).toContainText(
+    'South of the Fiji Islands',
+  );
 });

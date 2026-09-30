@@ -5,25 +5,36 @@
 /* An instrument panel of indexes, one column per question, divided by rules like the readouts. */
 .facets {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  grid-template-columns: 0.9fr 1.15fr 1.25fr 0.95fr 1fr;
   border-block: var(--hairline) solid var(--rule-strong);
 }
 
-@media (width >= 64rem) {
-  .facets {
-    grid-template-columns: 0.9fr 1.15fr 1.25fr 0.95fr 1fr;
+.facet + .facet {
+  border-inline-start: var(--hairline) solid var(--rule);
+}
+
+.facet:first-child {
+  padding-inline-start: 0;
+}
+
+.facet:last-child {
+  padding-inline-end: 0;
+}
+
+/* In a sheet, the same indexes one under the other. */
+:host(.stack) {
+  & .facets {
+    display: block;
+    border: 0;
   }
 
-  .facet + .facet {
-    border-inline-start: var(--hairline) solid var(--rule);
+  & .facet {
+    padding-inline: 0;
+    border-inline-start: 0;
   }
 
-  .facet:first-child {
-    padding-inline-start: 0;
-  }
-
-  .facet:last-child {
-    padding-inline-end: 0;
+  & .facet + .facet {
+    border-top: var(--hairline) solid var(--rule);
   }
 }
 

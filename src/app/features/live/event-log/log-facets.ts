@@ -14,11 +14,14 @@ let nextId = 0;
 @Component({
   selector: 'fl-log-facets',
   imports: [Icon, LogOption],
+  host: { '[class.stack]': "layout() === 'stack'" },
   templateUrl: './log-facets.html',
   styleUrl: './log-facets.css',
 })
 export class LogFacets {
   readonly facets = input.required<readonly Facet[]>();
+  /** A band of columns beside the list, or a stack of them in a sheet. */
+  readonly layout = input<'band' | 'stack'>('band');
 
   protected readonly id = `log-facets-${nextId++}`;
 }

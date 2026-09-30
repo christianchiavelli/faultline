@@ -25,6 +25,7 @@ import { capitalise } from '@ui/text';
 import { dotRadius } from '../../common/world-chart/world-chart';
 import { describeFilters, facetsOf, matches, sortEntries, toEntries } from './facets';
 import { LogFacets } from './log-facets';
+import { LogFilters } from './log-filters';
 import { LogSearch } from './log-search';
 import {
   LOG_ORDERS,
@@ -53,7 +54,17 @@ const FRESH_MS = 4_000;
 
 @Component({
   selector: 'fl-event-log',
-  imports: [RouterLink, DatePipe, I18nPluralPipe, AgoPipe, Highlight, Icon, LogFacets, LogSearch],
+  imports: [
+    RouterLink,
+    DatePipe,
+    I18nPluralPipe,
+    AgoPipe,
+    Highlight,
+    Icon,
+    LogFacets,
+    LogFilters,
+    LogSearch,
+  ],
   templateUrl: './event-log.html',
   styleUrl: './event-log.css',
 })
@@ -288,6 +299,8 @@ interface Row {
   readonly kind: string | null;
   readonly depth: string | null;
   readonly depthTitle: string | null;
+  /** "35.0 km deep", or "1.2 km above sea level", where no heading says what the number is. */
+  readonly depthPhrase: string | null;
   readonly reviewed: boolean;
   readonly fresh: boolean;
 }
@@ -314,6 +327,12 @@ function toRow(quake: QuakeSummary, fresh: boolean): Row {
     depth: depth === null ? null : depth.toFixed(1).replace('-', '−'),
     depthTitle:
       depth !== null && depth < 0 ? `${Math.abs(depth).toFixed(1)} km above sea level` : null,
+    depthPhrase:
+      depth === null
+        ? null
+        : depth < 0
+          ? `${Math.abs(depth).toFixed(1)} km above sea level`
+          : `${depth.toFixed(1)} km deep`,
     reviewed: quake.review === 'reviewed',
     fresh,
   };

@@ -130,4 +130,23 @@
   .body {
     padding: 0 var(--space-5);
   }
+
+  /* A sheet keeps the page it filters in view above it, and rises from where the thumb is. */
+  .dialog--sheet {
+    height: auto;
+    max-height: 88dvh;
+    margin-block: auto 0;
+    border-top: var(--hairline) solid var(--rule-strong);
+    translate: 0 1.5rem;
+
+    &[open] {
+      translate: 0 0;
+    }
+  }
+
+  @starting-style {
+    .dialog--sheet[open] {
+      translate: 0 1.5rem;
+    }
+  }
 }

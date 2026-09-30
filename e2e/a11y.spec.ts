@@ -74,6 +74,19 @@ for (const theme of THEMES) {
       expect(await audit(page)).toEqual([]);
     });
 
+    test('the filters sheet on a phone meets WCAG 2.2 AA', async ({ page, isMobile }) => {
+      test.skip(!isMobile, 'The phone layout');
+      await page.goto('/?mag=any&depth=shallow');
+      await waitForHydration(page);
+      await waitForHydrationOf(page.locator('fl-event-log'));
+      await page.getByRole('button', { name: /^Filters/ }).click();
+      const sheet = page.getByRole('dialog', { name: 'Filters' });
+      await expect(sheet).toBeVisible();
+      await settled(sheet);
+
+      expect(await audit(page)).toEqual([]);
+    });
+
     test('the log holding a new event meets WCAG 2.2 AA', async ({ page }) => {
       await page.clock.install();
       await page.goto('/?mag=any');

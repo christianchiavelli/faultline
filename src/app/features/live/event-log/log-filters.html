@@ -1,0 +1,21 @@
+<button type="button" class="tool-button" aria-haspopup="dialog" (click)="open.set(true)">
+  <ui-icon name="sliders" />Filters
+  @if (active(); as count) {
+    <span class="badge">{{ count }}<span class="visually-hidden">&ngsp;on</span></span>
+  }
+</button>
+<label class="tool-button order">
+  <span class="visually-hidden">Order</span>
+  <select (change)="sortBy($event)">
+    @for (choice of orders; track choice.value) {
+      <option [value]="choice.value" [selected]="choice.value === order()">
+        {{ choice.label }}
+      </option>
+    }
+  </select>
+  <ui-icon name="chevron-down" />
+</label>
+
+@defer (when open(); prefetch on idle) {
+  <fl-log-sheet [(open)]="open" [query]="query()" [facets]="facets()" [shown]="shown()" />
+}

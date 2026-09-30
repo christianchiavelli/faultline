@@ -1,0 +1,60 @@
+:host {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5em;
+  height: 1.5em;
+  padding-inline: 0.3em;
+  border-radius: var(--radius-tag);
+  background: var(--surface-inverse);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0;
+  color: var(--content-inverse);
+}
+
+/* Only a phone needs it: wider, the table's headings sort. */
+.order {
+  position: relative;
+  display: none;
+  padding-inline-end: calc(var(--space-3) + 1.2em);
+
+  & select {
+    appearance: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 0;
+    }
+  }
+
+  & ui-icon {
+    position: absolute;
+    inset-inline-end: var(--space-3);
+    pointer-events: none;
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+@media (width < 44rem) {
+  .order {
+    display: inline-flex;
+  }
+}

@@ -77,3 +77,14 @@ input {
     color: var(--content-primary);
   }
 }
+
+@media (width < 44rem) {
+  .search {
+    width: 100%;
+  }
+
+  /* A phone has no keyboard to press it on. */
+  .key {
+    display: none;
+  }
+}

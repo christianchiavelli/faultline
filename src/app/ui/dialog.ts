@@ -27,6 +27,7 @@ let nextId = 0;
     <dialog
       #dialog
       class="dialog"
+      [class.dialog--sheet]="sheet()"
       closedby="any"
       [attr.aria-labelledby]="headingId"
       [attr.aria-describedby]="lede() ? ledeId : null"
@@ -57,6 +58,8 @@ export class Dialog {
   readonly heading = input.required<string>();
   readonly eyebrow = input<string>();
   readonly lede = input<string>();
+  /** On a phone, rise from the bottom and leave the top of the page in view, for a panel of options. */
+  readonly sheet = input(false);
 
   readonly #id = nextId++;
   protected readonly headingId = `ui-dialog-${this.#id}-heading`;

@@ -10,15 +10,26 @@
 .log__header {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
   gap: var(--space-3);
+
+  & h2 {
+    margin-inline-end: auto;
+  }
 }
 
 .log__tools {
   display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Where the band of facets does not fit: a button to their sheet, and on a phone the order as a menu. */
+.log__bar {
+  display: none;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
 }
 
@@ -190,7 +201,8 @@
 }
 
 /* On a phone the region has no column of its own, so it follows the locality. */
-.place__region {
+.place__region,
+.depth__phrase {
   display: none;
 }
 
@@ -295,22 +307,120 @@
 }
 
 @media (width < 64rem) {
+  .log__facets {
+    display: none;
+  }
+
+  .log__bar {
+    display: flex;
+  }
+
   .ledger .col-position,
   .ledger .position {
     display: none;
   }
 }
 
+/*
+ * A phone: the search on a line of its own, and each event on two lines, the
+ * place above what is known about it. The table's roles are spelled out in its
+ * markup, so restyling its rows as grids leaves a table to a screen reader.
+ */
 @media (width < 44rem) {
-  .ledger .col-region,
-  .ledger .region,
-  .ledger .col-depth,
-  .ledger .depth,
+  .log__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .log__search {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .ledger,
+  .ledger tbody,
+  .ledger .day,
+  .ledger .day th {
+    display: block;
+  }
+
+  .ledger thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ledger tbody tr:not(.day) {
+    display: grid;
+    grid-template-columns: 4.75rem max-content max-content minmax(0, 1fr) max-content;
+    grid-template-areas:
+      'mag place place place place'
+      'mag time depth . status';
+    gap: 0.25rem var(--space-2);
+    padding-block: var(--space-3);
+    border-bottom: var(--hairline) solid var(--rule-faint);
+
+    & td {
+      padding: 0;
+      border: 0;
+    }
+  }
+
+  .ledger .magnitude {
+    grid-area: mag;
+    text-align: start;
+  }
+
+  .ledger .place {
+    grid-area: place;
+  }
+
+  .ledger .time {
+    grid-area: time;
+
+    & time {
+      display: none;
+    }
+  }
+
   .ago {
+    margin: 0;
+    font-size: var(--text-xs);
+  }
+
+  .ledger .depth {
+    grid-area: depth;
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    color: var(--content-tertiary);
+
+    &::before {
+      content: '·' / '';
+      margin-inline-end: var(--space-2);
+    }
+  }
+
+  .ledger .depth--none {
     display: none;
   }
 
+  .depth__value {
+    display: none;
+  }
+
+  .depth__phrase,
   .place__region {
     display: inline;
+  }
+
+  .ledger .status {
+    grid-area: status;
+  }
+
+  .ledger .region {
+    display: none;
   }
 }
