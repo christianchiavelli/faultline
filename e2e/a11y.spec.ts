@@ -1,6 +1,12 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { scrollThrough, settled, waitForHydration } from './support/page';
+import {
+  arrive,
+  scrollThrough,
+  settled,
+  waitForHydration,
+  waitForHydrationOf,
+} from './support/page';
 
 const PAGES = ['/', '/?min=all', '/quakes/us7000big', '/quakes/us7000tonga', '/quakes/zz404'];
 const THEMES = ['paper', 'film'] as const;
@@ -43,6 +49,18 @@ for (const theme of THEMES) {
       await page.getByRole('slider', { name: 'Events on the trace' }).focus();
       await page.keyboard.press('ArrowLeft');
       await expect(page.locator('fl-helicorder .card')).toBeVisible();
+
+      expect(await audit(page)).toEqual([]);
+    });
+
+    test('the log holding a new event meets WCAG 2.2 AA', async ({ page }) => {
+      await page.clock.install();
+      await page.goto('/?min=all');
+      await waitForHydration(page);
+      const log = page.getByRole('region', { name: 'Every event' });
+      await waitForHydrationOf(page.locator('fl-event-log'));
+      await arrive(page, { id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
+      await expect(log.getByRole('status')).toContainText('1 new event');
 
       expect(await audit(page)).toEqual([]);
     });

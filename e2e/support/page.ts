@@ -25,6 +25,23 @@ export async function waitForHydration(page: Page): Promise<void> {
 }
 
 /**
+ * A deferred section is server-rendered long before it hydrates, and until it
+ * does, nothing in it runs. Angular drops the component's `ngh` marker once it
+ * has hydrated.
+ */
+export async function waitForHydrationOf(section: Locator): Promise<void> {
+  await section.scrollIntoViewIfNeeded();
+  await expect(section).not.toHaveAttribute('ngh');
+}
+
+/** Two frames: long enough for an IntersectionObserver to report a scroll. */
+export async function nextFrames(page: Page): Promise<void> {
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+  );
+}
+
+/**
  * Brings every deferred section into view so it renders and hydrates, the way
  * a reader scrolling down would.
  */
@@ -75,4 +92,30 @@ export async function traceOrigin(page: Page, id: string): Promise<{ x: number; 
     x: box.x + ((since - row * HOUR) / HOUR) * box.width,
     y: box.y + ((row + 0.5) / 24) * box.height,
   };
+}
+
+/**
+ * Delivers one more event with the page's next poll of the feed, the way a
+ * quake that has just happened reaches an open page. Needs the page clock
+ * installed before the page loads, to bring that poll forward.
+ */
+export async function arrive(
+  page: Page,
+  quake: { readonly id: string; readonly place: string; readonly magnitude: number },
+): Promise<void> {
+  await page.route('**/api/quakes/recent?window=day', async (route) => {
+    const response = await route.fetch();
+    const body = (await response.json()) as { quakes: unknown[] };
+    body.quakes.unshift({
+      id: quake.id,
+      time: Date.now() - 60_000,
+      magnitude: { value: quake.magnitude, type: 'md' },
+      place: quake.place,
+      location: { latitude: 38.8, longitude: -122.75, depthKm: 2.1 },
+      review: 'automatic',
+      kind: 'earthquake',
+    });
+    await route.fulfill({ response, json: body });
+  });
+  await page.clock.fastForward('01:00');
 }

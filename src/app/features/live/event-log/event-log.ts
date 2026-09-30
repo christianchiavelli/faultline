@@ -1,13 +1,15 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, I18nPluralPipe } from '@angular/common';
 import {
   Component,
-  type ElementRef,
+  DestroyRef,
+  ElementRef,
   Injector,
   afterNextRender,
   computed,
   effect,
   inject,
   input,
+  signal,
   untracked,
   viewChild,
   viewChildren,
@@ -31,6 +33,9 @@ export type MagnitudeFilter = (typeof MAGNITUDE_FILTERS)[number]['value'];
  */
 export const LATEST = 10;
 
+/** How long rows just shown stay tinted, so the eye finds where they went. */
+const FRESH_MS = 4_000;
+
 /**
  * M2.5 by default: below it the log is mostly the dense micro-seismicity of a
  * few Californian and Alaskan networks, and the trace above already shows it.
@@ -49,7 +54,7 @@ function minimumOf(filter: MagnitudeFilter): number | null {
 
 @Component({
   selector: 'fl-event-log',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, I18nPluralPipe],
   templateUrl: './event-log.html',
   styleUrl: './event-log.css',
 })
@@ -59,23 +64,48 @@ export class EventLog {
   /** Every event at this filter, not only the latest: `?rows=all`. */
   readonly unfolded = input(false);
 
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #injector = inject(Injector);
+  readonly #destroyRef = inject(DestroyRef);
   private readonly places = viewChildren<ElementRef<HTMLAnchorElement>>('place');
   private readonly fold = viewChild<ElementRef<HTMLAnchorElement>>('fold');
 
+  /**
+   * A live list must not move under its reader. Every event they have been
+   * shown is seen; one that arrives while they can see the log is held above
+   * it until they ask for it.
+   */
+  readonly #seen = new Set<string>();
+  readonly #held = signal<ReadonlySet<string>>(new Set());
+  readonly #fresh = signal<ReadonlySet<string>>(new Set());
+  /** On screen, or scrolled past: anywhere a new row would push what the reader sees. */
+  readonly #reached = signal(false);
   #intent: 'unfold' | 'fold' | null = null;
+  #freshTimer: ReturnType<typeof setTimeout> | undefined;
+
+  readonly #listed = computed(() => {
+    const held = this.#held();
+    return held.size ? this.quakes().filter((quake) => !held.has(quake.id)) : this.quakes();
+  });
 
   readonly filters = computed(() =>
     MAGNITUDE_FILTERS.map((filter) => ({
       ...filter,
-      count: this.quakes().filter((quake) => passes(quake, filter.min)).length,
+      count: this.#listed().filter((quake) => passes(quake, filter.min)).length,
       current: filter.value === this.filter(),
     })),
   );
 
   readonly visible = computed(() => {
     const min = minimumOf(this.filter());
-    return this.quakes().filter((quake) => passes(quake, min));
+    return this.#listed().filter((quake) => passes(quake, min));
+  });
+
+  /** Held events this filter would show. */
+  readonly waiting = computed(() => {
+    const held = this.#held();
+    const min = minimumOf(this.filter());
+    return this.quakes().filter((quake) => held.has(quake.id) && passes(quake, min)).length;
   });
 
   readonly shown = computed(() =>
@@ -85,11 +115,12 @@ export class EventLog {
 
   /** Grouped by UTC day, the way a station logbook turns the page at midnight. */
   readonly days = computed(() => {
+    const fresh = this.#fresh();
     const days = new Map<string, { day: number; rows: Row[] }>();
     for (const quake of this.shown()) {
       const key = new Date(quake.time).toISOString().slice(0, 10);
       const day = days.get(key) ?? { day: quake.time, rows: [] };
-      day.rows.push(toRow(quake));
+      day.rows.push(toRow(quake, fresh.has(quake.id)));
       days.set(key, day);
     }
     return [...days.values()];
@@ -100,11 +131,34 @@ export class EventLog {
   );
 
   readonly latest = LATEST;
+  readonly events = { '=1': 'event', other: 'events' };
 
   constructor() {
     effect(() => {
+      const quakes = this.quakes();
+      untracked(() => this.#receive(quakes));
+    });
+    // A new filter redraws the whole list, so whatever was held comes in with it.
+    effect(() => {
+      this.filter();
+      untracked(() => this.#takeHeld());
+    });
+    effect(() => {
       const unfolded = this.unfolded();
       untracked(() => this.#settle(unfolded));
+    });
+    afterNextRender(() => this.#watchReach());
+    this.#destroyRef.onDestroy(() => clearTimeout(this.#freshTimer));
+  }
+
+  protected showNew(): void {
+    const shown = this.#takeHeld();
+    this.#fresh.set(shown);
+    clearTimeout(this.#freshTimer);
+    this.#freshTimer = setTimeout(() => this.#fresh.set(new Set()), FRESH_MS);
+    // The button leaves with the events it held, so focus goes to the first of them.
+    afterNextRender(() => this.#focus(this.shown().find((quake) => shown.has(quake.id))?.id), {
+      injector: this.#injector,
     });
   }
 
@@ -114,6 +168,26 @@ export class EventLog {
       return;
     }
     this.#intent = this.unfolded() ? 'fold' : 'unfold';
+  }
+
+  #receive(quakes: readonly QuakeSummary[]): void {
+    const held = this.#held();
+    const arrived = quakes.filter((quake) => !this.#seen.has(quake.id) && !held.has(quake.id));
+    if (!arrived.length) return;
+    // The first delivery is the list itself; later ones wait if they would land in view.
+    if (this.#seen.size && this.#reached()) {
+      this.#held.set(new Set([...held, ...arrived.map((quake) => quake.id)]));
+    } else {
+      for (const quake of arrived) this.#seen.add(quake.id);
+    }
+  }
+
+  #takeHeld(): ReadonlySet<string> {
+    const held = this.#held();
+    if (!held.size) return held;
+    for (const id of held) this.#seen.add(id);
+    this.#held.set(new Set());
+    return held;
   }
 
   /** After the fold link, the reader carries on where they were: at the first row it added, or at the link. */
@@ -134,6 +208,19 @@ export class EventLog {
       .find((place) => place.nativeElement.dataset['id'] === id)
       ?.nativeElement.focus();
   }
+
+  #watchReach(): void {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries.at(-1);
+      if (entry) {
+        const bottom = entry.rootBounds?.height ?? window.innerHeight;
+        this.#reached.set(entry.boundingClientRect.top < bottom);
+      }
+    });
+    observer.observe(this.#host.nativeElement);
+    this.#destroyRef.onDestroy(() => observer.disconnect());
+  }
 }
 
 interface Row {
@@ -146,9 +233,10 @@ interface Row {
   readonly depth: string | null;
   readonly depthTitle: string | null;
   readonly reviewed: boolean;
+  readonly fresh: boolean;
 }
 
-function toRow(quake: QuakeSummary): Row {
+function toRow(quake: QuakeSummary, fresh: boolean): Row {
   const scale = quake.magnitude ? magnitudeScale(quake.magnitude.type) : null;
   const depth = quake.location.depthKm;
   return {
@@ -162,5 +250,6 @@ function toRow(quake: QuakeSummary): Row {
     depthTitle:
       depth !== null && depth < 0 ? `${Math.abs(depth).toFixed(1)} km above sea level` : null,
     reviewed: quake.review === 'reviewed',
+    fresh,
   };
 }

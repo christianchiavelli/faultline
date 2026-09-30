@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { readout, traceOrigin, waitForHydration } from './support/page';
+import {
+  arrive,
+  nextFrames,
+  readout,
+  traceOrigin,
+  waitForHydration,
+  waitForHydrationOf,
+} from './support/page';
 
 test('renders the whole day on the server, before any script runs', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
@@ -212,4 +219,47 @@ test('folds the log to its latest ten, and unfolds it through the address bar', 
 
   await page.goBack();
   await expect(rows).toHaveCount(10);
+});
+
+test('holds a new event that lands while the log is in view, and shows it on request', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto('/?min=all');
+  await waitForHydration(page);
+  const log = page.getByRole('region', { name: 'Every event' });
+  const first = log.locator('tbody tr:not(.day)').first();
+  await waitForHydrationOf(page.locator('fl-event-log'));
+  await expect(first).toContainText('2 km NNW of The Geysers, CA');
+
+  await arrive(page, { id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
+
+  const waiting = log.getByRole('status');
+  await expect(waiting).toContainText('1 new event');
+  // The list the reader is looking at stays put, counts included.
+  await expect(first).toContainText('2 km NNW of The Geysers, CA');
+  await expect(log.locator('.more')).toContainText('The latest 10 of 14');
+
+  await waiting.getByRole('button', { name: 'Show it' }).click();
+
+  await expect(first).toContainText('4 km E of Cobb, CA');
+  await expect(first.getByRole('link')).toBeFocused();
+  await expect(log.locator('.more')).toContainText('The latest 10 of 15');
+});
+
+test('lets a new event straight in while the log is below the fold', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/?min=all');
+  await waitForHydration(page);
+  const log = page.getByRole('region', { name: 'Every event' });
+  // Rendered once, then left behind: the reader is back up at the trace.
+  await waitForHydrationOf(page.locator('fl-event-log'));
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await nextFrames(page);
+
+  await arrive(page, { id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
+  await log.scrollIntoViewIfNeeded();
+
+  await expect(log.locator('tbody tr:not(.day)').first()).toContainText('4 km E of Cobb, CA');
+  await expect(log.getByRole('status')).toHaveText('');
 });

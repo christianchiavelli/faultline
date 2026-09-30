@@ -90,6 +90,38 @@
   color: var(--content-secondary);
 }
 
+/* New events held above the list, in the pen's tint: what the reader should see first. */
+.fresh {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-block-end: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-accent);
+  font-size: var(--text-sm);
+}
+
+.fresh__count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+}
+
+.fresh__dot {
+  width: 0.5rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--trace-pen);
+}
+
+/* Rows just shown, tinted for a few seconds so the eye finds where they went. */
+.ledger tbody .row--fresh {
+  background: color-mix(in oklch, var(--surface-accent) 70%, transparent);
+}
+
 /* The fold: how much of the list is on the page, and the link to the rest. */
 .more {
   display: flex;

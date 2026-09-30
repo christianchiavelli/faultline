@@ -19,8 +19,23 @@
     </div>
   </header>
 
-  <!-- One item of the section's grid, so the fold sits right under the table. -->
+  <!-- One item of the section's grid: the fold sits right under the table, and an empty region adds no gap. -->
   <div class="log__list">
+    <!-- There before anything is held: a live region added along with its text may go unheard. -->
+    <div role="status">
+      @if (waiting(); as count) {
+        <p class="fresh">
+          <span class="fresh__count"
+            ><span class="fresh__dot" aria-hidden="true"></span>{{ count }} new
+            {{ count | i18nPlural: events }}</span
+          >
+          <button type="button" class="text-button" (click)="showNew()">
+            Show {{ count === 1 ? 'it' : 'them' }}
+          </button>
+        </p>
+      }
+    </div>
+
     @if (days().length) {
       <table class="ledger">
         <caption class="visually-hidden">
@@ -43,7 +58,7 @@
               <th scope="rowgroup" colspan="5">{{ day.day | date: 'EEEE d MMMM' : 'UTC' }}</th>
             </tr>
             @for (row of day.rows; track row.id) {
-              <tr>
+              <tr [class.row--fresh]="row.fresh">
                 <td class="mono time">{{ row.time | date: 'HH:mm:ss' : 'UTC' }}</td>
                 <td class="numeric">
                   @if (row.magnitude; as magnitude) {

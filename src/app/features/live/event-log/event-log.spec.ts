@@ -80,7 +80,9 @@ async function renderLog(
   const element = fixture.nativeElement as HTMLElement;
   const text = (selector: string) =>
     element.querySelector(selector)?.textContent?.replace(/\s+/g, ' ').trim();
-  return { fixture, element, text };
+  const firstRow = () =>
+    element.querySelector('tbody tr:not(.day) .place a')?.getAttribute('data-id');
+  return { fixture, element, text, firstRow };
 }
 
 describe('EventLog, folded', () => {
@@ -121,5 +123,83 @@ describe('EventLog, folded', () => {
     TestBed.tick();
 
     expect((document.activeElement as HTMLElement).dataset['id']).toBe(`q${LATEST}`);
+  });
+});
+
+const arrival = aQuake({ id: 'new', time: NOW + 60_000, magnitude: { value: 4.1, type: 'mb' } });
+
+/** jsdom has no IntersectionObserver. This one reports the log with its top at `top` px. */
+function logAt(top: number) {
+  vi.stubGlobal(
+    'IntersectionObserver',
+    class {
+      constructor(private readonly report: IntersectionObserverCallback) {}
+      observe() {
+        const entry = { boundingClientRect: { top }, rootBounds: { height: 800 } };
+        this.report([entry as unknown as IntersectionObserverEntry], this as never);
+      }
+      readonly disconnect = vi.fn();
+    },
+  );
+}
+
+describe('EventLog, live', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it('holds a new event that lands in view, and shows it when asked, focused and tinted', async () => {
+    logAt(120);
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { fixture, element, text, firstRow } = await renderLog(aDay(12));
+
+    fixture.componentRef.setInput('quakes', [arrival, ...aDay(12)]);
+    TestBed.tick();
+
+    // Nothing moved: not the rows, not the counts.
+    expect(firstRow()).toBe('q0');
+    expect(rows(element)).toHaveLength(LATEST);
+    expect(text('nav a')).toBe('All 12');
+    expect(text('[role="status"]')).toBe('1 new event Show it');
+
+    element.querySelector<HTMLButtonElement>('[role="status"] button')!.click();
+    TestBed.tick();
+
+    expect(element.querySelector('[role="status"]')?.textContent?.trim()).toBe('');
+    expect(text('nav a')).toBe('All 13');
+    const row = element.querySelector('tbody tr:not(.day)')!;
+    expect(row.classList).toContain('row--fresh');
+    expect((document.activeElement as HTMLElement).dataset['id']).toBe('new');
+
+    vi.advanceTimersByTime(4_000);
+    TestBed.tick();
+    expect(row.classList).not.toContain('row--fresh');
+  });
+
+  it('lets a new event straight in while the log is still below the fold', async () => {
+    logAt(2_400);
+    const { fixture, element, firstRow } = await renderLog(aDay(12));
+
+    fixture.componentRef.setInput('quakes', [arrival, ...aDay(12)]);
+    TestBed.tick();
+
+    expect(firstRow()).toBe('new');
+    expect(element.querySelector('.fresh')).toBeNull();
+  });
+
+  it('only calls out held events the filter would show, and lets them in with a new filter', async () => {
+    logAt(0);
+    const small = aQuake({ id: 'new', time: NOW + 60_000, magnitude: { value: 1.1, type: 'md' } });
+    const { fixture, element } = await renderLog(aDay(12), { filter: '2.5' });
+
+    fixture.componentRef.setInput('quakes', [small, ...aDay(12)]);
+    TestBed.tick();
+    expect(element.querySelector('.fresh')).toBeNull();
+
+    fixture.componentRef.setInput('filter', 'all');
+    TestBed.tick();
+    expect(element.querySelector('[data-id="new"]')).not.toBeNull();
+    expect(element.querySelector('.fresh')).toBeNull();
   });
 });
