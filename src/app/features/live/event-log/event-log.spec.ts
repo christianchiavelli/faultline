@@ -47,19 +47,25 @@ describe('EventLog', () => {
       ),
     ).toEqual(['Any 4 events', '2.5 and up 2 events', '4.5 and up 1 event']);
     expect(magnitude.querySelector('[aria-current="true"]')?.textContent).toContain('2.5 and up');
-    expect(element.querySelector('.summary')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+    expect(element.querySelector('.tally')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
       '2 of 4 events · M2.5 and up',
     );
+    // The default view has nothing to take off.
+    expect(element.querySelector('.chips')).toBeNull();
+    expect(element.querySelector('.clear')).toBeNull();
   });
 
-  it('narrows the list by kind of event, and offers the way back', async () => {
+  it('narrows the list by kind of event, and offers the way back from it', async () => {
     const element = await render({ ...at('any'), kind: 'other' });
+    const chips = [...element.querySelectorAll<HTMLAnchorElement>('.chip')];
 
     expect(rows(element)).toHaveLength(1);
     expect(rows(element)[0]).toContain('quarry blast');
-    expect(element.querySelector('.summary p')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-      '1 of 4 events · any magnitude · other events',
+    expect(element.querySelector('.tally')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      '1 of 4 events · any magnitude',
     );
+    expect(chips.map((chip) => chip.textContent?.trim())).toEqual(['Remove Other events']);
+    expect(chips[0]?.getAttribute('href')).toBe('/?mag=any');
     expect(element.querySelector('.clear')?.textContent?.trim()).toBe('Clear filters');
     expect(element.querySelector('.clear')?.getAttribute('href')).toBe('/');
   });

@@ -18,7 +18,7 @@ const ORDER_LABELS: Record<LogOrder, string> = {
 };
 
 /**
- * The log's filters where the screen is too narrow for their band: a button
+ * The log's filters where the screen is too narrow for their column: a button
  * to a sheet holding the same facets, and, where the table has no headings
  * left to sort from, the order as a menu.
  */

@@ -181,18 +181,41 @@ export function facetsOf(entries: readonly LogEntry[], query: LogQuery): Facet[]
   ];
 }
 
-/** "M2.5 and up · Alaska · shallow · “geysers”": the filters in force, as one line of text. */
-export function describeFilters(facets: readonly Facet[], search = ''): string {
-  const filters = facets.flatMap((facet) => {
+/** "M2.5 and up", or "any magnitude": the floor the list has, said beside its count. */
+export function describeFloor(facets: readonly Facet[]): string {
+  const floor = facets
+    .find((facet) => facet.key === 'magnitude')
+    ?.options.find((option) => option.current);
+  return !floor || floor.value === 'any' ? 'any magnitude' : `M${floor.label}`;
+}
+
+/** A filter narrowing the list, and the address of the view without it. */
+export interface FilterOn {
+  readonly key: FacetKey | 'search';
+  readonly label: string;
+  readonly params: Params;
+}
+
+/**
+ * The filters in force, each with its way back. The magnitude floor is not
+ * among them: the list always has one, so its count names it instead.
+ */
+export function filtersOn(facets: readonly Facet[], query: LogQuery): FilterOn[] {
+  const on = facets.flatMap((facet): FilterOn[] => {
     const current = facet.options.find((option) => option.current);
-    if (!current) return [];
-    if (facet.key === 'magnitude') {
-      return current.value === 'any' ? ['any magnitude'] : [`M${current.label}`];
-    }
-    if (current.value === null) return [];
-    return [facet.key === 'region' ? current.label : current.label.toLowerCase()];
+    const any = facet.options.find((option) => option.value === null);
+    return facet.key !== 'magnitude' && current?.value && any
+      ? [{ key: facet.key, label: current.label, params: any.params }]
+      : [];
   });
-  return [...filters, ...(search ? [`“${search}”`] : [])].join(' · ');
+  if (query.search) {
+    on.push({
+      key: 'search',
+      label: `“${query.search}”`,
+      params: logParams({ ...query, search: '' }),
+    });
+  }
+  return on;
 }
 
 const byTime = (a: LogEntry, b: LogEntry) => b.quake.time - a.quake.time;

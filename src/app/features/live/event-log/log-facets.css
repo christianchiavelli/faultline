@@ -2,47 +2,28 @@
   display: block;
 }
 
-/* An instrument panel of indexes, one column per question, divided by rules like the readouts. */
+/* An index of the list, a group per question divided by rules; the two short ones share a row. */
 .facets {
   display: grid;
-  grid-template-columns: 0.9fr 1.15fr 1.25fr 0.95fr 1fr;
-  border-block: var(--hairline) solid var(--rule-strong);
-}
-
-.facet + .facet {
-  border-inline-start: var(--hairline) solid var(--rule);
-}
-
-.facet:first-child {
-  padding-inline-start: 0;
-}
-
-.facet:last-child {
-  padding-inline-end: 0;
-}
-
-/* In a sheet, the same indexes one under the other. */
-:host(.stack) {
-  & .facets {
-    display: block;
-    border: 0;
-  }
-
-  & .facet {
-    padding-inline: 0;
-    border-inline-start: 0;
-  }
-
-  & .facet + .facet {
-    border-top: var(--hairline) solid var(--rule);
-  }
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--space-5);
 }
 
 .facet {
   display: grid;
+  grid-column: 1 / -1;
   align-content: start;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
+  padding-block: var(--space-3);
+}
+
+.facet + .facet {
+  border-top: var(--hairline) solid var(--rule);
+}
+
+.facet--review,
+.facet--kind {
+  grid-column: auto;
 }
 
 .options {
@@ -70,7 +51,11 @@
   anchor-name: --log-regions;
 }
 
-/* Every region, under the link that opened it: anchored in CSS, turned upward when there is no room below. */
+/*
+ * Every region, under the link that opened it: anchored in CSS, turned upward
+ * when there is no room below. Pulled left by its own padding, so its names
+ * line up with the index and it covers the marks hanging left of the options.
+ */
 .popover {
   position-anchor: --log-regions;
   position-area: bottom span-right;
@@ -78,11 +63,11 @@
   inset: auto;
   width: min(30rem, 100vw - 2 * var(--page-gutter));
   max-height: min(26rem, 70dvh);
-  margin: var(--space-1) 0;
+  margin: var(--space-1) 0 var(--space-1) calc(-1 * var(--space-5));
   padding: var(--space-4) var(--space-5);
   overflow: auto;
   border: var(--hairline) solid var(--rule-strong);
-  background: var(--surface-page);
+  background: var(--surface-raised);
   color: var(--content-primary);
 
   & .eyebrow {
@@ -97,5 +82,16 @@
 
   & li {
     break-inside: avoid;
+  }
+}
+
+/*
+ * On a phone the sheet is the width of the screen, and so is the list it
+ * opens: the room right of its link, and the padding it is pulled left by.
+ */
+@media (width < 40rem) {
+  .popover {
+    width: calc(100% + var(--space-5));
+    border-inline: 0;
   }
 }

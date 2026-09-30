@@ -1,6 +1,11 @@
 <nav class="facets" aria-label="Filter the events">
   @for (facet of facets(); track facet.key) {
-    <div class="facet" role="group" [attr.aria-labelledby]="id + '-' + facet.key">
+    <div
+      class="facet"
+      [class]="'facet--' + facet.key"
+      role="group"
+      [attr.aria-labelledby]="id + '-' + facet.key"
+    >
       <p class="eyebrow" [id]="id + '-' + facet.key">{{ facet.label }}</p>
       <ul class="options">
         @for (option of facet.options; track option.value) {

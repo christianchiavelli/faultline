@@ -2,65 +2,78 @@
   display: block;
 }
 
+/*
+ * Narrow first: the heading, the search and the way to the filters, the count
+ * with the export beside it, then the list. Where there is room the filters
+ * take a column of their own, beside the list they narrow.
+ */
 .log {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'head head'
+    'search bar'
+    'summary tools'
+    'list list';
+  align-items: center;
   gap: var(--space-4);
 }
 
 .log__header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
+  display: grid;
+  grid-area: head;
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+}
 
-  & h2 {
-    margin-inline-end: auto;
-  }
+.log__search {
+  grid-area: search;
+}
+
+.log__facets {
+  display: none;
+  grid-area: facets;
+  align-self: start;
+}
+
+/* A button to the facets in a sheet, and on a phone the order as a menu. */
+.log__bar {
+  display: flex;
+  grid-area: bar;
+}
+
+.log__summary {
+  grid-area: summary;
 }
 
 .log__tools {
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
+  grid-area: tools;
+  justify-content: end;
 }
 
-/* Where the band of facets does not fit: a button to their sheet, and on a phone the order as a menu. */
-.log__bar {
-  display: none;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+.log__list {
+  grid-area: list;
+  align-self: start;
 }
 
-/* How many of the day's events the filters leave, what they are, and the way back. */
-.summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-4);
-  margin-block-end: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--content-secondary);
-
-  & .mono {
-    font-weight: 560;
-    color: var(--content-primary);
+@media (width >= 80rem) {
+  .log {
+    grid-template-columns: 15rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      'head head head'
+      'search summary tools'
+      'facets list list';
+    column-gap: var(--space-10);
   }
-}
 
-.summary__applied {
-  color: var(--content-tertiary);
-}
+  .log__facets {
+    display: block;
+  }
 
-.clear {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35em;
-  font-weight: 600;
-  color: var(--content-primary);
-  text-decoration-color: currentColor;
+  .log__bar {
+    display: none;
+  }
 }
 
 .ledger {
@@ -80,10 +93,14 @@
   }
 }
 
-/* Seven columns sharing the width, so no single one opens a gap across the middle of the row. */
+/*
+ * Seven columns sharing the width, so no single one opens a gap across the
+ * middle of the row. Measured beside the filters, where the table is at its
+ * narrowest: a long locality and a two-word region still fit on one line.
+ */
 .ledger {
   & .col-time {
-    width: 12%;
+    width: 14%;
   }
 
   & .col-mag {
@@ -91,11 +108,11 @@
   }
 
   & .col-where {
-    width: 30%;
+    width: 31%;
   }
 
   & .col-region {
-    width: 16%;
+    width: 15%;
   }
 
   & .col-position {
@@ -103,11 +120,11 @@
   }
 
   & .col-depth {
-    width: 9%;
+    width: 8%;
   }
 
   & .col-status {
-    width: 11%;
+    width: 10%;
   }
 }
 
@@ -211,6 +228,7 @@
 }
 
 .position {
+  font-size: var(--text-xs);
   white-space: nowrap;
   color: var(--content-tertiary);
 
@@ -304,17 +322,11 @@
 /* As wide as the table it explains, so it reads as its caption rather than a column of its own. */
 .note {
   max-width: none;
+  margin-block-start: var(--space-4);
 }
 
-@media (width < 64rem) {
-  .log__facets {
-    display: none;
-  }
-
-  .log__bar {
-    display: flex;
-  }
-
+/* Short of room for seven columns, the position goes first: an event's page has it, with its uncertainty. */
+@media (width < 72rem) {
   .ledger .col-position,
   .ledger .position {
     display: none;
@@ -327,14 +339,13 @@
  * markup, so restyling its rows as grids leaves a table to a screen reader.
  */
 @media (width < 44rem) {
-  .log__header {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .log__search {
-    grid-row: 2;
-    grid-column: 1 / -1;
+  .log {
+    grid-template-areas:
+      'head head'
+      'search search'
+      'bar bar'
+      'summary tools'
+      'list list';
   }
 
   .ledger,

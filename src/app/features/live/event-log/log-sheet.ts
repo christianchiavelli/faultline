@@ -7,9 +7,9 @@ import { LogFacets } from './log-facets';
 import { clearFilters, isFiltered, logParams, type LogQuery } from './log-query';
 
 /**
- * The log's facets in a sheet, for a screen too narrow for their band. Its own
- * component, so that `@defer` loads it as a file of this app: a library pipe
- * used only inside a deferred block is loaded through its package's whole
+ * The log's facets in a sheet, for a screen too narrow for their column. Its
+ * own component, so that `@defer` loads it as a file of this app: a library
+ * pipe used only inside a deferred block is loaded through its package's whole
  * namespace, which keeps every export of it in the first load.
  */
 @Component({
@@ -17,7 +17,7 @@ import { clearFilters, isFiltered, logParams, type LogQuery } from './log-query'
   imports: [RouterLink, I18nPluralPipe, Dialog, LogFacets],
   template: `
     <ui-dialog [(open)]="open" heading="Filters" [sheet]="true">
-      <fl-log-facets [facets]="facets()" layout="stack" />
+      <fl-log-facets [facets]="facets()" />
       <div uiDialogFooter class="foot">
         @if (filtered()) {
           <a class="text-button" [routerLink]="[]" [queryParams]="clearParams()">Clear filters</a>

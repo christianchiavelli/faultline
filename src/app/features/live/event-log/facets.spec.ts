@@ -1,6 +1,14 @@
 import type { Quake } from '@shared/domain/quake';
 import { aQuake } from '@shared/testing/quake-fixture';
-import { describeFilters, facetsOf, matches, sortEntries, toEntries, type Facet } from './facets';
+import {
+  describeFloor,
+  facetsOf,
+  filtersOn,
+  matches,
+  sortEntries,
+  toEntries,
+  type Facet,
+} from './facets';
 import { DEFAULT_LOG_QUERY, type LogQuery } from './log-query';
 
 const at = (latitude: number, depthKm: number | null) => ({ latitude, longitude: 0, depthKm });
@@ -143,23 +151,50 @@ describe('facetsOf', () => {
   });
 });
 
-describe('describeFilters', () => {
-  it('writes the filters in force as one line', () => {
-    expect(describeFilters(facetsOf(entries, DEFAULT_LOG_QUERY))).toBe('M2.5 and up');
-    expect(
-      describeFilters(
-        facetsOf(entries, {
-          ...DEFAULT_LOG_QUERY,
-          magnitude: 'any',
-          region: 'alaska',
-          depth: 'shallow',
-          review: 'reviewed',
-        }),
-      ),
-    ).toBe('any magnitude · Alaska · shallow · reviewed');
-    expect(describeFilters(facetsOf(entries, DEFAULT_LOG_QUERY), 'willow')).toBe(
-      'M2.5 and up · “willow”',
+describe('describeFloor', () => {
+  it('names the magnitude floor the list has', () => {
+    expect(describeFloor(facetsOf(entries, DEFAULT_LOG_QUERY))).toBe('M2.5 and up');
+    expect(describeFloor(facetsOf(entries, { ...DEFAULT_LOG_QUERY, magnitude: '4.5' }))).toBe(
+      'M4.5 and up',
     );
+    expect(describeFloor(facetsOf(entries, { ...DEFAULT_LOG_QUERY, magnitude: 'any' }))).toBe(
+      'any magnitude',
+    );
+  });
+});
+
+describe('filtersOn', () => {
+  it('has nothing to take off in the default view', () => {
+    expect(filtersOn(facetsOf(entries, DEFAULT_LOG_QUERY), DEFAULT_LOG_QUERY)).toEqual([]);
+  });
+
+  it('lists each filter in force with the view without it, the floor aside', () => {
+    const query: LogQuery = {
+      ...DEFAULT_LOG_QUERY,
+      magnitude: 'any',
+      region: 'alaska',
+      depth: 'shallow',
+      search: 'willow',
+      order: 'largest',
+    };
+
+    expect(filtersOn(facetsOf(entries, query), query)).toEqual([
+      {
+        key: 'region',
+        label: 'Alaska',
+        params: { mag: 'any', depth: 'shallow', q: 'willow', sort: 'largest' },
+      },
+      {
+        key: 'depth',
+        label: 'Shallow',
+        params: { mag: 'any', region: 'alaska', q: 'willow', sort: 'largest' },
+      },
+      {
+        key: 'search',
+        label: '“willow”',
+        params: { mag: 'any', region: 'alaska', depth: 'shallow', sort: 'largest' },
+      },
+    ]);
   });
 });
 

@@ -23,10 +23,11 @@ import { Highlight } from '@ui/highlight';
 import { Icon } from '@ui/icon';
 import { capitalise } from '@ui/text';
 import { dotRadius } from '../../common/world-chart/world-chart';
-import { describeFilters, facetsOf, matches, sortEntries, toEntries } from './facets';
+import { facetsOf, matches, sortEntries, toEntries } from './facets';
 import { LogFacets } from './log-facets';
 import { LogFilters } from './log-filters';
 import { LogSearch } from './log-search';
+import { LogSummary } from './log-summary';
 import {
   LOG_ORDERS,
   clearFilters,
@@ -64,6 +65,7 @@ const FRESH_MS = 4_000;
     LogFacets,
     LogFilters,
     LogSearch,
+    LogSummary,
   ],
   templateUrl: './event-log.html',
   styleUrl: './event-log.css',
@@ -103,7 +105,6 @@ export class EventLog {
 
   readonly facets = computed(() => facetsOf(this.#entries(), this.query()));
   protected readonly filtered = computed(() => isFiltered(this.query()));
-  protected readonly applied = computed(() => describeFilters(this.facets(), this.query().search));
   protected readonly search = computed(() => this.query().search);
   protected readonly total = computed(() => this.#listed().length);
   protected readonly clearParams = computed(() => logParams(clearFilters(this.query())));

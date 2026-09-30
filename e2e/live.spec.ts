@@ -299,7 +299,10 @@ test('filters the log by region and depth, counting every option first', async (
 
   await expect(page).toHaveURL(/\/\?mag=any&region=california$/);
   await expect(log.locator('tbody tr:not(.day)')).toHaveCount(7);
-  await expect(log.locator('.summary p')).toHaveText('7 of 14 events · any magnitude · California');
+  await expect(log.locator('.tally')).toHaveText('7 of 14 events · any magnitude');
+  await expect(
+    log.getByRole('list', { name: 'Filters on' }).getByRole('link'),
+  ).toHaveAccessibleName('Remove California');
   // Every Californian event of the day is shallow, and the other depths say so before a click.
   await expect(
     filters.getByRole('group', { name: 'Depth' }).getByRole('link', { name: /^Shallow/ }),
@@ -309,7 +312,8 @@ test('filters the log by region and depth, counting every option first', async (
   await log.getByRole('link', { name: 'Clear filters' }).click();
 
   await expect(page).toHaveURL(/\/$/);
-  await expect(log.locator('.summary p')).toHaveText('6 of 14 events · M2.5 and up');
+  await expect(log.locator('.tally')).toHaveText('6 of 14 events · M2.5 and up');
+  await expect(log.getByRole('list', { name: 'Filters on' })).toHaveCount(0);
 });
 
 test('has every region of the day one click away, in a popover', async ({ page, isMobile }) => {
@@ -353,7 +357,7 @@ test('searches the log by place, marking what it found', async ({ page }) => {
   await expect(page).toHaveURL(/\/\?mag=any&q=geysers$/);
   await expect(log.locator('tbody tr:not(.day)')).toHaveCount(4);
   await expect(log.locator('tbody mark').first()).toHaveText('Geysers');
-  await expect(log.locator('.summary p')).toContainText('· “geysers”');
+  await expect(log.getByRole('link', { name: 'Remove “geysers”' })).toBeVisible();
 
   await log.getByRole('button', { name: 'Clear the search' }).click();
 
