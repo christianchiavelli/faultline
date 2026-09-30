@@ -18,7 +18,7 @@ Node is pinned by `devEngines` (24.15+, required by the Angular 22 CLI). Always 
 
 Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to make an import pass.
 
-- `src/shared` — domain, contracts, projection. Plain TypeScript: no Angular, no Node, no RxJS.
+- `src/shared` — domain, contracts, projection. Plain TypeScript: no Angular, no Node, no RxJS. Schemas here import `zod/mini`: they ship to the browser, where the classic API cannot be tree-shaken.
 - `src/server` — the BFF. Node and Zod; never Angular. All USGS access goes through `usgs/catalogue.ts`, validated by `usgs/schema.ts`.
 - `src/app/ui` — design system. Must not know about earthquakes (`@shared/*` is off limits).
 - `src/app` — the Angular app. Reaches the BFF over HTTP (`core/api/quakes.ts`). The single exception is `core/api/in-process-backend.ts`, provided only in `app.config.server.ts`.
@@ -26,9 +26,11 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 ## Conventions
 
 - Angular 22 idioms: standalone components (never set `standalone`), OnPush is the default (never set it), `input()`/`output()`, signals and `computed()`, `@if`/`@for`, `inject()`, `@Service()` for new singletons, host bindings in `host: {}`.
-- Data: `httpResource` via `core/api/quakes.ts`; read values behind `hasValue()`. No stores: URL state goes through router input binding.
+- Data: `httpResource` via `core/api/quakes.ts`; read values behind `hasValue()`. No stores: URL state goes through router input binding. Server state that needs a client cache, like the export's live count, is TanStack Query, provided through `QUERY_CLIENT` in the lazy chunk that uses it, never in the app config.
 - Styles: component CSS reads semantic tokens only (`src/styles/tokens.css`). New colours are added as primitives and exposed through a semantic token with `light-dark()`. No Tailwind, no component library.
 - Selectors: `fl-` for app components, `ui-` for design-system components.
+- Dialogs: `ui-dialog`, on the native `<dialog>`; never a hand-built overlay. A dialog's code is its own chunk, rendered with `@defer (when open(); prefetch on idle)`.
+- Icons: Font Awesome solid SVGs through `ui-icon`, registered in `ui/icons.ts`. Beside a word an icon is decoration; a control that has only an icon, like a dialog's close button, carries an `aria-label`. A standalone link to another site ends with the external-link icon; a link inside running text does not.
 - Honest data: a missing value renders as `—`, never as zero; provisional and reviewed values must look different; scales and uncertainties are shown next to the numbers they qualify.
 - Comments explain why, at the line that needs it. No comments that restate the code.
 - UI copy is English (British spelling, as in the rest of the app).
@@ -42,6 +44,10 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - The USGS FDSN service answers 404 for unknown ids and 409 for deleted events; the API maps them to 404 and 410.
 - Angular's transfer cache hands only successful responses to the browser. `core/api/transfer-errors.ts` hands over API errors too; without it an error page refetches while hydrating.
 - A page that renders without its data sets the failure status through `RESPONSE_INIT` (see `live-page.ts`, `quake-page.ts`).
+- Inside a block with `hydrate` triggers, a nested `@defer` renders on the state its handler sets (`when open()`), not `on interaction`: a click replayed after hydration reaches `(click)` handlers, never a trigger's own listener (see `export-button.ts`).
+- Two dependencies are patched (`patches/`, reasons in `pnpm-workspace.yaml`). An install that fails to apply one means the file changed upstream: check whether the fix shipped before re-creating the patch.
+- The initial bundle budget is tight on purpose, 400 kB to warn and 450 kB to fail. A library that drags all of Angular into the first load shows up there first: find the cause with `pnpm build --stats-json` rather than raise the budget.
+- In a unit spec, a TanStack query in flight is a pending task, so `whenStable()` waits for an answer the spec has yet to give. Render with `TestBed.tick()` instead (see `export-dialog.spec.ts`).
 
 ## Design changes
 
