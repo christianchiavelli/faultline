@@ -1,4 +1,5 @@
 import type { Params } from '@angular/router';
+import type { ExportPreset } from '../../export/export-request';
 import { isDepthClass, type DepthClass } from '@shared/domain/depth';
 import type { ReviewStatus } from '@shared/domain/quake';
 
@@ -133,4 +134,24 @@ export function clearFilters(query: LogQuery): LogQuery {
 
 export function minimumMagnitude(floor: MagnitudeFloor): number | null {
   return MAGNITUDE_FLOORS.find((candidate) => candidate.value === floor)!.min;
+}
+
+/**
+ * The export of what the log shows, as far as the catalogue can select it:
+ * magnitude, depth, review and earthquakes alone carry over. A region, a
+ * search and "other events" cannot be asked of the USGS, so the dialog names
+ * them as left behind.
+ */
+export function toExportPreset(query: LogQuery): ExportPreset {
+  return {
+    magnitude: query.magnitude === 'any' ? 'all' : query.magnitude,
+    depth: query.depth ?? 'any',
+    review: query.review ?? 'any',
+    kind: query.kind === 'earthquake' ? 'earthquake' : 'any',
+    leftOut: [
+      ...(query.region ? ['the region'] : []),
+      ...(query.search ? ['the place search'] : []),
+      ...(query.kind === 'other' ? ['other events alone'] : []),
+    ],
+  };
 }

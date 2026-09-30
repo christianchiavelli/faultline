@@ -12,7 +12,7 @@ import { capitalise } from '@ui/text';
 import { WorldChart } from '../common/world-chart/world-chart';
 import { ExportButton } from '../export/export-button';
 import { EventLog } from './event-log/event-log';
-import { parseLogQuery, type LogParams } from './event-log/log-query';
+import { parseLogQuery, toExportPreset, type LogParams } from './event-log/log-query';
 import { Helicorder } from './helicorder/helicorder';
 import { MagnitudeChart } from './magnitude-chart/magnitude-chart';
 
@@ -72,11 +72,7 @@ export class LivePage {
       rows: this.rows(),
     } satisfies Record<keyof LogParams, string | undefined>),
   );
-  /** The export's own name for "any magnitude". */
-  protected readonly exportMagnitude = computed(() => {
-    const magnitude = this.query().magnitude;
-    return magnitude === 'any' ? 'all' : magnitude;
-  });
+  protected readonly exportPreset = computed(() => toExportPreset(this.query()));
   protected readonly summary = computed(() => summarise(this.feed()?.quakes ?? []));
 
   protected readonly largest = computed(() => {

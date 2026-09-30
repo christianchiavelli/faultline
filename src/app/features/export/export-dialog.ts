@@ -17,11 +17,14 @@ import { provideTanStackQuery } from '@tanstack/angular-query-experimental';
 import { Dialog } from '@ui/dialog';
 import { Icon } from '@ui/icon';
 import {
+  DEFAULT_PRESET,
+  DEPTH_CHOICES,
   KIND_CHOICES,
   MAGNITUDE_CHOICES,
   RADIUS_CHOICES,
   REVIEW_CHOICES,
   describeFile,
+  describeLeftOut,
   describePeriod,
   initialForm,
   isoDay,
@@ -29,7 +32,7 @@ import {
   suggestionsFor,
   toAnchor,
   toQuery,
-  type MagnitudeChoice,
+  type ExportPreset,
   type Suggestion,
 } from './export-request';
 
@@ -58,8 +61,8 @@ export class ExportDialog {
   readonly open = model(false);
   /** The event the export is centred on, when opened from its page. */
   readonly event = input<QuakeSummary | null>(null);
-  /** The log's filter, when opened from the log. */
-  readonly minMagnitude = input<MagnitudeChoice>('2.5');
+  /** The log's filters, when opened from the log. */
+  readonly preset = input<ExportPreset>(DEFAULT_PRESET);
 
   readonly #now = inject(Clock).now;
   /** The counts are for this minute: the clock ticks every second, the query only when this moves. */
@@ -72,7 +75,7 @@ export class ExportDialog {
 
   /** Starts again from the defaults when the page it was opened from changes, and not before. */
   protected readonly model = linkedSignal(() =>
-    initialForm(this.anchor(), this.minMagnitude(), untracked(this.#now)),
+    initialForm(this.anchor(), this.preset(), untracked(this.#now)),
   );
 
   protected readonly form = form(this.model, (path) => {
@@ -93,6 +96,7 @@ export class ExportDialog {
 
   protected readonly periods = computed(() => periodChoices(this.anchor()));
   protected readonly magnitudes = MAGNITUDE_CHOICES;
+  protected readonly depths = DEPTH_CHOICES;
   protected readonly radii = RADIUS_CHOICES;
   protected readonly reviews = REVIEW_CHOICES;
   protected readonly kinds = KIND_CHOICES;
@@ -124,6 +128,9 @@ export class ExportDialog {
     const when = formatDate(anchor.time, "d MMM yyyy 'at' HH:mm", 'en-US', 'UTC');
     return `Around ${anchor.description}, on ${when} UTC.`;
   });
+
+  /** What the log filtered by and the catalogue cannot, said before the reader counts on it. */
+  protected readonly leftOut = computed(() => describeLeftOut(this.preset().leftOut));
 
   protected readonly periodText = computed(() => {
     const query = this.query();

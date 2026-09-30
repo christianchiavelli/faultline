@@ -2,7 +2,7 @@ import { Component, input, signal } from '@angular/core';
 import type { QuakeSummary } from '@shared/domain/quake';
 import { Icon } from '@ui/icon';
 import { ExportDialog } from './export-dialog';
-import type { MagnitudeChoice } from './export-request';
+import { DEFAULT_PRESET, type ExportPreset } from './export-request';
 
 /**
  * The way into an export: a tool button in the event log, or, given an
@@ -28,13 +28,14 @@ import type { MagnitudeChoice } from './export-request';
     </button>
 
     @defer (when open(); prefetch on idle) {
-      <fl-export-dialog [(open)]="open" [event]="event()" [minMagnitude]="minMagnitude()" />
+      <fl-export-dialog [(open)]="open" [event]="event()" [preset]="preset()" />
     }
   `,
 })
 export class ExportButton {
   readonly event = input<QuakeSummary | null>(null);
-  readonly minMagnitude = input<MagnitudeChoice>('2.5');
+  /** The log's filters, which the dialog opens with. */
+  readonly preset = input<ExportPreset>(DEFAULT_PRESET);
 
   protected readonly open = signal(false);
 }

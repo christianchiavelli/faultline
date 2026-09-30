@@ -17,7 +17,9 @@ const query: ExportQuery = {
   to: T0 + 24 * HOUR,
   minMagnitude: null,
   near: null,
-  reviewedOnly: false,
+  minDepthKm: null,
+  maxDepthKm: null,
+  review: null,
   earthquakesOnly: false,
 };
 
@@ -179,8 +181,10 @@ describe('countEvents', () => {
     const aftershocks: ExportQuery = {
       ...query,
       minMagnitude: 2.5,
+      minDepthKm: 70,
+      maxDepthKm: 300,
       near: { latitude: -8.2, longitude: 121.5, radiusKm: 100 },
-      reviewedOnly: true,
+      review: 'automatic',
       earthquakesOnly: true,
     };
 
@@ -195,7 +199,9 @@ describe('countEvents', () => {
       latitude: '-8.2',
       longitude: '121.5',
       maxradiuskm: '100',
-      reviewstatus: 'reviewed',
+      mindepth: '70',
+      maxdepth: '300',
+      reviewstatus: 'automatic',
       eventtype: 'earthquake',
     });
   });

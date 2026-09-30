@@ -146,7 +146,7 @@
 
     @defer (on viewport; hydrate on viewport) {
       <fl-event-log [quakes]="feed.quakes" [query]="query()" [now]="now()">
-        <fl-export-button [minMagnitude]="exportMagnitude()" />
+        <fl-export-button [preset]="exportPreset()" />
       </fl-event-log>
     } @placeholder {
       <div class="log-placeholder" aria-hidden="true"></div>

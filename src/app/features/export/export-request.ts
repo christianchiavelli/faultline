@@ -1,5 +1,11 @@
 import { formatDate } from '@angular/common';
-import { EXPORT_LIMIT, type ExportFormat, type ExportQuery } from '@shared/api/export';
+import {
+  EXPORT_LIMIT,
+  depthClassOfRange,
+  type ExportFormat,
+  type ExportQuery,
+} from '@shared/api/export';
+import { DEPTH_CLASSES, type DepthClass } from '@shared/domain/depth';
 import type { QuakeSummary } from '@shared/domain/quake';
 
 /**
@@ -15,7 +21,8 @@ export type PeriodChoice = 'day' | 'week' | 'month' | 'since-event' | 'custom';
 export type MagnitudeChoice = 'all' | '2.5' | '4.5' | '6';
 export type AreaChoice = 'world' | 'near';
 export type RadiusChoice = '25' | '50' | '100' | '250' | '500';
-export type ReviewChoice = 'any' | 'reviewed';
+export type DepthChoice = 'any' | DepthClass;
+export type ReviewChoice = 'any' | 'reviewed' | 'automatic';
 export type KindChoice = 'any' | 'earthquake';
 
 /** What the dialog's controls hold. Radio values are strings, as the inputs carry them. */
@@ -23,6 +30,7 @@ export interface ExportForm {
   period: PeriodChoice;
   custom: { from: string; to: string };
   magnitude: MagnitudeChoice;
+  depth: DepthChoice;
   area: AreaChoice;
   radiusKm: RadiusChoice;
   review: ReviewChoice;
@@ -38,6 +46,27 @@ export interface ExportAnchor {
   /** "the M7.8 66 km NNW of Ende, Indonesia" */
   readonly description: string;
 }
+
+/**
+ * What the dialog starts from when the log opens it: the log's own filters,
+ * as far as the catalogue can select by them.
+ */
+export interface ExportPreset {
+  readonly magnitude: MagnitudeChoice;
+  readonly depth: DepthChoice;
+  readonly review: ReviewChoice;
+  readonly kind: KindChoice;
+  /** The log's filters the catalogue has no way to select by, in words: "the region". */
+  readonly leftOut: readonly string[];
+}
+
+export const DEFAULT_PRESET: ExportPreset = {
+  magnitude: '2.5',
+  depth: 'any',
+  review: 'any',
+  kind: 'any',
+  leftOut: [],
+};
 
 interface Choice<T> {
   readonly value: T;
@@ -62,6 +91,11 @@ export const MAGNITUDE_CHOICES: readonly Choice<MagnitudeChoice>[] = [
   { value: '6', label: '6+' },
 ];
 
+export const DEPTH_CHOICES: readonly Choice<DepthChoice>[] = [
+  { value: 'any', label: 'Any' },
+  ...DEPTH_CLASSES.map(({ value, label }) => ({ value, label })),
+];
+
 export const RADIUS_CHOICES: readonly Choice<RadiusChoice>[] = [
   { value: '25', label: '25' },
   { value: '50', label: '50' },
@@ -73,6 +107,7 @@ export const RADIUS_CHOICES: readonly Choice<RadiusChoice>[] = [
 export const REVIEW_CHOICES: readonly Choice<ReviewChoice>[] = [
   { value: 'any', label: 'Reviewed and automatic' },
   { value: 'reviewed', label: 'Reviewed only' },
+  { value: 'automatic', label: 'Automatic only' },
 ];
 
 export const KIND_CHOICES: readonly Choice<KindChoice>[] = [
@@ -92,22 +127,23 @@ export function toAnchor(quake: QuakeSummary): ExportAnchor {
 
 /**
  * The dialog opens on what the reader is already looking at: from the log,
- * the last day at the log's magnitude filter; from an event, every event near
- * it since it happened, which is its aftershock sequence.
+ * the last day with the log's filters; from an event, every event near it
+ * since it happened, which is its aftershock sequence.
  */
 export function initialForm(
   anchor: ExportAnchor | null,
-  magnitude: MagnitudeChoice,
+  preset: ExportPreset,
   now: number,
 ): ExportForm {
   return {
     period: anchor ? 'since-event' : 'day',
     custom: { from: isoDay(now - 30 * DAY), to: isoDay(now) },
-    magnitude: anchor ? 'all' : magnitude,
+    magnitude: anchor ? 'all' : preset.magnitude,
+    depth: preset.depth,
     area: anchor ? 'near' : 'world',
     radiusKm: '100',
-    review: 'any',
-    kind: 'any',
+    review: preset.review,
+    kind: preset.kind,
     format: 'csv',
   };
 }
@@ -120,10 +156,13 @@ export function initialForm(
 export function toQuery(form: ExportForm, anchor: ExportAnchor | null, now: number): ExportQuery {
   const end = Math.ceil(now / MINUTE) * MINUTE;
   const [from, to] = periodBounds(form, anchor, end);
+  const depth = DEPTH_CLASSES.find((candidate) => candidate.value === form.depth);
   return {
     from,
     to,
     minMagnitude: form.magnitude === 'all' ? null : Number(form.magnitude),
+    minDepthKm: depth?.fromKm ?? null,
+    maxDepthKm: depth?.toKm ?? null,
     near:
       form.area === 'near' && anchor
         ? {
@@ -132,7 +171,7 @@ export function toQuery(form: ExportForm, anchor: ExportAnchor | null, now: numb
             radiusKm: Number(form.radiusKm),
           }
         : null,
-    reviewedOnly: form.review === 'reviewed',
+    review: form.review === 'any' ? null : form.review,
     earthquakesOnly: form.kind === 'earthquake',
   };
 }
@@ -239,12 +278,28 @@ export function describePeriod(form: ExportForm, query: ExportQuery): string {
   return `${from} to ${formatDate(query.to, 'd MMM, HH:mm', 'en-US', 'UTC')} UTC`;
 }
 
-/** "About 7 kB, worldwide, M2.5 and up": the file in one line, next to its count. */
+/** "About 7 kB, worldwide, M2.5 and up, shallow": the file in one line, next to its count. */
 export function describeFile(query: ExportQuery, count: number, format: ExportFormat): string {
   const where = query.near ? `within ${query.near.radiusKm} km of the epicentre` : 'worldwide';
   const magnitude =
     query.minMagnitude === null ? 'every magnitude' : `M${query.minMagnitude} and up`;
-  return `About ${estimateSize(count, format)}, ${where}, ${magnitude}`;
+  const depth = depthClassOfRange(query);
+  return [`About ${estimateSize(count, format)}`, where, magnitude, depth, query.review]
+    .filter(Boolean)
+    .join(', ');
+}
+
+/** "Left in the log: the region and the place search." Nothing when the file takes every filter. */
+export function describeLeftOut(leftOut: readonly string[]): string | null {
+  if (!leftOut.length) return null;
+  const list =
+    leftOut.length === 1
+      ? leftOut[0]
+      : `${leftOut.slice(0, -1).join(', ')} and ${leftOut[leftOut.length - 1]}`;
+  return (
+    `Left in the log: ${list}. The USGS catalogue cannot select events that way, ` +
+    `so the file holds more than the log shows.`
+  );
 }
 
 export function isoDay(ms: number): string {

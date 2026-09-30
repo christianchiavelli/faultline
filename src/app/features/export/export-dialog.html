@@ -1,5 +1,8 @@
 <ui-dialog [(open)]="open" heading="Export events" eyebrow="USGS catalogue" [lede]="lede()">
   <form class="fields" novalidate (submit)="$event.preventDefault()">
+    @if (leftOut(); as note) {
+      <p class="callout left-out">{{ note }}</p>
+    }
     @if (anchor()) {
       <fieldset class="field">
         <legend class="label">Where</legend>
@@ -103,6 +106,26 @@
         <p class="hint">
           Magnitudes come on different scales; the file names the scale of each one.
         </p>
+      </div>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend class="label">Depth</legend>
+      <div class="controls">
+        <div class="segmented">
+          @for (choice of depths; track choice.value) {
+            <label class="segmented__item">
+              <input
+                class="visually-hidden"
+                type="radio"
+                [value]="choice.value"
+                [formField]="form.depth"
+              />
+              {{ choice.label }}
+            </label>
+          }
+        </div>
+        <p class="hint">Shallow is down to 70 km, intermediate to 300, deep below that.</p>
       </div>
     </fieldset>
 

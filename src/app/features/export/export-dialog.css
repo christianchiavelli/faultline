@@ -215,3 +215,7 @@
     }
   }
 }
+
+.left-out {
+  margin-block-start: var(--space-4);
+}

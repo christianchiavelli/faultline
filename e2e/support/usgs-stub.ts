@@ -232,8 +232,11 @@ interface Search {
     readonly longitude: number;
     readonly km: number;
   } | null;
-  readonly reviewedOnly: boolean;
   readonly earthquakesOnly: boolean;
+  /** `reviewed` or `automatic`, as `reviewstatus` takes them. */
+  readonly review: string | null;
+  readonly minDepth: number | null;
+  readonly maxDepth: number | null;
 }
 
 function readSearch(params: URLSearchParams): Search {
@@ -249,8 +252,10 @@ function readSearch(params: URLSearchParams): Search {
     minMagnitude: number('minmagnitude'),
     circle:
       latitude !== null && longitude !== null && km !== null ? { latitude, longitude, km } : null,
-    reviewedOnly: params.get('reviewstatus') === 'reviewed',
     earthquakesOnly: params.get('eventtype') === 'earthquake',
+    review: params.get('reviewstatus'),
+    minDepth: number('mindepth'),
+    maxDepth: number('maxdepth'),
   };
 }
 
@@ -260,7 +265,9 @@ function matches(event: StubEvent, time: number, search: Search): boolean {
     time >= search.start &&
     time <= search.end &&
     (minMagnitude === null || (event.mag !== null && event.mag >= minMagnitude)) &&
-    (!search.reviewedOnly || event.status === 'reviewed') &&
+    (!search.review || event.status === search.review) &&
+    (search.minDepth === null || event.coordinates[2] >= search.minDepth) &&
+    (search.maxDepth === null || event.coordinates[2] < search.maxDepth) &&
     (!search.earthquakesOnly || (event.type ?? 'earthquake') === 'earthquake') &&
     (!circle || distanceKm(event, circle) <= circle.km)
   );

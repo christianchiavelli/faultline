@@ -1,5 +1,7 @@
 // The mini build: this file ships to the browser, and the classic API cannot be tree-shaken.
 import * as z from 'zod/mini';
+import { DEPTH_CLASSES } from '../domain/depth';
+import type { ReviewStatus } from '../domain/quake';
 
 /**
  * The export contract. The BFF parses every request with `exportQuerySchema`,
@@ -22,13 +24,17 @@ export interface ExportQuery {
   /** Epoch milliseconds, exclusive. */
   readonly to: number;
   readonly minMagnitude: number | null;
+  /** Kilometres below sea level, from inclusive and to exclusive; `null` for no bound. */
+  readonly minDepthKm: number | null;
+  readonly maxDepthKm: number | null;
   /** A circle around a point, or the whole world. */
   readonly near: {
     readonly latitude: number;
     readonly longitude: number;
     readonly radiusKm: number;
   } | null;
-  readonly reviewedOnly: boolean;
+  /** Only events in this state of review; `null` for both. */
+  readonly review: ReviewStatus | null;
   readonly earthquakesOnly: boolean;
 }
 
@@ -128,11 +134,14 @@ export const exportQuerySchema = z.pipe(
       from: z.iso.datetime('Expected an ISO time in UTC.').check(inRecord),
       to: z.iso.datetime('Expected an ISO time in UTC.'),
       minmag: decimal(z.gte(-2), z.lte(10)),
+      // Above sea level to below the deepest earthquakes, as far as the USGS accepts.
+      mindepth: decimal(z.gte(-100), z.lte(1000)),
+      maxdepth: decimal(z.gte(-100), z.lte(1000)),
       lat: decimal(z.gte(-90), z.lte(90)),
       lon: decimal(z.gte(-180), z.lte(180)),
       // Half the planet: the most the USGS accepts.
       radiuskm: decimal(z.positive(), z.lte(20_001.6)),
-      reviewed: flag,
+      review: z.optional(z.enum(['reviewed', 'automatic'])),
       earthquakes: flag,
     })
     .check(
@@ -147,16 +156,23 @@ export const exportQuerySchema = z.pipe(
           [raw.lat, raw.lon, raw.radiuskm].every((part) => part !== undefined),
         { path: ['radiuskm'], error: 'A circle needs lat, lon and radiuskm together.' },
       ),
+      z.refine(
+        (raw) =>
+          raw.mindepth === undefined || raw.maxdepth === undefined || raw.mindepth < raw.maxdepth,
+        { path: ['maxdepth'], error: 'The depths must run from shallower to deeper.' },
+      ),
     ),
   z.transform((raw): ExportQuery => ({
     from: Date.parse(raw.from),
     to: Date.parse(raw.to),
     minMagnitude: raw.minmag ?? null,
+    minDepthKm: raw.mindepth ?? null,
+    maxDepthKm: raw.maxdepth ?? null,
     near:
       raw.lat !== undefined && raw.lon !== undefined && raw.radiuskm !== undefined
         ? { latitude: raw.lat, longitude: raw.lon, radiusKm: raw.radiuskm }
         : null,
-    reviewedOnly: raw.reviewed ?? false,
+    review: raw.review ?? null,
     earthquakesOnly: raw.earthquakes ?? false,
   })),
 );
@@ -187,23 +203,37 @@ function isDay(value: string): boolean {
 export function exportSearchParams(query: ExportQuery): URLSearchParams {
   const params = new URLSearchParams({ from: isoTime(query.from), to: isoTime(query.to) });
   if (query.minMagnitude !== null) params.set('minmag', String(query.minMagnitude));
+  if (query.minDepthKm !== null) params.set('mindepth', String(query.minDepthKm));
+  if (query.maxDepthKm !== null) params.set('maxdepth', String(query.maxDepthKm));
   if (query.near) {
     params.set('lat', String(query.near.latitude));
     params.set('lon', String(query.near.longitude));
     params.set('radiuskm', String(query.near.radiusKm));
   }
-  if (query.reviewedOnly) params.set('reviewed', 'true');
+  if (query.review) params.set('review', query.review);
   if (query.earthquakesOnly) params.set('earthquakes', 'true');
   return params;
 }
 
-/** `faultline_2026-08-30_2026-09-29_m2.5_100km.csv`: what and when, readable in a downloads folder. */
+/** `faultline_2026-08-30_2026-09-29_m2.5_shallow_100km.csv`: what and when, readable in a downloads folder. */
 export function exportFileName(query: ExportQuery, format: ExportFormat): string {
   // `to` is exclusive, so the last day in the file is the one just before it.
   const parts = ['faultline', isoDay(query.from), isoDay(query.to - 1)];
   if (query.minMagnitude !== null) parts.push(`m${query.minMagnitude}`);
+  const depth = depthClassOfRange(query);
+  if (depth) parts.push(depth);
+  if (query.review) parts.push(query.review);
   if (query.near) parts.push(`${query.near.radiusKm}km`);
   return `${parts.join('_')}.${format}`;
+}
+
+/** The depth class a query's range is, when it is one: "shallow", "intermediate" or "deep". */
+export function depthClassOfRange(query: Pick<ExportQuery, 'minDepthKm' | 'maxDepthKm'>) {
+  return (
+    DEPTH_CLASSES.find(
+      ({ fromKm, toKm }) => fromKm === query.minDepthKm && toKm === query.maxDepthKm,
+    )?.value ?? null
+  );
 }
 
 function isoTime(ms: number): string {

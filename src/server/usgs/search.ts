@@ -158,12 +158,14 @@ function searchParams(query: ExportQuery, start: number): URLSearchParams {
     endtime: new Date(query.to - 1).toISOString(),
   });
   if (query.minMagnitude !== null) params.set('minmagnitude', String(query.minMagnitude));
+  if (query.minDepthKm !== null) params.set('mindepth', String(query.minDepthKm));
+  if (query.maxDepthKm !== null) params.set('maxdepth', String(query.maxDepthKm));
   if (query.near) {
     params.set('latitude', String(query.near.latitude));
     params.set('longitude', String(query.near.longitude));
     params.set('maxradiuskm', String(query.near.radiusKm));
   }
-  if (query.reviewedOnly) params.set('reviewstatus', 'reviewed');
+  if (query.review) params.set('reviewstatus', query.review);
   if (query.earthquakesOnly) params.set('eventtype', 'earthquake');
   return params;
 }

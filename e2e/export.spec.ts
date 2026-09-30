@@ -139,3 +139,24 @@ test('fills a phone screen, with its actions pinned under the thumb', async ({
   expect(footer.y + footer.height).toBeCloseTo(viewport.height, 0);
   await expect(dialog.getByRole('link', { name: 'Download 6 events' })).toBeInViewport();
 });
+
+test('opens on the log’s filters, and names the ones the catalogue cannot take', async ({
+  page,
+}) => {
+  const dialog = await openFrom(
+    page,
+    '/?mag=4.5&region=tonga&depth=shallow&review=automatic',
+    'Export…',
+  );
+
+  await expect(dialog.getByRole('radio', { name: '4.5+' })).toBeChecked();
+  await expect(dialog.getByRole('radio', { name: 'Shallow' })).toBeChecked();
+  await expect(dialog.getByRole('radio', { name: 'Automatic only' })).toBeChecked();
+  await expect(dialog.locator('.left-out')).toHaveText(
+    'Left in the log: the region. The USGS catalogue cannot select events that way, ' +
+      'so the file holds more than the log shows.',
+  );
+  const link = dialog.getByRole('link', { name: /^Download/ });
+  await expect(link).toHaveAttribute('href', /[?&]maxdepth=70&/);
+  await expect(link).toHaveAttribute('href', /[?&]review=automatic(&|$)/);
+});
