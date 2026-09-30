@@ -336,3 +336,51 @@ test('renders a filtered view on the server, as its address asks', async ({ brow
   await expect(log.locator('tbody tr:not(.day)')).toContainText('South of the Fiji Islands');
   await context.close();
 });
+
+test('searches the log by place, marking what it found', async ({ page }) => {
+  await page.goto('/?mag=any');
+  await waitForHydration(page);
+  const log = page.getByRole('region', { name: 'Every event' });
+  await waitForHydrationOf(page.locator('fl-event-log'));
+  const search = log.getByRole('searchbox', { name: 'Search places' });
+
+  await search.fill('geysers');
+
+  await expect(page).toHaveURL(/\/\?mag=any&q=geysers$/);
+  await expect(log.locator('tbody tr:not(.day)')).toHaveCount(4);
+  await expect(log.locator('tbody mark').first()).toHaveText('Geysers');
+  await expect(log.locator('.summary p')).toContainText('· “geysers”');
+
+  await log.getByRole('button', { name: 'Clear the search' }).click();
+
+  await expect(page).toHaveURL(/\/\?mag=any$/);
+  await expect(search).toBeFocused();
+  await expect(log.locator('tbody mark')).toHaveCount(0);
+});
+
+test('goes to the search on "/", from anywhere on the page', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'A phone has no keyboard shortcuts');
+  await page.goto('/');
+  await waitForHydration(page);
+  await waitForHydrationOf(page.locator('fl-event-log'));
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  await page.keyboard.press('/');
+
+  await expect(page.getByRole('searchbox', { name: 'Search places' })).toBeFocused();
+});
+
+test('searches before any script runs, accents or not', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/?mag=any');
+  const log = page.getByRole('region', { name: 'Every event' });
+
+  await log.getByRole('searchbox', { name: 'Search places' }).fill('pahala');
+  await log.getByRole('searchbox', { name: 'Search places' }).press('Enter');
+
+  await expect(page).toHaveURL(/[?&]q=pahala/);
+  await expect(log.locator('tbody tr:not(.day)')).toHaveCount(1);
+  await expect(log.locator('tbody mark')).toHaveText('Pāhala');
+  await context.close();
+});

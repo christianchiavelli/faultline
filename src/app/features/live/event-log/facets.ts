@@ -2,7 +2,7 @@ import type { Params } from '@angular/router';
 import { DEPTH_CLASSES, depthClassOf, type DepthClass } from '@shared/domain/depth';
 import { regionSlug, splitPlace } from '@shared/domain/place';
 import { EARTHQUAKE_KIND, type QuakeSummary } from '@shared/domain/quake';
-import { capitalise } from '@ui/text';
+import { capitalise, fold, searchWords } from '@ui/text';
 import { MAGNITUDE_FLOORS, logParams, minimumMagnitude, type LogQuery } from './log-query';
 
 /** An event, with what the log filters it by worked out once. */
@@ -12,6 +12,8 @@ export interface LogEntry {
   readonly region: string | null;
   readonly regionSlug: string | null;
   readonly depth: DepthClass | null;
+  /** The place name and its region as a search compares them, so "california" finds "…, CA". */
+  readonly text: string;
 }
 
 export function toEntries(quakes: readonly QuakeSummary[]): LogEntry[] {
@@ -22,6 +24,7 @@ export function toEntries(quakes: readonly QuakeSummary[]): LogEntry[] {
       region: region ? capitalise(region) : null,
       regionSlug: region ? regionSlug(region) : null,
       depth: depthClassOf(quake.location.depthKm),
+      text: fold(`${quake.place ?? ''} ${region ?? ''}`),
     };
   });
 }
@@ -43,9 +46,15 @@ const TESTS: Record<FacetKey, (entry: LogEntry, query: LogQuery) => boolean> = {
     kind === null || (kind === 'earthquake') === (quake.kind === EARTHQUAKE_KIND),
 };
 
-/** Whether the query shows this entry, leaving one filter out when asked to. */
+/**
+ * Whether the query shows this entry, leaving one filter out when asked to.
+ * The search always applies: the counts are of what the reader is looking for.
+ */
 export function matches(entry: LogEntry, query: LogQuery, except?: FacetKey): boolean {
-  return FACET_KEYS.every((key) => key === except || TESTS[key](entry, query));
+  return (
+    FACET_KEYS.every((key) => key === except || TESTS[key](entry, query)) &&
+    searchWords(query.search).every((word) => entry.text.includes(word))
+  );
 }
 
 export interface FacetOption {
@@ -166,17 +175,16 @@ export function facetsOf(entries: readonly LogEntry[], query: LogQuery): Facet[]
   ];
 }
 
-/** "M2.5 and up · Alaska · shallow": the filters in force, as one line of text. */
-export function describeFilters(facets: readonly Facet[]): string {
-  return facets
-    .flatMap((facet) => {
-      const current = facet.options.find((option) => option.current);
-      if (!current) return [];
-      if (facet.key === 'magnitude') {
-        return current.value === 'any' ? ['any magnitude'] : [`M${current.label}`];
-      }
-      if (current.value === null) return [];
-      return [facet.key === 'region' ? current.label : current.label.toLowerCase()];
-    })
-    .join(' · ');
+/** "M2.5 and up · Alaska · shallow · “geysers”": the filters in force, as one line of text. */
+export function describeFilters(facets: readonly Facet[], search = ''): string {
+  const filters = facets.flatMap((facet) => {
+    const current = facet.options.find((option) => option.current);
+    if (!current) return [];
+    if (facet.key === 'magnitude') {
+      return current.value === 'any' ? ['any magnitude'] : [`M${current.label}`];
+    }
+    if (current.value === null) return [];
+    return [facet.key === 'region' ? current.label : current.label.toLowerCase()];
+  });
+  return [...filters, ...(search ? [`“${search}”`] : [])].join(' · ');
 }

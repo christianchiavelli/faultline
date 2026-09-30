@@ -19,6 +19,8 @@ export interface LogQuery {
   readonly review: ReviewStatus | null;
   /** `?kind=earthquake`, or `other` for explosions, quarry blasts and the rest. */
   readonly kind: KindFilter | null;
+  /** `?q=geysers`: words the place name must hold; empty for no search. */
+  readonly search: string;
   /** `?rows=all`: every event, not only the latest. */
   readonly unfolded: boolean;
 }
@@ -44,6 +46,7 @@ export interface LogParams {
   readonly depth?: string;
   readonly review?: string;
   readonly kind?: string;
+  readonly q?: string;
   readonly rows?: string;
 }
 
@@ -53,8 +56,17 @@ export const DEFAULT_LOG_QUERY: LogQuery = {
   depth: null,
   review: null,
   kind: null,
+  search: '',
   unfolded: false,
 };
+
+/** Long enough for any place name; an address with more is not a search a reader typed. */
+const SEARCH_LENGTH = 80;
+
+/** A search as the address keeps it: spaces collapsed, ends trimmed, length capped. */
+export function normaliseSearch(value: string | null | undefined): string {
+  return (value ?? '').replace(/\s+/g, ' ').trim().slice(0, SEARCH_LENGTH);
+}
 
 /** Lowercase words joined by hyphens, and short: anything else is not a region this app wrote. */
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -70,6 +82,7 @@ export function parseLogQuery(params: LogParams): LogQuery {
     depth: isDepthClass(params.depth) ? params.depth : null,
     review: params.review === 'reviewed' || params.review === 'automatic' ? params.review : null,
     kind: params.kind === 'earthquake' || params.kind === 'other' ? params.kind : null,
+    search: normaliseSearch(params.q),
     unfolded: params.rows === 'all',
   };
 }
@@ -85,6 +98,7 @@ export function logParams(query: LogQuery): Params {
   if (query.depth) params['depth'] = query.depth;
   if (query.review) params['review'] = query.review;
   if (query.kind) params['kind'] = query.kind;
+  if (query.search) params['q'] = query.search;
   if (query.unfolded) params['rows'] = 'all';
   return params;
 }
@@ -96,11 +110,12 @@ export function isFiltered(query: LogQuery): boolean {
     query.region !== null ||
     query.depth !== null ||
     query.review !== null ||
-    query.kind !== null
+    query.kind !== null ||
+    query.search !== ''
   );
 }
 
-/** The same view with every filter back at its default. */
+/** The same view with every filter, and the search, back at its default. */
 export function clearFilters(query: LogQuery): LogQuery {
   return { ...DEFAULT_LOG_QUERY, unfolded: query.unfolded };
 }

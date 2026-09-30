@@ -20,6 +20,7 @@ describe('parseLogQuery', () => {
         depth: 'shallow',
         review: 'reviewed',
         kind: 'earthquake',
+        q: 'anchorage',
         rows: 'all',
       }),
     ).toEqual({
@@ -28,6 +29,7 @@ describe('parseLogQuery', () => {
       depth: 'shallow',
       review: 'reviewed',
       kind: 'earthquake',
+      search: 'anchorage',
       unfolded: true,
     });
   });
@@ -43,6 +45,11 @@ describe('parseLogQuery', () => {
         rows: 'some',
       }),
     ).toEqual(DEFAULT_LOG_QUERY);
+  });
+
+  it('keeps a search as typed, its spaces tidied and its length capped', () => {
+    expect(parseLogQuery({ q: '  the   geysers ' }).search).toBe('the geysers');
+    expect(parseLogQuery({ q: 'a'.repeat(200) }).search).toHaveLength(80);
   });
 
   it('reads a region the way the app writes it, whatever the case', () => {
@@ -63,6 +70,7 @@ describe('logParams', () => {
       depth: 'intermediate',
       review: 'automatic',
       kind: 'other',
+      search: 'cobb',
       unfolded: true,
     };
 
@@ -72,6 +80,7 @@ describe('logParams', () => {
       ['depth', 'intermediate'],
       ['review', 'automatic'],
       ['kind', 'other'],
+      ['q', 'cobb'],
       ['rows', 'all'],
     ]);
     expect(parseLogQuery(logParams(query))).toEqual(query);
@@ -79,8 +88,13 @@ describe('logParams', () => {
 });
 
 describe('clearFilters', () => {
-  it('puts every filter back, and keeps the log unfolded', () => {
-    const query: LogQuery = { ...DEFAULT_LOG_QUERY, region: 'alaska', unfolded: true };
+  it('puts every filter and the search back, and keeps the log unfolded', () => {
+    const query: LogQuery = {
+      ...DEFAULT_LOG_QUERY,
+      region: 'alaska',
+      search: 'willow',
+      unfolded: true,
+    };
 
     expect(isFiltered(query)).toBe(true);
     expect(clearFilters(query)).toEqual({ ...DEFAULT_LOG_QUERY, unfolded: true });

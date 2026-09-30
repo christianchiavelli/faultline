@@ -2,6 +2,7 @@
   <header class="log__header">
     <h2 class="section-title" id="log-title">Every event</h2>
     <div class="log__tools">
+      <fl-log-search [query]="query()" />
       <ng-content />
     </div>
   </header>
@@ -85,10 +86,12 @@
                     class="ledger__link"
                     [routerLink]="['/quakes', row.id]"
                     [attr.data-id]="row.id"
-                    >{{ row.where }}</a
-                  >
+                    ><ui-highlight [text]="row.where" [search]="search()"
+                  /></a>
                   @if (row.inlineRegion; as region) {
-                    <span class="place__region">, {{ region }}</span>
+                    <span class="place__region"
+                      >, <ui-highlight [text]="region" [search]="search()"
+                    /></span>
                   }
                   @if (row.kind; as kind) {
                     <span class="tag kind">{{ kind }}</span>
@@ -96,7 +99,7 @@
                 </td>
                 <td class="region">
                   @if (row.region; as region) {
-                    {{ region }}
+                    <ui-highlight [text]="region" [search]="search()" />
                   } @else {
                     <span class="missing">—</span>
                   }

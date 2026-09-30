@@ -19,11 +19,13 @@ import { magnitudeScale } from '@shared/domain/magnitude';
 import { splitPlace } from '@shared/domain/place';
 import { EARTHQUAKE_KIND, isNotable, type QuakeSummary } from '@shared/domain/quake';
 import { AgoPipe } from '@ui/ago.pipe';
+import { Highlight } from '@ui/highlight';
 import { Icon } from '@ui/icon';
 import { capitalise } from '@ui/text';
 import { dotRadius } from '../../common/world-chart/world-chart';
 import { describeFilters, facetsOf, matches, toEntries } from './facets';
 import { LogFacets } from './log-facets';
+import { LogSearch } from './log-search';
 import { clearFilters, isFiltered, logParams, type LogQuery } from './log-query';
 
 /**
@@ -37,7 +39,7 @@ const FRESH_MS = 4_000;
 
 @Component({
   selector: 'fl-event-log',
-  imports: [RouterLink, DatePipe, I18nPluralPipe, AgoPipe, Icon, LogFacets],
+  imports: [RouterLink, DatePipe, I18nPluralPipe, AgoPipe, Highlight, Icon, LogFacets, LogSearch],
   templateUrl: './event-log.html',
   styleUrl: './event-log.css',
 })
@@ -76,7 +78,8 @@ export class EventLog {
 
   readonly facets = computed(() => facetsOf(this.#entries(), this.query()));
   protected readonly filtered = computed(() => isFiltered(this.query()));
-  protected readonly applied = computed(() => describeFilters(this.facets()));
+  protected readonly applied = computed(() => describeFilters(this.facets(), this.query().search));
+  protected readonly search = computed(() => this.query().search);
   protected readonly total = computed(() => this.#listed().length);
   protected readonly clearParams = computed(() => logParams(clearFilters(this.query())));
 

@@ -12,6 +12,7 @@ const PAGES = [
   '/',
   '/?mag=any',
   '/?mag=any&region=california&depth=shallow',
+  '/?mag=any&q=geysers',
   '/quakes/us7000big',
   '/quakes/us7000tonga',
   '/quakes/zz404',

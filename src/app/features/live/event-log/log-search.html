@@ -1,0 +1,30 @@
+<search>
+  <form class="search" method="get" action="/" (submit)="submit($event)">
+    @for (carry of carried(); track carry.name) {
+      <input type="hidden" [attr.name]="carry.name" [attr.value]="carry.value" />
+    }
+    <label class="field">
+      <ui-icon name="search" />
+      <span class="visually-hidden">Search places</span>
+      <input
+        #field
+        type="search"
+        name="q"
+        placeholder="Search places"
+        autocomplete="off"
+        spellcheck="false"
+        enterkeyhint="search"
+        aria-keyshortcuts="/"
+        [attr.value]="query().search || null"
+        (input)="typed(field.value)"
+      />
+    </label>
+    @if (draft()) {
+      <button type="button" class="clear" (click)="clear()">
+        <ui-icon name="close" label="Clear the search" />
+      </button>
+    } @else {
+      <kbd class="key" aria-hidden="true">/</kbd>
+    }
+  </form>
+</search>

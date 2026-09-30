@@ -68,6 +68,26 @@ describe('matches', () => {
   });
 });
 
+describe('matches, searching', () => {
+  it('finds every word of a search in the place or its region, accents aside', () => {
+    expect(ids({ ...DEFAULT_LOG_QUERY, magnitude: 'any', search: 'california' })).toEqual([
+      'c1',
+      'c2',
+    ]);
+    expect(ids({ ...DEFAULT_LOG_QUERY, search: 'ALASKA willow' })).toEqual(['a2']);
+    expect(ids({ ...DEFAULT_LOG_QUERY, search: 'hualien taipei' })).toEqual([]);
+  });
+
+  it('counts the options of every facet within the search', () => {
+    const facets = facetsOf(entries, { ...DEFAULT_LOG_QUERY, search: 'alaska' });
+
+    expect(facet(facets, 'region').options.map((o) => [o.label, o.count])).toEqual([
+      ['Anywhere', 3],
+      ['Alaska', 3],
+    ]);
+  });
+});
+
 describe('facetsOf', () => {
   it('counts each option with the other filters kept', () => {
     const facets = facetsOf(entries, { ...DEFAULT_LOG_QUERY, region: 'alaska' });
@@ -137,5 +157,8 @@ describe('describeFilters', () => {
         }),
       ),
     ).toBe('any magnitude · Alaska · shallow · reviewed');
+    expect(describeFilters(facetsOf(entries, DEFAULT_LOG_QUERY), 'willow')).toBe(
+      'M2.5 and up · “willow”',
+    );
   });
 });

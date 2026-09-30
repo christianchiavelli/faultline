@@ -12,7 +12,7 @@ import { capitalise } from '@ui/text';
 import { WorldChart } from '../common/world-chart/world-chart';
 import { ExportButton } from '../export/export-button';
 import { EventLog } from './event-log/event-log';
-import { parseLogQuery } from './event-log/log-query';
+import { parseLogQuery, type LogParams } from './event-log/log-query';
 import { Helicorder } from './helicorder/helicorder';
 import { MagnitudeChart } from './magnitude-chart/magnitude-chart';
 
@@ -47,6 +47,7 @@ export class LivePage {
   readonly depth = input<string>();
   readonly review = input<string>();
   readonly kind = input<string>();
+  readonly q = input<string>();
   readonly rows = input<string>();
 
   protected readonly now = inject(Clock).now;
@@ -57,6 +58,7 @@ export class LivePage {
     const feed = this.feed();
     return !!feed && (feed.stale || this.now() - feed.generatedAt > FEED_LATE_MS);
   });
+  // Every parameter the log reads, or this fails to compile: an unbound one would do nothing, silently.
   protected readonly query = computed(() =>
     parseLogQuery({
       mag: this.mag(),
@@ -64,8 +66,9 @@ export class LivePage {
       depth: this.depth(),
       review: this.review(),
       kind: this.kind(),
+      q: this.q(),
       rows: this.rows(),
-    }),
+    } satisfies Record<keyof LogParams, string | undefined>),
   );
   /** The export's own name for "any magnitude". */
   protected readonly exportMagnitude = computed(() => {
