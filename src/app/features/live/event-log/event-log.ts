@@ -19,9 +19,12 @@ import { magnitudeScale } from '@shared/domain/magnitude';
 import { splitPlace } from '@shared/domain/place';
 import { EARTHQUAKE_KIND, isNotable, type QuakeSummary } from '@shared/domain/quake';
 import { AgoPipe } from '@ui/ago.pipe';
+import { Icon } from '@ui/icon';
 import { capitalise } from '@ui/text';
 import { dotRadius } from '../../common/world-chart/world-chart';
-import { MAGNITUDE_FLOORS, logParams, minimumMagnitude, type LogQuery } from './log-query';
+import { describeFilters, facetsOf, matches, toEntries } from './facets';
+import { LogFacets } from './log-facets';
+import { clearFilters, isFiltered, logParams, type LogQuery } from './log-query';
 
 /**
  * About a laptop screen of the log. The rest is one link away, in the address
@@ -32,13 +35,9 @@ export const LATEST = 10;
 /** How long rows just shown stay tinted, so the eye finds where they went. */
 const FRESH_MS = 4_000;
 
-function passes(quake: QuakeSummary, min: number | null): boolean {
-  return min === null || (quake.magnitude?.value ?? -Infinity) >= min;
-}
-
 @Component({
   selector: 'fl-event-log',
-  imports: [RouterLink, DatePipe, I18nPluralPipe, AgoPipe],
+  imports: [RouterLink, DatePipe, I18nPluralPipe, AgoPipe, Icon, LogFacets],
   templateUrl: './event-log.html',
   styleUrl: './event-log.css',
 })
@@ -73,33 +72,49 @@ export class EventLog {
     return held.size ? this.quakes().filter((quake) => !held.has(quake.id)) : this.quakes();
   });
 
-  readonly filters = computed(() => {
-    const query = this.query();
-    return MAGNITUDE_FLOORS.map((floor) => ({
-      ...floor,
-      count: this.#listed().filter((quake) => passes(quake, floor.min)).length,
-      current: floor.value === query.magnitude,
-      params: logParams({ ...query, magnitude: floor.value }),
-    }));
-  });
+  readonly #entries = computed(() => toEntries(this.#listed()));
+
+  readonly facets = computed(() => facetsOf(this.#entries(), this.query()));
+  protected readonly filtered = computed(() => isFiltered(this.query()));
+  protected readonly applied = computed(() => describeFilters(this.facets()));
+  protected readonly total = computed(() => this.#listed().length);
+  protected readonly clearParams = computed(() => logParams(clearFilters(this.query())));
 
   /** The fold link's address: the same view, folded the other way. */
   protected readonly foldParams = computed(() =>
     logParams({ ...this.query(), unfolded: !this.query().unfolded }),
   );
 
-  readonly #minimum = computed(() => minimumMagnitude(this.query().magnitude));
+  /** The filters alone, as text: unfolding the list is not a new filter. */
+  readonly #filters = computed(() => JSON.stringify({ ...this.query(), unfolded: false }));
 
   readonly visible = computed(() => {
-    const min = this.#minimum();
-    return this.#listed().filter((quake) => passes(quake, min));
+    const query = this.query();
+    return this.#entries()
+      .filter((entry) => matches(entry, query))
+      .map((entry) => entry.quake);
   });
 
-  /** Held events this filter would show. */
+  /** Held events these filters would show. */
   readonly waiting = computed(() => {
     const held = this.#held();
-    const min = this.#minimum();
-    return this.quakes().filter((quake) => held.has(quake.id) && passes(quake, min)).length;
+    const query = this.query();
+    return toEntries(this.quakes().filter((quake) => held.has(quake.id))).filter((entry) =>
+      matches(entry, query),
+    ).length;
+  });
+
+  /**
+   * What a screen reader hears after a filter changes: the new count. It
+   * follows the filters and not the feed, or every minute's delivery would
+   * interrupt the reader with a count they did not ask for.
+   */
+  protected readonly announcement = computed(() => {
+    this.#filters();
+    return untracked(() => {
+      const count = this.visible().length;
+      return `${count} ${count === 1 ? 'event' : 'events'}`;
+    });
   });
 
   readonly shown = computed(() =>
@@ -134,7 +149,7 @@ export class EventLog {
     });
     // A new filter redraws the whole list, so whatever was held comes in with it.
     effect(() => {
-      this.#minimum();
+      this.#filters();
       untracked(() => this.#takeHeld());
     });
     effect(() => {

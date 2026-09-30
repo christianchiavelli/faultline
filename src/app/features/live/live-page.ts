@@ -43,6 +43,10 @@ const FEED_LATE_MS = 5 * 60_000;
 export class LivePage {
   /** The log's view, from the query parameters the router binds here (see `log-query.ts`). */
   readonly mag = input<string>();
+  readonly region = input<string>();
+  readonly depth = input<string>();
+  readonly review = input<string>();
+  readonly kind = input<string>();
   readonly rows = input<string>();
 
   protected readonly now = inject(Clock).now;
@@ -53,7 +57,16 @@ export class LivePage {
     const feed = this.feed();
     return !!feed && (feed.stale || this.now() - feed.generatedAt > FEED_LATE_MS);
   });
-  protected readonly query = computed(() => parseLogQuery({ mag: this.mag(), rows: this.rows() }));
+  protected readonly query = computed(() =>
+    parseLogQuery({
+      mag: this.mag(),
+      region: this.region(),
+      depth: this.depth(),
+      review: this.review(),
+      kind: this.kind(),
+      rows: this.rows(),
+    }),
+  );
   /** The export's own name for "any magnitude". */
   protected readonly exportMagnitude = computed(() => {
     const magnitude = this.query().magnitude;

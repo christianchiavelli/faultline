@@ -22,11 +22,34 @@
   gap: var(--space-3);
 }
 
-.filter__count {
-  font-size: var(--text-2xs);
-  font-weight: 400;
-  letter-spacing: 0;
-  opacity: 0.8;
+/* How many of the day's events the filters leave, what they are, and the way back. */
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-block-end: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--content-secondary);
+
+  & .mono {
+    font-weight: 560;
+    color: var(--content-primary);
+  }
+}
+
+.summary__applied {
+  color: var(--content-tertiary);
+}
+
+.clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-weight: 600;
+  color: var(--content-primary);
+  text-decoration-color: currentColor;
 }
 
 .ledger {

@@ -8,7 +8,14 @@ import {
   waitForHydrationOf,
 } from './support/page';
 
-const PAGES = ['/', '/?mag=any', '/quakes/us7000big', '/quakes/us7000tonga', '/quakes/zz404'];
+const PAGES = [
+  '/',
+  '/?mag=any',
+  '/?mag=any&region=california&depth=shallow',
+  '/quakes/us7000big',
+  '/quakes/us7000tonga',
+  '/quakes/zz404',
+];
 const THEMES = ['paper', 'film'] as const;
 
 /** The export dialog in its two fullest states: offering suggestions, and a file near an event. */
@@ -53,6 +60,19 @@ for (const theme of THEMES) {
       expect(await audit(page)).toEqual([]);
     });
 
+    test('every region, open in its popover, meets WCAG 2.2 AA', async ({ page, isMobile }) => {
+      test.skip(isMobile, 'A phone keeps its filters in a sheet');
+      await page.goto('/?mag=any');
+      await waitForHydration(page);
+      await waitForHydrationOf(page.locator('fl-event-log'));
+      await page.getByRole('button', { name: 'All 8 regions' }).click();
+      await expect(
+        page.getByRole('group', { name: 'Every region in the last 24 hours' }),
+      ).toBeVisible();
+
+      expect(await audit(page)).toEqual([]);
+    });
+
     test('the log holding a new event meets WCAG 2.2 AA', async ({ page }) => {
       await page.clock.install();
       await page.goto('/?mag=any');
@@ -60,7 +80,7 @@ for (const theme of THEMES) {
       const log = page.getByRole('region', { name: 'Every event' });
       await waitForHydrationOf(page.locator('fl-event-log'));
       await arrive(page, { id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
-      await expect(log.getByRole('status')).toContainText('1 new event');
+      await expect(log.getByRole('status', { name: 'New events' })).toContainText('1 new event');
 
       expect(await audit(page)).toEqual([]);
     });

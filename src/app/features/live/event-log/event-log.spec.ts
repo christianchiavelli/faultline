@@ -3,9 +3,13 @@ import { provideRouter } from '@angular/router';
 import type { Quake, QuakeSummary } from '@shared/domain/quake';
 import { aQuake } from '@shared/testing/quake-fixture';
 import { EventLog, LATEST } from './event-log';
-import { parseLogQuery, type LogQuery, type MagnitudeFloor } from './log-query';
+import { DEFAULT_LOG_QUERY, parseLogQuery, type LogQuery, type MagnitudeFloor } from './log-query';
 
-const at = (magnitude: MagnitudeFloor, unfolded = false): LogQuery => ({ magnitude, unfolded });
+const at = (magnitude: MagnitudeFloor, unfolded = false): LogQuery => ({
+  ...DEFAULT_LOG_QUERY,
+  magnitude,
+  unfolded,
+});
 
 const quakes: Quake[] = [
   aQuake({ id: 'big', magnitude: { value: 5.3, type: 'mww' }, place: 'south of the Fiji Islands' }),
@@ -34,14 +38,40 @@ const rows = (element: HTMLElement) =>
 describe('EventLog', () => {
   it('shows M2.5 and above by default, with a count on every filter', async () => {
     const element = await render(parseLogQuery({}));
+    const magnitude = element.querySelector('[role="group"]')!;
 
     expect(rows(element)).toHaveLength(2);
     expect(
-      [...element.querySelectorAll('nav a')].map((link) =>
+      [...magnitude.querySelectorAll('a')].map((link) =>
         link.textContent?.replace(/\s+/g, ' ').trim(),
       ),
-    ).toEqual(['All 4', 'M2.5+ 2', 'M4.5+ 1']);
-    expect(element.querySelector('[aria-current="true"]')?.textContent).toContain('M2.5+');
+    ).toEqual(['Any 4 events', '2.5 and up 2 events', '4.5 and up 1 event']);
+    expect(magnitude.querySelector('[aria-current="true"]')?.textContent).toContain('2.5 and up');
+    expect(element.querySelector('.summary')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      '2 of 4 events · M2.5 and up',
+    );
+  });
+
+  it('narrows the list by kind of event, and offers the way back', async () => {
+    const element = await render({ ...at('any'), kind: 'other' });
+
+    expect(rows(element)).toHaveLength(1);
+    expect(rows(element)[0]).toContain('quarry blast');
+    expect(element.querySelector('.summary p')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      '1 of 4 events · any magnitude · other events',
+    );
+    expect(element.querySelector('.clear')?.textContent?.trim()).toBe('Clear filters');
+    expect(element.querySelector('.clear')?.getAttribute('href')).toBe('/');
+  });
+
+  it('says when nothing matches, with the same way back', async () => {
+    const element = await render({ ...at('4.5'), region: 'alaska' });
+
+    expect(element.querySelector('table')).toBeNull();
+    expect(element.querySelector('.empty')?.textContent).toContain(
+      'No event in the last 24 hours matches these filters.',
+    );
+    expect(element.querySelector('.empty a')?.getAttribute('href')).toBe('/');
   });
 
   it('splits the place into locality and region, and gives the position', async () => {
@@ -188,14 +218,14 @@ describe('EventLog, live', () => {
     // Nothing moved: not the rows, not the counts.
     expect(firstRow()).toBe('q0');
     expect(rows(element)).toHaveLength(LATEST);
-    expect(text('nav a')).toBe('All 12');
-    expect(text('[role="status"]')).toBe('1 new event Show it');
+    expect(text('nav a')).toBe('Any 12 events');
+    expect(text('[aria-label="New events"]')).toBe('1 new event Show it');
 
-    element.querySelector<HTMLButtonElement>('[role="status"] button')!.click();
+    element.querySelector<HTMLButtonElement>('[aria-label="New events"] button')!.click();
     TestBed.tick();
 
-    expect(element.querySelector('[role="status"]')?.textContent?.trim()).toBe('');
-    expect(text('nav a')).toBe('All 13');
+    expect(element.querySelector('[aria-label="New events"]')?.textContent?.trim()).toBe('');
+    expect(text('nav a')).toBe('Any 13 events');
     const row = element.querySelector('tbody tr:not(.day)')!;
     expect(row.classList).toContain('row--fresh');
     expect((document.activeElement as HTMLElement).dataset['id']).toBe('new');

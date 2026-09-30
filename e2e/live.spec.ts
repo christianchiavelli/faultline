@@ -39,16 +39,16 @@ test('opens a labelled event straight from the trace', async ({ page }) => {
 test('filters the log through the address bar and keeps the reader in place', async ({ page }) => {
   await page.goto('/');
   const log = page.getByRole('region', { name: 'Every event' });
-  const filters = log.getByRole('navigation', { name: 'Minimum magnitude' });
+  const filters = log.getByRole('group', { name: 'Magnitude' });
   const rows = log.locator('tbody tr:not(.day)');
   await filters.scrollIntoViewIfNeeded();
   await expect(rows).toHaveCount(6);
 
-  await filters.getByRole('link', { name: /^M4\.5\+/ }).click();
+  await filters.getByRole('link', { name: /^4\.5 and up/ }).click();
 
   await expect(page).toHaveURL(/\?mag=4\.5$/);
   await expect(rows).toHaveCount(3);
-  await expect(filters.getByRole('link', { name: /^M4\.5\+/ })).toHaveAttribute(
+  await expect(filters.getByRole('link', { name: /^4\.5 and up/ })).toHaveAttribute(
     'aria-current',
     'true',
   );
@@ -247,7 +247,7 @@ test('holds a new event that lands while the log is in view, and shows it on req
 
   await arrive(page, { id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
 
-  const waiting = log.getByRole('status');
+  const waiting = log.getByRole('status', { name: 'New events' });
   await expect(waiting).toContainText('1 new event');
   // The list the reader is looking at stays put, counts included.
   await expect(first).toContainText('2 km NNW of The Geysers');
@@ -274,5 +274,65 @@ test('lets a new event straight in while the log is below the fold', async ({ pa
   await log.scrollIntoViewIfNeeded();
 
   await expect(log.locator('tbody tr:not(.day)').first()).toContainText('4 km E of Cobb');
-  await expect(log.getByRole('status')).toHaveText('');
+  await expect(log.getByRole('status', { name: 'New events' })).toHaveText('');
+});
+
+test('filters the log by region and depth, counting every option first', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'A phone keeps its filters in a sheet');
+  await page.goto('/?mag=any');
+  await waitForHydration(page);
+  const log = page.getByRole('region', { name: 'Every event' });
+  await waitForHydrationOf(page.locator('fl-event-log'));
+  const filters = log.getByRole('navigation', { name: 'Filter the events' });
+
+  await filters
+    .getByRole('group', { name: 'Region' })
+    .getByRole('link', { name: 'California 7 events' })
+    .click();
+
+  await expect(page).toHaveURL(/\/\?mag=any&region=california$/);
+  await expect(log.locator('tbody tr:not(.day)')).toHaveCount(7);
+  await expect(log.locator('.summary p')).toHaveText('7 of 14 events · any magnitude · California');
+  // Every Californian event of the day is shallow, and the other depths say so before a click.
+  await expect(
+    filters.getByRole('group', { name: 'Depth' }).getByRole('link', { name: /^Shallow/ }),
+  ).toContainText('7');
+  await expect(filters.getByRole('group', { name: 'Depth' }).getByRole('link')).toHaveCount(2);
+
+  await log.getByRole('link', { name: 'Clear filters' }).click();
+
+  await expect(page).toHaveURL(/\/$/);
+  await expect(log.locator('.summary p')).toHaveText('6 of 14 events · M2.5 and up');
+});
+
+test('has every region of the day one click away, in a popover', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'A phone keeps its filters in a sheet');
+  await page.goto('/?mag=any');
+  await waitForHydration(page);
+  const log = page.getByRole('region', { name: 'Every event' });
+  await waitForHydrationOf(page.locator('fl-event-log'));
+
+  await log.getByRole('button', { name: 'All 8 regions' }).click();
+  const every = page.getByRole('group', { name: 'Every region in the last 24 hours' });
+  await expect(every).toBeVisible();
+  await every.getByRole('link', { name: /^Washington/ }).click();
+
+  await expect(page).toHaveURL(/region=washington$/);
+  await expect(every).toBeHidden();
+  await expect(log.locator('tbody tr:not(.day)')).toHaveCount(1);
+  await expect(log.getByText('explosion', { exact: true })).toBeVisible();
+});
+
+test('renders a filtered view on the server, as its address asks', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/?mag=any&depth=deep');
+  const log = page.getByRole('region', { name: 'Every event' });
+
+  await expect(log.locator('tbody tr:not(.day)')).toHaveCount(1);
+  await expect(log.locator('tbody tr:not(.day)')).toContainText('South of the Fiji Islands');
+  await context.close();
 });

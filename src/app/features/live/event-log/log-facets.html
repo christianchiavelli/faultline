@@ -1,0 +1,33 @@
+<nav class="facets" aria-label="Filter the events">
+  @for (facet of facets(); track facet.key) {
+    <div class="facet" role="group" [attr.aria-labelledby]="id + '-' + facet.key">
+      <p class="eyebrow" [id]="id + '-' + facet.key">{{ facet.label }}</p>
+      <ul class="options">
+        @for (option of facet.options; track option.value) {
+          <li><fl-log-option [option]="option" /></li>
+        }
+      </ul>
+      @if (facet.all; as all) {
+        <button type="button" class="all" [attr.popovertarget]="id + '-all'">
+          All {{ all.length }} regions<ui-icon name="chevron-down" />
+        </button>
+        <div
+          #popover
+          popover
+          class="popover"
+          role="group"
+          [id]="id + '-all'"
+          [attr.aria-labelledby]="id + '-all-label'"
+        >
+          <p class="eyebrow" [id]="id + '-all-label'">Every region in the last 24 hours</p>
+          <ul class="options options--columns">
+            @for (option of all; track option.value) {
+              <!-- A choice changes the view in place, so the popover closes behind it. -->
+              <li><fl-log-option [option]="option" (chosen)="popover.hidePopover()" /></li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  }
+</nav>

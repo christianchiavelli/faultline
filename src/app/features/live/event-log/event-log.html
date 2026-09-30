@@ -2,26 +2,30 @@
   <header class="log__header">
     <h2 class="section-title" id="log-title">Every event</h2>
     <div class="log__tools">
-      <nav class="segmented" aria-label="Minimum magnitude">
-        @for (filter of filters(); track filter.value) {
-          <a
-            class="segmented__item"
-            [routerLink]="[]"
-            [queryParams]="filter.params"
-            [attr.aria-current]="filter.current ? 'true' : null"
-          >
-            {{ filter.label }} <span class="filter__count mono">{{ filter.count }}</span>
-          </a>
-        }
-      </nav>
       <ng-content />
     </div>
   </header>
 
+  <fl-log-facets [facets]="facets()" />
+
   <!-- One item of the section's grid: the fold sits right under the table, and an empty region adds no gap. -->
   <div class="log__list">
+    <div class="summary">
+      <p>
+        <span class="mono">{{ visible().length }}</span> of <span class="mono">{{ total() }}</span>
+        {{ total() | i18nPlural: events }}
+        <span class="summary__applied">· {{ applied() }}</span>
+      </p>
+      @if (filtered()) {
+        <a class="clear" [routerLink]="[]" [queryParams]="clearParams()"
+          ><ui-icon name="close" />Clear filters</a
+        >
+      }
+    </div>
+    <p class="visually-hidden" role="status" aria-label="Events shown">{{ announcement() }}</p>
+
     <!-- There before anything is held: a live region added along with its text may go unheard. -->
-    <div role="status">
+    <div role="status" aria-label="New events">
       @if (waiting(); as count) {
         <p class="fresh">
           <span class="fresh__count"
@@ -144,8 +148,13 @@
           >
         </p>
       }
+    } @else if (filtered()) {
+      <p class="empty">
+        No event in the last 24 hours matches these filters.
+        <a [routerLink]="[]" [queryParams]="clearParams()">Clear filters</a>
+      </p>
     } @else {
-      <p class="empty">Nothing at this magnitude in the last 24 hours.</p>
+      <p class="empty">Nothing at M2.5 and up in the last 24 hours.</p>
     }
   </div>
 

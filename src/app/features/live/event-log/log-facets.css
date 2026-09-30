@@ -1,0 +1,90 @@
+:host {
+  display: block;
+}
+
+/* An instrument panel of indexes, one column per question, divided by rules like the readouts. */
+.facets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  border-block: var(--hairline) solid var(--rule-strong);
+}
+
+@media (width >= 64rem) {
+  .facets {
+    grid-template-columns: 0.9fr 1.15fr 1.25fr 0.95fr 1fr;
+  }
+
+  .facet + .facet {
+    border-inline-start: var(--hairline) solid var(--rule);
+  }
+
+  .facet:first-child {
+    padding-inline-start: 0;
+  }
+
+  .facet:last-child {
+    padding-inline-end: 0;
+  }
+}
+
+.facet {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+}
+
+.options {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  justify-self: start;
+  margin-top: var(--space-1);
+  padding: var(--space-1) 0;
+  border: 0;
+  background: none;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: var(--hairline);
+  text-underline-offset: 0.22em;
+  color: var(--content-primary);
+  anchor-name: --log-regions;
+}
+
+/* Every region, under the link that opened it: anchored in CSS, turned upward when there is no room below. */
+.popover {
+  position-anchor: --log-regions;
+  position-area: bottom span-right;
+  position-try-fallbacks: flip-block;
+  inset: auto;
+  width: min(30rem, 100vw - 2 * var(--page-gutter));
+  max-height: min(26rem, 70dvh);
+  margin: var(--space-1) 0;
+  padding: var(--space-4) var(--space-5);
+  overflow: auto;
+  border: var(--hairline) solid var(--rule-strong);
+  background: var(--surface-page);
+  color: var(--content-primary);
+
+  & .eyebrow {
+    margin-bottom: var(--space-2);
+  }
+}
+
+.options--columns {
+  display: block;
+  columns: 2 11rem;
+  column-gap: var(--space-8);
+
+  & li {
+    break-inside: avoid;
+  }
+}
