@@ -30,6 +30,7 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - Styles: component CSS reads semantic tokens only (`src/styles/tokens.css`). New colours are added as primitives and exposed through a semantic token with `light-dark()`. No Tailwind, no component library.
 - Selectors: `fl-` for app components, `ui-` for design-system components.
 - Dialogs: `ui-dialog`, on the native `<dialog>`; never a hand-built overlay. A dialog's code is its own chunk, rendered with `@defer (when open(); prefetch on idle)`.
+- Live lists never move under the reader: an arrival waits behind a count while the list is on screen or scrolled past, and comes in when asked for (see `event-log.ts`).
 - Charts: SVG drawn by a pure module beside the component (`trace.ts`, `distribution.ts`), so the server and the browser draw the same thing. The drawing is `aria-hidden`, and what it says is also in text: a caption, and where the numbers matter a visually hidden table.
 - Icons: Font Awesome solid SVGs through `ui-icon`, registered in `ui/icons.ts`. Beside a word an icon is decoration; a control that has only an icon, like a dialog's close button, carries an `aria-label`. A standalone link to another site ends with the external-link icon; a link inside running text does not.
 - Honest data: a missing value renders as `—`, never as zero; provisional and reviewed values must look different; scales and uncertainties are shown next to the numbers they qualify.
@@ -47,6 +48,7 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - A page that renders without its data sets the failure status through `RESPONSE_INIT` (see `live-page.ts`, `quake-page.ts`).
 - Inside a block with `hydrate` triggers, a nested `@defer` renders on the state its handler sets (`when open()`), not `on interaction`: a click replayed after hydration reaches `(click)` handlers, never a trigger's own listener (see `export-button.ts`).
 - Two dependencies are patched (`patches/`, reasons in `pnpm-workspace.yaml`). An install that fails to apply one means the file changed upstream: check whether the fix shipped before re-creating the patch.
+- In an e2e spec, a deferred section's server HTML is on the page long before its code runs. Wait with `waitForHydrationOf()` before anything that needs the code, like a live update (see `e2e/support/page.ts`).
 - A visually hidden `<table>` still widens the page, since a table grows to fit its cells whatever width it is given: hide a wrapper `div` instead (see `magnitude-chart.html`).
 - The trace is a target of its own, so every label on it is a target beside another, and WCAG 2.5.8 then wants it 24 px tall. The labels keep their look by masking only the band behind their text (see `helicorder.css`).
 - The initial bundle budget is tight on purpose, 400 kB to warn and 450 kB to fail. A library that drags all of Angular into the first load shows up there first: find the cause with `pnpm build --stats-json` rather than raise the budget.
