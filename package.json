@@ -43,7 +43,6 @@
     "@angular/platform-server": "^22.2.0",
     "@angular/router": "^22.2.0",
     "@angular/ssr": "^22.2.0",
-    "@fortawesome/free-solid-svg-icons": "^7.3.1",
     "@tanstack/angular-query-experimental": "^5.104.0",
     "compression": "^1.8.2",
     "express": "^5.2.1",

@@ -12,7 +12,7 @@ import { ICONS, type IconName } from './icons';
   selector: 'ui-icon',
   template: `
     <svg
-      [attr.viewBox]="viewBox()"
+      viewBox="0 0 16 16"
       [attr.role]="label() ? 'img' : null"
       [attr.aria-label]="label() ?? null"
       [attr.aria-hidden]="label() ? null : 'true'"
@@ -34,8 +34,16 @@ import { ICONS, type IconName } from './icons';
       display: block;
       width: 100%;
       height: 100%;
-      fill: currentColor;
       overflow: visible;
+    }
+
+    /* In grid units, so the line thickens with the text around it. */
+    path {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.7;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
     }
   `,
 })
@@ -43,16 +51,5 @@ export class Icon {
   readonly name = input.required<IconName>();
   readonly label = input<string>();
 
-  readonly #icon = computed(() => ICONS[this.name()].icon);
-
-  protected readonly viewBox = computed(() => {
-    const [width, height] = this.#icon();
-    return `0 0 ${width} ${height}`;
-  });
-
-  /** Duotone icons carry two paths; the solid set carries one. */
-  protected readonly path = computed(() => {
-    const path = this.#icon()[4];
-    return Array.isArray(path) ? path.join(' ') : path;
-  });
+  protected readonly path = computed(() => ICONS[this.name()]);
 }

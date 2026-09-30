@@ -43,7 +43,7 @@ let nextId = 0;
           }
         </div>
         <button type="button" class="close" aria-label="Close" (click)="open.set(false)">
-          <ui-icon name="xmark" />
+          <ui-icon name="close" />
         </button>
       </header>
       <div class="body"><ng-content /></div>

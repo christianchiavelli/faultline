@@ -36,9 +36,6 @@ importers:
       '@angular/ssr':
         specifier: ^22.2.0
         version: 22.2.0(e63611e51463b2cc17af41b05692fdd1)
-      '@fortawesome/free-solid-svg-icons':
-        specifier: ^7.3.1
-        version: 7.3.1
       '@tanstack/angular-query-experimental':
         specifier: ^5.104.0
         version: 5.104.0(patch_hash=528a635c3fa036aef714db161521a38871bd3390087e97ec282862ee7aa675b0)(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(csstype@3.2.3)
@@ -708,14 +705,6 @@ packages:
 
   '@fontsource-variable/martian-mono@5.3.0':
     resolution: {integrity: sha512-0wVODx9ILwNnaYC4XCuSaFRYtj1Prd89MRVaSuv2ng6zLiQkS4SepaWEPefs7vqCZS8sbEOA8jb/4F5KNMnGdg==}
-
-  '@fortawesome/fontawesome-common-types@7.3.1':
-    resolution: {integrity: sha512-k0C0sdHmZtAo6dRDtd1Z/qcpyHbL0CKsjV8seMY/21xGhY5Wsv0XRmiI/xEEH4y2c9b1+jvgNs/3EqhV27yUEA==}
-    engines: {node: '>=6'}
-
-  '@fortawesome/free-solid-svg-icons@7.3.1':
-    resolution: {integrity: sha512-v0BLa0eqg7ubvVWeNSHVBs8fWH/GJicERZoJaxJ3FE/lj67VSqzoMg9pzfZVOfLMX10y0pGwQAuxoRVVH2patg==}
-    engines: {node: '>=6'}
 
   '@harperfast/extended-iterable@1.0.3':
     resolution: {integrity: sha512-sSAYhQca3rDWtQUHSAPeO7axFIUJOI6hn1gjRC5APVE1a90tuyT8f5WIgRsFhhWA7htNkju2veB9eWL6YHi/Lw==}
@@ -3951,12 +3940,6 @@ snapshots:
   '@fontsource-variable/archivo@5.3.0': {}
 
   '@fontsource-variable/martian-mono@5.3.0': {}
-
-  '@fortawesome/fontawesome-common-types@7.3.1': {}
-
-  '@fortawesome/free-solid-svg-icons@7.3.1':
-    dependencies:
-      '@fortawesome/fontawesome-common-types': 7.3.1
 
   '@harperfast/extended-iterable@1.0.3':
     optional: true
