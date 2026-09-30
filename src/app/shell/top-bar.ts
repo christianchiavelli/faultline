@@ -27,7 +27,7 @@ const THEME_LABEL: Record<ThemePreference, string> = {
         </time>
         <button
           type="button"
-          class="theme"
+          class="tool-button theme"
           (click)="theme.set(theme.next())"
           [attr.aria-label]="'Theme: ' + label() + '. Switch to ' + nextLabel()"
         >

@@ -33,7 +33,7 @@ describe('EventLog', () => {
 
     expect(rows(element)).toHaveLength(2);
     expect(
-      [...element.querySelectorAll('.filter')].map((link) =>
+      [...element.querySelectorAll('nav a')].map((link) =>
         link.textContent?.replace(/\s+/g, ' ').trim(),
       ),
     ).toEqual(['All 4', 'M2.5+ 2', 'M4.5+ 1']);
