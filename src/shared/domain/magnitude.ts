@@ -143,3 +143,22 @@ export function radiatedEnergy(magnitude: number): number {
 export function energyRatio(a: number, b: number): number {
   return 10 ** (1.5 * (a - b));
 }
+
+/**
+ * Earthquakes of M5 to 5.9 in an average year worldwide, in the USGS table of
+ * how often each size happens, "based on observations since 1990". The
+ * smaller classes in that table are estimates made from this one, since no
+ * network catches them all; this one is counted.
+ * https://ds.iris.edu/ds/support/faq/7/is-the-number-of-earthquakes-increasing/
+ */
+const M5_A_YEAR = 1319;
+
+/**
+ * How many earthquakes an average day brings worldwide with a magnitude from
+ * `from` up to `to`, by the Gutenberg–Richter law: about ten times as many for
+ * each whole step down (b = 1), anchored on the counted rate of M5s.
+ */
+export function expectedPerDay(from: number, to: number): number {
+  const fiveAndUp = M5_A_YEAR / (1 - 10 ** -1) / 365.25;
+  return fiveAndUp * (10 ** (5 - from) - 10 ** (5 - to));
+}
