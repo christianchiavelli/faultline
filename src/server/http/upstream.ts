@@ -32,6 +32,11 @@ export class UpstreamBusyError extends Error {
 export interface UpstreamOptions {
   readonly timeoutMs?: number;
   readonly retries?: number;
+  /**
+   * Cancels the request and every retry still to come, as when the reader of
+   * an export closes the tab. A cancelled call is not an upstream failure.
+   */
+  readonly signal?: AbortSignal;
   /** Injected in tests. */
   readonly fetchFn?: typeof fetch;
   readonly random?: () => number;
@@ -57,27 +62,46 @@ export async function getJson(
   url: string,
   options: UpstreamOptions = {},
 ): Promise<UpstreamResponse> {
+  const { status, text } = await request(url, 'application/geo+json, application/json', options);
+  if (status < 200 || status >= 300) return { status, body: text || null };
+  return { status, body: text ? (JSON.parse(text) as unknown) : null };
+}
+
+/** For answers that are not JSON, such as the CSV of a catalogue search. */
+export async function getText(
+  url: string,
+  options: UpstreamOptions = {},
+): Promise<{ readonly status: number; readonly text: string }> {
+  return request(url, 'text/csv, text/plain', options);
+}
+
+async function request(
+  url: string,
+  accept: string,
+  options: UpstreamOptions,
+): Promise<{ readonly status: number; readonly text: string }> {
   const {
     timeoutMs = 8_000,
     retries = 2,
+    signal,
     fetchFn = fetch,
     random = Math.random,
     sleep = wait,
   } = options;
 
   for (let attempt = 0; ; attempt++) {
+    signal?.throwIfAborted();
     const hasAttemptsLeft = attempt < retries;
+    const timeout = AbortSignal.timeout(timeoutMs);
 
     let response: Response;
     try {
       response = await fetchFn(url, {
-        headers: {
-          accept: 'application/geo+json, application/json',
-          'user-agent': serverConfig.userAgent,
-        },
-        signal: AbortSignal.timeout(timeoutMs),
+        headers: { accept, 'user-agent': serverConfig.userAgent },
+        signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
       });
     } catch (error) {
+      if (signal?.aborted) throw error;
       if (!hasAttemptsLeft)
         throw new UpstreamError('USGS did not answer', undefined, { cause: error });
       await sleep(backoffDelay(attempt, random));
@@ -85,14 +109,14 @@ export async function getJson(
     }
 
     if (RETRYABLE.has(response.status)) {
+      // Unread, the body would hold its connection until garbage collection.
+      await response.body?.cancel();
       if (!hasAttemptsLeft)
         throw new UpstreamError(`USGS answered ${response.status}`, response.status);
       await sleep(backoffDelay(attempt, random));
       continue;
     }
 
-    const text = await response.text();
-    if (!response.ok) return { status: response.status, body: text || null };
-    return { status: response.status, body: text ? (JSON.parse(text) as unknown) : null };
+    return { status: response.status, text: await response.text() };
   }
 }

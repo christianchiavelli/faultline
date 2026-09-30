@@ -1,4 +1,4 @@
-import { backoffDelay, getJson, UpstreamError } from './upstream';
+import { backoffDelay, getJson, getText, UpstreamError } from './upstream';
 
 const noWait = () => Promise.resolve();
 
@@ -51,6 +51,34 @@ describe('getJson', () => {
       status: 404,
       body: 'Error 404: Not Found',
     });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('getText', () => {
+  it('hands back the body as it came, for formats that are not JSON', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(respond(200, 'time,latitude\n'));
+
+    expect(await getText('https://usgs.test', { fetchFn, sleep: noWait })).toEqual({
+      status: 200,
+      text: 'time,latitude\n',
+    });
+  });
+
+  it('stops at once when the caller gives up, without retrying or blaming the USGS', async () => {
+    const controller = new AbortController();
+    const fetchFn = vi.fn().mockImplementation(() => {
+      controller.abort();
+      return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+    });
+
+    const error: unknown = await getText('https://usgs.test', {
+      fetchFn,
+      sleep: noWait,
+      signal: controller.signal,
+    }).catch((reason: unknown) => reason);
+
+    expect(error).not.toBeInstanceOf(UpstreamError);
     expect(fetchFn).toHaveBeenCalledTimes(1);
   });
 });
