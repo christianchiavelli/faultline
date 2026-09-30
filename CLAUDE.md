@@ -28,6 +28,7 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - Angular 22 idioms: standalone components (never set `standalone`), OnPush is the default (never set it), `input()`/`output()`, signals and `computed()`, `@if`/`@for`, `inject()`, `@Service()` for new singletons, host bindings in `host: {}`.
 - Data: `httpResource` via `core/api/quakes.ts`; read values behind `hasValue()`. No stores: URL state goes through router input binding. The log's is one `LogQuery` (`event-log/log-query.ts`): a parameter per filter, named after what it sets, holding a word that reads on its own, defaults left out and the rest written in one order. Server state that needs a client cache, like the export's live count, is TanStack Query, provided through `QUERY_CLIENT` in the lazy chunk that uses it, never in the app config.
 - Styles: component CSS reads semantic tokens only (`src/styles/tokens.css`). New colours are added as primitives and exposed through a semantic token with `light-dark()`. No Tailwind, no component library.
+- Layout: a page of sections is `.bands`, and each section a `.band`, edge to edge, its content on the page's column through a subgrid (`layout.css`). The bands take turns: the page's own colour, then `.band--raised`, then the page's again (see `live-page.html`). Never give a band's content a width of its own to line it up with the page; the subgrid already does.
 - Selectors: `fl-` for app components, `ui-` for design-system components.
 - Dialogs: `ui-dialog`, on the native `<dialog>`; never a hand-built overlay. A dialog's code is its own chunk, rendered with `@defer (when open(); prefetch on idle)`.
 - Filters that are links show the count their view would hold, the other filters kept (see `facets.ts`); an option that would empty the list is text, not a link.
@@ -42,6 +43,7 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 ## Gotchas
 
 - The server DOM throws on `document.cookie`; read cookies from the `REQUEST` headers on the server (see `core/theme.ts`).
+- The footer takes its gap and its rule from `--footer-space` and `--footer-rule`, which a page in bands sets to nothing through `body:has(.bands)`: its last band already ends it. A new page in bands needs nothing more; a page that is not keeps both.
 - Nothing may start a timer on the server. Browser-only work goes in `afterNextRender` (see `core/poll.ts`, `core/clock.ts`).
 - SVGs that must fill a sized box are positioned absolutely: an SVG's intrinsic aspect ratio otherwise sizes the grid row (see `helicorder.css`).
 - The USGS FDSN service answers 404 for unknown ids and 409 for deleted events; the API maps them to 404 and 410.

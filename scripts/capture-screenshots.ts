@@ -166,6 +166,8 @@ for (const shot of SHOTS.filter(({ name }) => only.size === 0 || only.has(name))
     );
   }
 
+  // A screenshot has no scrollbar over its gutter, where the page's bands would stop short of the edge.
+  await page.addStyleTag({ content: 'html { scrollbar-width: none; }' });
   await scrollThrough(page);
   await page.evaluate(async () => {
     await document.fonts.ready;
