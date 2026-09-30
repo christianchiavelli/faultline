@@ -28,6 +28,8 @@ Figures from the day feed of 29 September: 203 events, 145 kB as served, 19 kB g
 - `place` is written to follow a magnitude, as in the feed's own `title` (`M 5.6 - southern Mid-Atlantic Ridge`), so some places start lowercase. Standing alone as a heading or a table cell, they get a capital.
 - `type` mixes kinds of event: 4 explosions among 199 earthquakes that day; the week added mining explosions and quarry blasts. They are counted and labelled, and never become the largest earthquake of the day.
 - `ids`, `sources` and `types` are comma-wrapped strings (`,ci41340631,`). 15 events carried more than one id, one per network that reported them; `id` is the preferred one.
+- An `id` is its network's code, then that network's own code for the event: all 212 events of the day feed on 30 September started with their `net`, always two letters. The live page reads the network off the id rather than carry the field.
+- Size says which network located an event. That same day, every event below M2.5 came from a US regional network (`nc` 57, `ak` 41, `ci` 38, `av` 10 and six more), and every one from M4.5 up from `us`, the global network.
 - `time` and `updated` are milliseconds since the epoch, UTC. `tz` is always `null`, and `felt` was `null` for 189 of the 203.
 
 ## Origin products are strings, and not every network sends them all
