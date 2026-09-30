@@ -1,4 +1,4 @@
-import type { ZodError } from 'zod';
+import type { $ZodError } from 'zod/v4/core';
 import { problem, type ApiResult } from '../http/result';
 import { UpstreamBusyError, UpstreamError } from '../http/upstream';
 
@@ -32,6 +32,6 @@ export function upstreamProblem(error: unknown, path: string): ApiResult {
 }
 
 /** Every reason a query was refused, in one sentence per reason. */
-export function issuesDetail(error: ZodError): string {
+export function issuesDetail(error: $ZodError): string {
   return error.issues.map((issue) => issue.message).join(' ');
 }

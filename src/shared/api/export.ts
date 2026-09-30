@@ -1,4 +1,5 @@
-import { z } from 'zod';
+// The mini build: this file ships to the browser, and the classic API cannot be tree-shaken.
+import * as z from 'zod/mini';
 
 /**
  * The export contract. The BFF parses every request with `exportQuerySchema`,
@@ -94,43 +95,60 @@ export const EXPORT_COLUMNS = [
 ] as const satisfies readonly (keyof ExportEvent)[];
 
 /** ISO dates and times compare correctly as strings, so this holds for both. */
-const inRecord = (iso: string) => iso >= EXPORT_EARLIEST_DATE;
-const BEFORE_RECORD = 'The catalogue starts in 1900.';
+const inRecord = z.refine<string>(
+  (iso) => iso >= EXPORT_EARLIEST_DATE,
+  'The catalogue starts in 1900.',
+);
 
-/** A decimal as it arrives in a query string. Stricter than coercion, which reads "" as 0. */
-const decimal = z
-  .string()
-  .regex(/^-?\d+(\.\d+)?$/, 'Expected a number.')
-  .transform(Number);
+/**
+ * An optional decimal as it arrives in a query string, within the given
+ * bounds. Stricter than coercion, which reads "" as 0.
+ */
+const decimal = (...bounds: z.core.$ZodCheck<number>[]) =>
+  z.optional(
+    z.pipe(
+      z.pipe(
+        z.string().check(z.regex(/^-?\d+(\.\d+)?$/, 'Expected a number.')),
+        z.transform(Number),
+      ),
+      z.number().check(...bounds),
+    ),
+  );
 
-const flag = z.literal('true').transform(() => true);
+const flag = z.optional(
+  z.pipe(
+    z.literal('true'),
+    z.transform(() => true),
+  ),
+);
 
-export const exportQuerySchema = z
-  .object({
-    from: z.iso
-      .datetime({ message: 'Expected an ISO time in UTC.' })
-      .refine(inRecord, BEFORE_RECORD),
-    to: z.iso.datetime({ message: 'Expected an ISO time in UTC.' }),
-    minmag: decimal.pipe(z.number().min(-2).max(10)).optional(),
-    lat: decimal.pipe(z.number().min(-90).max(90)).optional(),
-    lon: decimal.pipe(z.number().min(-180).max(180)).optional(),
-    // Half the planet: the most the USGS accepts.
-    radiuskm: decimal.pipe(z.number().positive().max(20_001.6)).optional(),
-    reviewed: flag.optional(),
-    earthquakes: flag.optional(),
-  })
-  // Zod runs a refinement even when a field already failed; an unreadable time is reported once, above.
-  .refine((raw) => !(Date.parse(raw.from) >= Date.parse(raw.to)), {
-    path: ['to'],
-    message: 'The period must end after it starts.',
-  })
-  .refine(
-    (raw) =>
-      [raw.lat, raw.lon, raw.radiuskm].every((part) => part === undefined) ||
-      [raw.lat, raw.lon, raw.radiuskm].every((part) => part !== undefined),
-    { path: ['radiuskm'], message: 'A circle needs lat, lon and radiuskm together.' },
-  )
-  .transform((raw): ExportQuery => ({
+export const exportQuerySchema = z.pipe(
+  z
+    .object({
+      from: z.iso.datetime('Expected an ISO time in UTC.').check(inRecord),
+      to: z.iso.datetime('Expected an ISO time in UTC.'),
+      minmag: decimal(z.gte(-2), z.lte(10)),
+      lat: decimal(z.gte(-90), z.lte(90)),
+      lon: decimal(z.gte(-180), z.lte(180)),
+      // Half the planet: the most the USGS accepts.
+      radiuskm: decimal(z.positive(), z.lte(20_001.6)),
+      reviewed: flag,
+      earthquakes: flag,
+    })
+    .check(
+      // Zod runs a refinement even when a field already failed; an unreadable time is reported once, above.
+      z.refine((raw) => !(Date.parse(raw.from) >= Date.parse(raw.to)), {
+        path: ['to'],
+        error: 'The period must end after it starts.',
+      }),
+      z.refine(
+        (raw) =>
+          [raw.lat, raw.lon, raw.radiuskm].every((part) => part === undefined) ||
+          [raw.lat, raw.lon, raw.radiuskm].every((part) => part !== undefined),
+        { path: ['radiuskm'], error: 'A circle needs lat, lon and radiuskm together.' },
+      ),
+    ),
+  z.transform((raw): ExportQuery => ({
     from: Date.parse(raw.from),
     to: Date.parse(raw.to),
     minMagnitude: raw.minmag ?? null,
@@ -140,9 +158,10 @@ export const exportQuerySchema = z
         : null,
     reviewedOnly: raw.reviewed ?? false,
     earthquakesOnly: raw.earthquakes ?? false,
-  }));
+  })),
+);
 
-export const exportFormatSchema = z.enum(EXPORT_FORMATS).default('csv');
+export const exportFormatSchema = z._default(z.enum(EXPORT_FORMATS), 'csv');
 
 /**
  * The dialog's custom period, as its two date fields hold it. Same floor as
@@ -150,13 +169,15 @@ export const exportFormatSchema = z.enum(EXPORT_FORMATS).default('csv');
  */
 export const exportDateRangeSchema = z
   .object({
-    from: z.iso.date({ message: 'Enter a date.' }).refine(inRecord, BEFORE_RECORD),
-    to: z.iso.date({ message: 'Enter a date.' }),
+    from: z.iso.date('Enter a date.').check(inRecord),
+    to: z.iso.date('Enter a date.'),
   })
-  .refine((range) => !isDay(range.from) || !isDay(range.to) || range.from <= range.to, {
-    path: ['to'],
-    message: 'End on or after the start.',
-  });
+  .check(
+    z.refine((range) => !isDay(range.from) || !isDay(range.to) || range.from <= range.to, {
+      path: ['to'],
+      error: 'End on or after the start.',
+    }),
+  );
 
 function isDay(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
