@@ -1,9 +1,9 @@
 import type { FeedWindow, QuakeDetailResponse, RecentQuakesResponse } from '@shared/api/contracts';
 import { byTimeDescending, type QuakeSummary } from '@shared/domain/quake';
 import { serverConfig } from '../config';
-import { createRateLimiter } from '../http/rate-limit';
 import { createSwrCache } from '../http/swr-cache';
-import { getJson, UpstreamBusyError, UpstreamError } from '../http/upstream';
+import { getJson, UpstreamError } from '../http/upstream';
+import { spendOrRefuse } from './budget';
 import { preferredProduct, toOriginQuality, toQuake, toSummary } from './map';
 import { detailSchema, featureSchema, feedSchema } from './schema';
 
@@ -24,12 +24,6 @@ const detailCache = createSwrCache<QuakeDetailResponse | EventGone>({
   maxEntries: 500,
   onBackgroundError: (key, error) => console.warn(`[usgs] event ${key} refresh failed`, error),
 });
-
-/**
- * Only event lookups draw on it: feeds are fetched once a minute per window
- * whatever the traffic, and cached lookups never reach this point.
- */
-const upstreamBudget = createRateLimiter(serverConfig.upstreamRate);
 
 interface FeedSnapshot {
   readonly generatedAt: number;
@@ -80,8 +74,7 @@ export async function quakeDetail(id: string): Promise<QuakeDetailResponse | Eve
 }
 
 async function fetchDetail(id: string): Promise<QuakeDetailResponse | EventGone> {
-  const budget = upstreamBudget.take('usgs');
-  if (!budget.allowed) throw new UpstreamBusyError(budget.retryAfterSeconds);
+  spendOrRefuse();
 
   const url = `${serverConfig.usgsBaseUrl}/fdsnws/event/1/query?eventid=${encodeURIComponent(id)}&format=geojson`;
   const response = await getJson(url);
