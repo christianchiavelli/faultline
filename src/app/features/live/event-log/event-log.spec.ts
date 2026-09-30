@@ -109,10 +109,13 @@ describe('EventLog', () => {
   });
 
   it('marks events that are not earthquakes, and provisional ones', async () => {
-    const all = rows(await render(at('any')));
+    const element = await render(at('any'));
+    const all = rows(element);
 
     expect(all.find((row) => row.includes('quarry blast'))).toBeDefined();
     expect(all.filter((row) => row.includes('Automatic'))).toHaveLength(1);
+    // Reviewed and automatic look different, not only read different.
+    expect(element.querySelectorAll('.review--done')).toHaveLength(3);
   });
 
   it('explains negative depths only when one is on screen', async () => {

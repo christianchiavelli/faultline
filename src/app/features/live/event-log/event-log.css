@@ -259,6 +259,37 @@
   color: var(--content-tertiary);
 }
 
+/*
+ * Reviewed or not, as a word and a mark rather than a box on every row: the
+ * mark is filled once a seismologist has checked the event, open while it may
+ * still move.
+ */
+.review {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  color: var(--content-tertiary);
+
+  &::before {
+    content: '';
+    width: 0.5rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+}
+
+.review--done {
+  color: var(--content-secondary);
+
+  &::before {
+    background: var(--content-primary);
+    box-shadow: none;
+  }
+}
+
 .empty {
   padding: var(--space-8) 0;
   color: var(--content-secondary);

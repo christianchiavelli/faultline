@@ -163,11 +163,9 @@
                   }
                 </td>
                 <td role="cell" class="status">
-                  @if (row.reviewed) {
-                    <span class="tag tag--solid">Reviewed</span>
-                  } @else {
-                    <span class="tag tag--dashed">Automatic</span>
-                  }
+                  <span class="review" [class.review--done]="row.reviewed">{{
+                    row.reviewed ? 'Reviewed' : 'Automatic'
+                  }}</span>
                 </td>
               </tr>
             }
