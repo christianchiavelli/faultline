@@ -26,14 +26,17 @@ import { Component } from '@angular/core';
 
     .footer {
       display: grid;
-      gap: var(--space-2);
+      gap: var(--space-2) var(--space-12);
       padding-block: var(--space-6) var(--space-10);
       font-size: var(--text-xs);
       color: var(--content-tertiary);
     }
 
-    p {
-      max-width: var(--measure);
+    /* One low band on a wide screen: the credits, and the warning on one line at the right. */
+    @media (width >= 80rem) {
+      .footer {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
     }
   `,
 })

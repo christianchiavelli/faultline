@@ -90,6 +90,11 @@
   color: var(--content-secondary);
 }
 
+/* As wide as the table it explains, so it reads as its caption rather than a column of its own. */
+.note {
+  max-width: none;
+}
+
 @media (width < 44rem) {
   .ledger th:nth-child(4),
   .ledger td:nth-child(4) {
