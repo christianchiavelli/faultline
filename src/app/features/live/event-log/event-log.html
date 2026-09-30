@@ -19,62 +19,98 @@
     </div>
   </header>
 
-  @if (days().length) {
-    <table class="ledger">
-      <caption class="visually-hidden">
-        Seismic events in the last 24 hours, newest first.
-      </caption>
-      <thead>
-        <tr>
-          <th scope="col">UTC</th>
-          <th scope="col" class="numeric">Mag</th>
-          <th scope="col">Where</th>
-          <th scope="col" class="numeric">Depth km</th>
-          <th scope="col">Status</th>
-        </tr>
-      </thead>
-      @for (day of days(); track day.day) {
-        <tbody>
-          <tr class="day">
-            <th scope="rowgroup" colspan="5">{{ day.day | date: 'EEEE d MMMM' : 'UTC' }}</th>
+  <!-- One item of the section's grid, so the fold sits right under the table. -->
+  <div class="log__list">
+    @if (days().length) {
+      <table class="ledger">
+        <caption class="visually-hidden">
+          Seismic events in the last 24 hours, newest first{{
+            folds() && !unfolded() ? ': the latest ' + latest + ' of ' + visible().length : ''
+          }}.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">UTC</th>
+            <th scope="col" class="numeric">Mag</th>
+            <th scope="col">Where</th>
+            <th scope="col" class="numeric">Depth km</th>
+            <th scope="col">Status</th>
           </tr>
-          @for (row of day.rows; track row.id) {
-            <tr>
-              <td class="mono time">{{ row.time | date: 'HH:mm:ss' : 'UTC' }}</td>
-              <td class="numeric">
-                @if (row.magnitude; as magnitude) {
-                  <span class="mono magnitude">{{ magnitude }}</span>
-                  <abbr class="scale" [title]="row.scale!.title">{{ row.scale!.code }}</abbr>
-                } @else {
-                  <span class="missing" title="No magnitude computed yet">—</span>
-                }
-              </td>
-              <td class="place">
-                <a [routerLink]="['/quakes', row.id]">{{ row.place }}</a>
-                @if (row.kind; as kind) {
-                  <span class="tag kind">{{ kind }}</span>
-                }
-              </td>
-              <td class="mono numeric">
-                @if (row.depth; as depth) {
-                  <span [attr.title]="row.depthTitle">{{ depth }}</span>
-                } @else {
-                  <span class="missing">—</span>
-                }
-              </td>
-              <td>
-                @if (row.reviewed) {
-                  <span class="tag tag--solid">Reviewed</span>
-                } @else {
-                  <span class="tag tag--dashed">Automatic</span>
-                }
-              </td>
+        </thead>
+        @for (day of days(); track day.day) {
+          <tbody>
+            <tr class="day">
+              <th scope="rowgroup" colspan="5">{{ day.day | date: 'EEEE d MMMM' : 'UTC' }}</th>
             </tr>
-          }
-        </tbody>
-      }
-    </table>
+            @for (row of day.rows; track row.id) {
+              <tr>
+                <td class="mono time">{{ row.time | date: 'HH:mm:ss' : 'UTC' }}</td>
+                <td class="numeric">
+                  @if (row.magnitude; as magnitude) {
+                    <span class="mono magnitude">{{ magnitude }}</span>
+                    <abbr class="scale" [title]="row.scale!.title">{{ row.scale!.code }}</abbr>
+                  } @else {
+                    <span class="missing" title="No magnitude computed yet">—</span>
+                  }
+                </td>
+                <td class="place">
+                  <a #place [routerLink]="['/quakes', row.id]" [attr.data-id]="row.id">{{
+                    row.place
+                  }}</a>
+                  @if (row.kind; as kind) {
+                    <span class="tag kind">{{ kind }}</span>
+                  }
+                </td>
+                <td class="mono numeric">
+                  @if (row.depth; as depth) {
+                    <span [attr.title]="row.depthTitle">{{ depth }}</span>
+                  } @else {
+                    <span class="missing">—</span>
+                  }
+                </td>
+                <td>
+                  @if (row.reviewed) {
+                    <span class="tag tag--solid">Reviewed</span>
+                  } @else {
+                    <span class="tag tag--dashed">Automatic</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        }
+      </table>
 
+      @if (folds()) {
+        <p class="more">
+          @if (unfolded()) {
+            <span
+              >All <span class="mono">{{ visible().length }}</span></span
+            >
+          } @else {
+            <span
+              >The latest <span class="mono">{{ latest }}</span> of
+              <span class="mono">{{ visible().length }}</span></span
+            >
+          }
+          <!-- One link that changes, so focus stays on it when it folds the list. -->
+          <a
+            #fold
+            class="more__link"
+            [routerLink]="[]"
+            [queryParams]="{ rows: unfolded() ? null : 'all' }"
+            queryParamsHandling="merge"
+            (click)="toggle($event)"
+            >{{ unfolded() ? 'Show only the latest ' + latest : 'Show all ' + visible().length }}</a
+          >
+        </p>
+      }
+    } @else {
+      <p class="empty">Nothing at this magnitude in the last 24 hours.</p>
+    }
+  </div>
+
+  @if (days().length) {
     <p class="note">
       Magnitudes come on different scales, named next to each value; hover one for what it measures.
       Automatic events were located by software and can still move, change size or be deleted.
@@ -83,7 +119,5 @@
         located relative to the sea, not the ground.
       }
     </p>
-  } @else {
-    <p class="empty">Nothing at this magnitude in the last 24 hours.</p>
   }
 </section>

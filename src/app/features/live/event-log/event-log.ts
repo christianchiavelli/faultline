@@ -1,5 +1,17 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import {
+  Component,
+  type ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  input,
+  untracked,
+  viewChild,
+  viewChildren,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { magnitudeScale } from '@shared/domain/magnitude';
 import { EARTHQUAKE_KIND, type QuakeSummary } from '@shared/domain/quake';
@@ -14,6 +26,12 @@ export const MAGNITUDE_FILTERS = [
 export type MagnitudeFilter = (typeof MAGNITUDE_FILTERS)[number]['value'];
 
 /**
+ * About a laptop screen of the log. The rest is one link away, in the address
+ * bar like the filter, so it can be shared and undone with Back.
+ */
+export const LATEST = 10;
+
+/**
  * M2.5 by default: below it the log is mostly the dense micro-seismicity of a
  * few Californian and Alaskan networks, and the trace above already shows it.
  */
@@ -25,6 +43,10 @@ function passes(quake: QuakeSummary, min: number | null): boolean {
   return min === null || (quake.magnitude?.value ?? -Infinity) >= min;
 }
 
+function minimumOf(filter: MagnitudeFilter): number | null {
+  return MAGNITUDE_FILTERS.find((candidate) => candidate.value === filter)!.min;
+}
+
 @Component({
   selector: 'fl-event-log',
   imports: [RouterLink, DatePipe],
@@ -34,6 +56,14 @@ function passes(quake: QuakeSummary, min: number | null): boolean {
 export class EventLog {
   readonly quakes = input.required<readonly QuakeSummary[]>();
   readonly filter = input.required<MagnitudeFilter>();
+  /** Every event at this filter, not only the latest: `?rows=all`. */
+  readonly unfolded = input(false);
+
+  readonly #injector = inject(Injector);
+  private readonly places = viewChildren<ElementRef<HTMLAnchorElement>>('place');
+  private readonly fold = viewChild<ElementRef<HTMLAnchorElement>>('fold');
+
+  #intent: 'unfold' | 'fold' | null = null;
 
   readonly filters = computed(() =>
     MAGNITUDE_FILTERS.map((filter) => ({
@@ -44,14 +74,19 @@ export class EventLog {
   );
 
   readonly visible = computed(() => {
-    const { min } = MAGNITUDE_FILTERS.find((filter) => filter.value === this.filter())!;
+    const min = minimumOf(this.filter());
     return this.quakes().filter((quake) => passes(quake, min));
   });
+
+  readonly shown = computed(() =>
+    this.unfolded() ? this.visible() : this.visible().slice(0, LATEST),
+  );
+  readonly folds = computed(() => this.visible().length > LATEST);
 
   /** Grouped by UTC day, the way a station logbook turns the page at midnight. */
   readonly days = computed(() => {
     const days = new Map<string, { day: number; rows: Row[] }>();
-    for (const quake of this.visible()) {
+    for (const quake of this.shown()) {
       const key = new Date(quake.time).toISOString().slice(0, 10);
       const day = days.get(key) ?? { day: quake.time, rows: [] };
       day.rows.push(toRow(quake));
@@ -61,8 +96,44 @@ export class EventLog {
   });
 
   readonly hasNegativeDepth = computed(() =>
-    this.visible().some((quake) => (quake.location.depthKm ?? 0) < 0),
+    this.shown().some((quake) => (quake.location.depthKm ?? 0) < 0),
   );
+
+  readonly latest = LATEST;
+
+  constructor() {
+    effect(() => {
+      const unfolded = this.unfolded();
+      untracked(() => this.#settle(unfolded));
+    });
+  }
+
+  protected toggle(event: MouseEvent): void {
+    // A modified click opens a tab and leaves this list as it is.
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    this.#intent = this.unfolded() ? 'fold' : 'unfold';
+  }
+
+  /** After the fold link, the reader carries on where they were: at the first row it added, or at the link. */
+  #settle(unfolded: boolean): void {
+    const intent = this.#intent;
+    this.#intent = null;
+    if (intent === 'unfold' && unfolded) {
+      afterNextRender(() => this.#focus(this.shown()[LATEST]?.id), { injector: this.#injector });
+    } else if (intent === 'fold' && !unfolded) {
+      afterNextRender(() => this.fold()?.nativeElement.scrollIntoView({ block: 'center' }), {
+        injector: this.#injector,
+      });
+    }
+  }
+
+  #focus(id: string | undefined): void {
+    this.places()
+      .find((place) => place.nativeElement.dataset['id'] === id)
+      ?.nativeElement.focus();
+  }
 }
 
 interface Row {

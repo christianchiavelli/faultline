@@ -42,6 +42,8 @@ const FEED_LATE_MS = 5 * 60_000;
 export class LivePage {
   /** `?min=` from the URL, bound by the router. The filter lives in the address bar, not in a store. */
   readonly min = input<string>();
+  /** `?rows=all` unfolds the log past its latest events, in the address bar for the same reason. */
+  readonly rows = input<string>();
 
   protected readonly now = inject(Clock).now;
   protected readonly recent = recentQuakesResource(() => 'day');
@@ -52,6 +54,7 @@ export class LivePage {
     return !!feed && (feed.stale || this.now() - feed.generatedAt > FEED_LATE_MS);
   });
   protected readonly filter = computed(() => parseMagnitudeFilter(this.min()));
+  protected readonly unfolded = computed(() => this.rows() === 'all');
   protected readonly summary = computed(() => summarise(this.feed()?.quakes ?? []));
 
   protected readonly largest = computed(() => {

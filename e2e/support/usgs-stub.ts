@@ -6,7 +6,9 @@
  * The day is small but awkward on purpose, like the real feed: mixed
  * magnitude scales, automatic and reviewed events, a depth above sea level, a
  * place name outside ASCII, an explosion, an event with no magnitude yet and
- * one record that fails validation.
+ * one record that fails validation. A swarm of small ones at The Geysers, as
+ * the real feed always has, makes the whole day longer than the log shows at
+ * first.
  *
  * The same day answers searches, counted and as CSV, the way the FDSN event
  * service does. Before it the catalogue is far busier than the real one, and
@@ -111,6 +113,51 @@ const EVENTS: readonly StubEvent[] = [
     status: 'reviewed',
     coordinates: [-122.3, 46.4, 0],
     type: 'explosion',
+  },
+  {
+    id: 'nc0002',
+    hoursAgo: 0.9,
+    mag: 0.9,
+    magType: 'md',
+    place: '1 km NW of The Geysers, CA',
+    status: 'automatic',
+    coordinates: [-122.77, 38.8, 1.9],
+  },
+  {
+    id: 'nc0003',
+    hoursAgo: 2.8,
+    mag: 1.6,
+    magType: 'md',
+    place: '3 km W of Cobb, CA',
+    status: 'automatic',
+    coordinates: [-122.76, 38.82, 2.4],
+  },
+  {
+    id: 'nc0004',
+    hoursAgo: 4.4,
+    mag: 0.6,
+    magType: 'md',
+    place: '4 km NW of The Geysers, CA',
+    status: 'automatic',
+    coordinates: [-122.79, 38.81, 1.1],
+  },
+  {
+    id: 'nc0005',
+    hoursAgo: 7.9,
+    mag: 1.2,
+    magType: 'md',
+    place: '6 km NW of Cobb, CA',
+    status: 'reviewed',
+    coordinates: [-122.78, 38.86, 3],
+  },
+  {
+    id: 'nc0006',
+    hoursAgo: 13.3,
+    mag: 2.1,
+    magType: 'md',
+    place: '2 km E of The Geysers, CA',
+    status: 'reviewed',
+    coordinates: [-122.73, 38.78, 1.5],
   },
   {
     id: 'ci0001',

@@ -7,8 +7,8 @@ test('renders the whole day on the server, before any script runs', async ({ bro
   await page.goto('/');
 
   await expect(page.locator('fl-helicorder path.ink')).toHaveCount(24);
-  await expect(readout(page, 'Events').locator('.readout__value')).toHaveText('9');
-  await expect(readout(page, 'Events')).toContainText('8 earthquakes · 1 explosion');
+  await expect(readout(page, 'Events').locator('.readout__value')).toHaveText('14');
+  await expect(readout(page, 'Events')).toContainText('13 earthquakes · 1 explosion');
   await expect(readout(page, 'Largest')).toContainText('South of the Fiji Islands');
   await expect(
     page.getByRole('link', { name: 'M6.2 Mww, South of the Fiji Islands' }),
@@ -53,10 +53,10 @@ test('filters the log through the address bar and keeps the reader in place', as
 });
 
 test('is upfront about the awkward records', async ({ page }) => {
-  await page.goto('/?min=all');
+  await page.goto('/?min=all&rows=all');
   const log = page.getByRole('region', { name: 'Every event' });
 
-  await expect(log.locator('tbody tr:not(.day)')).toHaveCount(9);
+  await expect(log.locator('tbody tr:not(.day)')).toHaveCount(14);
   await expect(log.getByText('explosion', { exact: true })).toBeVisible();
   await expect(log.getByTitle('1.2 km above sea level')).toHaveText('−1.2');
   await expect(log.getByTitle('No magnitude computed yet')).toBeVisible();
@@ -155,6 +155,8 @@ test('steps through the trace from the keyboard, as through a slider', async ({ 
   await expect(trace).toHaveAttribute('aria-valuetext', /^M1\.3 Md, 2 km NNW of The Geysers, CA,/);
   await expect(card).toContainText('Other events');
 
+  // Back past the swarm's latest, half an hour older still.
+  await page.keyboard.press('ArrowLeft');
   await page.keyboard.press('ArrowLeft');
   await expect(trace).toHaveAttribute(
     'aria-valuetext',
@@ -174,8 +176,8 @@ test('weighs the day against an average day on Earth', async ({ page }) => {
   const sizes = page.getByRole('region', { name: 'How big' });
   const table = sizes.getByRole('table', { name: /by magnitude/ });
 
-  // From the smallest event, M1.3, to the largest, M6.2, empty sizes included.
-  await expect(table.getByRole('row')).toHaveCount(12);
+  // From the smallest earthquake, M0.6, to the largest, M6.2, empty sizes included.
+  await expect(table.getByRole('row')).toHaveCount(13);
   await expect(table.getByRole('row', { name: /^M2\.5 to 3 / }).getByRole('cell')).toHaveText([
     '2',
     '870',
@@ -186,4 +188,28 @@ test('weighs the day against an average day on Earth', async ({ page }) => {
   await expect(sizes.locator('figcaption')).toContainText(
     'Mostly missing. 3 located, where an average day has about 1,300',
   );
+});
+
+test('folds the log to its latest ten, and unfolds it through the address bar', async ({
+  page,
+}) => {
+  await page.goto('/?min=all');
+  await waitForHydration(page);
+  const log = page.getByRole('region', { name: 'Every event' });
+  const rows = log.locator('tbody tr:not(.day)');
+  await log.locator('.more').scrollIntoViewIfNeeded();
+
+  await expect(rows).toHaveCount(10);
+  await expect(log.locator('.more')).toContainText('The latest 10 of 14');
+
+  // From the keyboard, the reader carries on at the first row the link adds.
+  await log.getByRole('link', { name: 'Show all 14' }).focus();
+  await page.keyboard.press('Enter');
+
+  await expect(page).toHaveURL(/[?&]rows=all/);
+  await expect(rows).toHaveCount(14);
+  await expect(rows.nth(10).getByRole('link')).toBeFocused();
+
+  await page.goBack();
+  await expect(rows).toHaveCount(10);
 });
