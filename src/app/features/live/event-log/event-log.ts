@@ -23,10 +23,24 @@ import { Highlight } from '@ui/highlight';
 import { Icon } from '@ui/icon';
 import { capitalise } from '@ui/text';
 import { dotRadius } from '../../common/world-chart/world-chart';
-import { describeFilters, facetsOf, matches, toEntries } from './facets';
+import { describeFilters, facetsOf, matches, sortEntries, toEntries } from './facets';
 import { LogFacets } from './log-facets';
 import { LogSearch } from './log-search';
-import { clearFilters, isFiltered, logParams, type LogQuery } from './log-query';
+import {
+  LOG_ORDERS,
+  clearFilters,
+  isFiltered,
+  logParams,
+  type LogOrder,
+  type LogQuery,
+} from './log-query';
+
+/** How the fold and the caption name the order: "the latest 10", "largest first". */
+const ORDER_WORDS: Record<LogOrder, { readonly few: string; readonly first: string }> = {
+  newest: { few: 'latest', first: 'newest first' },
+  largest: { few: 'largest', first: 'largest first' },
+  deepest: { few: 'deepest', first: 'deepest first' },
+};
 
 /**
  * About a laptop screen of the log. The rest is one link away, in the address
@@ -93,9 +107,21 @@ export class EventLog {
 
   readonly visible = computed(() => {
     const query = this.query();
-    return this.#entries()
-      .filter((entry) => matches(entry, query))
-      .map((entry) => entry.quake);
+    return sortEntries(
+      this.#entries().filter((entry) => matches(entry, query)),
+      query.order,
+    ).map((entry) => entry.quake);
+  });
+
+  protected readonly order = computed(() => this.query().order);
+  protected readonly orderWords = computed(() => ORDER_WORDS[this.order()]);
+
+  /** Each sortable column's link: the same view, in that column's order. */
+  protected readonly sorts = computed(() => {
+    const query = this.query();
+    return Object.fromEntries(
+      LOG_ORDERS.map((order) => [order, logParams({ ...query, order })]),
+    ) as Record<LogOrder, ReturnType<typeof logParams>>;
   });
 
   /** Held events these filters would show. */
@@ -125,10 +151,18 @@ export class EventLog {
   );
   readonly folds = computed(() => this.visible().length > LATEST);
 
-  /** Grouped by UTC day, the way a station logbook turns the page at midnight. */
+  /**
+   * Grouped by UTC day, the way a station logbook turns the page at midnight.
+   * Sorted by size or depth, the days would interleave, so the list is one
+   * group without a heading.
+   */
   readonly days = computed(() => {
     const fresh = this.#fresh();
-    const days = new Map<string, { day: number; rows: Row[] }>();
+    if (this.order() !== 'newest') {
+      const rows = this.shown().map((quake) => toRow(quake, fresh.has(quake.id)));
+      return rows.length ? [{ day: null, rows }] : [];
+    }
+    const days = new Map<string, { day: number | null; rows: Row[] }>();
     for (const quake of this.shown()) {
       const key = new Date(quake.time).toISOString().slice(0, 10);
       const day = days.get(key) ?? { day: quake.time, rows: [] };

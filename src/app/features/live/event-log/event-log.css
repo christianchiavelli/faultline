@@ -100,6 +100,33 @@
   }
 }
 
+/* A heading that sorts: its arrow says which order is in force, a faint pair that it can take one. */
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  min-height: 24px;
+  color: inherit;
+  text-decoration: none;
+
+  & ui-icon {
+    font-size: 1.1em;
+    opacity: 0.5;
+  }
+
+  &:hover {
+    color: var(--content-primary);
+  }
+}
+
+.ledger th[aria-sort] .sort {
+  color: var(--content-primary);
+
+  & ui-icon {
+    opacity: 1;
+  }
+}
+
 .time {
   color: var(--content-secondary);
   white-space: nowrap;

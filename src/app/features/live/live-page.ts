@@ -48,6 +48,7 @@ export class LivePage {
   readonly review = input<string>();
   readonly kind = input<string>();
   readonly q = input<string>();
+  readonly sort = input<string>();
   readonly rows = input<string>();
 
   protected readonly now = inject(Clock).now;
@@ -67,6 +68,7 @@ export class LivePage {
       review: this.review(),
       kind: this.kind(),
       q: this.q(),
+      sort: this.sort(),
       rows: this.rows(),
     } satisfies Record<keyof LogParams, string | undefined>),
   );

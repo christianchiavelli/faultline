@@ -1,6 +1,6 @@
 import type { Quake } from '@shared/domain/quake';
 import { aQuake } from '@shared/testing/quake-fixture';
-import { describeFilters, facetsOf, matches, toEntries, type Facet } from './facets';
+import { describeFilters, facetsOf, matches, sortEntries, toEntries, type Facet } from './facets';
 import { DEFAULT_LOG_QUERY, type LogQuery } from './log-query';
 
 const at = (latitude: number, depthKm: number | null) => ({ latitude, longitude: 0, depthKm });
@@ -160,5 +160,29 @@ describe('describeFilters', () => {
     expect(describeFilters(facetsOf(entries, DEFAULT_LOG_QUERY), 'willow')).toBe(
       'M2.5 and up · “willow”',
     );
+  });
+});
+
+describe('sortEntries', () => {
+  const order = (by: Parameters<typeof sortEntries>[1]) =>
+    sortEntries(
+      toEntries([
+        aQuake({ id: 'old', time: 1, magnitude: { value: 3, type: 'ml' }, location: at(0, 10) }),
+        aQuake({ id: 'new', time: 3, magnitude: { value: 3, type: 'ml' }, location: at(0, null) }),
+        aQuake({ id: 'big', time: 2, magnitude: { value: 6, type: 'mww' }, location: at(0, 500) }),
+        aQuake({ id: 'none', time: 4, magnitude: null, location: at(0, 35) }),
+      ]),
+      by,
+    ).map((entry) => entry.quake.id);
+
+  it('puts the newest, the largest or the deepest first', () => {
+    expect(order('newest')).toEqual(['none', 'new', 'big', 'old']);
+    expect(order('largest')[0]).toBe('big');
+    expect(order('deepest')[0]).toBe('big');
+  });
+
+  it('puts events without the value last, and the newest first among equals', () => {
+    expect(order('largest')).toEqual(['big', 'new', 'old', 'none']);
+    expect(order('deepest')).toEqual(['big', 'none', 'old', 'new']);
   });
 });

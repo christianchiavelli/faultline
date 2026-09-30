@@ -21,6 +21,7 @@ describe('parseLogQuery', () => {
         review: 'reviewed',
         kind: 'earthquake',
         q: 'anchorage',
+        sort: 'deepest',
         rows: 'all',
       }),
     ).toEqual({
@@ -30,6 +31,7 @@ describe('parseLogQuery', () => {
       review: 'reviewed',
       kind: 'earthquake',
       search: 'anchorage',
+      order: 'deepest',
       unfolded: true,
     });
   });
@@ -42,6 +44,7 @@ describe('parseLogQuery', () => {
         depth: 'mantle',
         review: 'maybe',
         kind: 'blast',
+        sort: 'oldest',
         rows: 'some',
       }),
     ).toEqual(DEFAULT_LOG_QUERY);
@@ -71,6 +74,7 @@ describe('logParams', () => {
       review: 'automatic',
       kind: 'other',
       search: 'cobb',
+      order: 'largest',
       unfolded: true,
     };
 
@@ -81,6 +85,7 @@ describe('logParams', () => {
       ['review', 'automatic'],
       ['kind', 'other'],
       ['q', 'cobb'],
+      ['sort', 'largest'],
       ['rows', 'all'],
     ]);
     expect(parseLogQuery(logParams(query))).toEqual(query);
@@ -88,16 +93,21 @@ describe('logParams', () => {
 });
 
 describe('clearFilters', () => {
-  it('puts every filter and the search back, and keeps the log unfolded', () => {
+  it('puts every filter and the search back, keeping the order and the fold', () => {
     const query: LogQuery = {
       ...DEFAULT_LOG_QUERY,
       region: 'alaska',
       search: 'willow',
+      order: 'deepest',
       unfolded: true,
     };
 
     expect(isFiltered(query)).toBe(true);
-    expect(clearFilters(query)).toEqual({ ...DEFAULT_LOG_QUERY, unfolded: true });
+    expect(clearFilters(query)).toEqual({
+      ...DEFAULT_LOG_QUERY,
+      order: 'deepest',
+      unfolded: true,
+    });
     expect(isFiltered(clearFilters(query))).toBe(false);
   });
 });

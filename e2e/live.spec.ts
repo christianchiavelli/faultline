@@ -384,3 +384,33 @@ test('searches before any script runs, accents or not', async ({ browser }) => {
   await expect(log.locator('tbody mark')).toHaveText('Pāhala');
   await context.close();
 });
+
+test('sorts the log by size or by depth from its headings', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'A phone sorts from a menu');
+  await page.goto('/?mag=any');
+  await waitForHydration(page);
+  const log = page.getByRole('region', { name: 'Every event' });
+  await waitForHydrationOf(page.locator('fl-event-log'));
+  const rows = log.locator('tbody tr:not(.day)');
+  const heading = (name: string) => log.getByRole('columnheader', { name, exact: true });
+
+  await heading('Mag').getByRole('link').click();
+
+  await expect(page).toHaveURL(/\/\?mag=any&sort=largest$/);
+  await expect(heading('Mag')).toHaveAttribute('aria-sort', 'descending');
+  await expect(rows.nth(0)).toContainText('South of the Fiji Islands');
+  await expect(rows.nth(1)).toContainText('Kermadec Islands');
+  // Sorted by size, the days would interleave: one list, no day headings.
+  await expect(log.locator('tr.day')).toHaveCount(0);
+  await expect(log.locator('.more')).toContainText('The largest 10 of 14');
+
+  await heading('Depth km').getByRole('link').click();
+
+  await expect(page).toHaveURL(/sort=deepest$/);
+  await expect(rows.nth(1)).toContainText('12 km NW of Anchorage');
+
+  await heading('UTC').getByRole('link').click();
+
+  await expect(page).toHaveURL(/\/\?mag=any$/);
+  await expect(log.locator('tr.day')).toHaveCount(1);
+});

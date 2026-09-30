@@ -21,6 +21,8 @@ export interface LogQuery {
   readonly kind: KindFilter | null;
   /** `?q=geysers`: words the place name must hold; empty for no search. */
   readonly search: string;
+  /** `?sort=largest` or `deepest`; the newest first otherwise, the order a live log reads in. */
+  readonly order: LogOrder;
   /** `?rows=all`: every event, not only the latest. */
   readonly unfolded: boolean;
 }
@@ -39,6 +41,11 @@ export type MagnitudeFloor = (typeof MAGNITUDE_FLOORS)[number]['value'];
 
 export type KindFilter = 'earthquake' | 'other';
 
+/** Each column sorts the way it is read: the newest, the largest, the deepest first. */
+export const LOG_ORDERS = ['newest', 'largest', 'deepest'] as const;
+
+export type LogOrder = (typeof LOG_ORDERS)[number];
+
 /** The query parameters, as the router binds them to the page. */
 export interface LogParams {
   readonly mag?: string;
@@ -47,6 +54,7 @@ export interface LogParams {
   readonly review?: string;
   readonly kind?: string;
   readonly q?: string;
+  readonly sort?: string;
   readonly rows?: string;
 }
 
@@ -57,6 +65,7 @@ export const DEFAULT_LOG_QUERY: LogQuery = {
   review: null,
   kind: null,
   search: '',
+  order: 'newest',
   unfolded: false,
 };
 
@@ -83,6 +92,7 @@ export function parseLogQuery(params: LogParams): LogQuery {
     review: params.review === 'reviewed' || params.review === 'automatic' ? params.review : null,
     kind: params.kind === 'earthquake' || params.kind === 'other' ? params.kind : null,
     search: normaliseSearch(params.q),
+    order: LOG_ORDERS.find((order) => order === params.sort) ?? DEFAULT_LOG_QUERY.order,
     unfolded: params.rows === 'all',
   };
 }
@@ -99,11 +109,12 @@ export function logParams(query: LogQuery): Params {
   if (query.review) params['review'] = query.review;
   if (query.kind) params['kind'] = query.kind;
   if (query.search) params['q'] = query.search;
+  if (query.order !== DEFAULT_LOG_QUERY.order) params['sort'] = query.order;
   if (query.unfolded) params['rows'] = 'all';
   return params;
 }
 
-/** Whether any filter differs from the default view. Unfolding is not a filter. */
+/** Whether any filter differs from the default view. The order and the fold are not filters. */
 export function isFiltered(query: LogQuery): boolean {
   return (
     query.magnitude !== DEFAULT_LOG_QUERY.magnitude ||
@@ -115,9 +126,9 @@ export function isFiltered(query: LogQuery): boolean {
   );
 }
 
-/** The same view with every filter, and the search, back at its default. */
+/** The same view, in the same order, with every filter and the search back at their defaults. */
 export function clearFilters(query: LogQuery): LogQuery {
-  return { ...DEFAULT_LOG_QUERY, unfolded: query.unfolded };
+  return { ...DEFAULT_LOG_QUERY, order: query.order, unfolded: query.unfolded };
 }
 
 export function minimumMagnitude(floor: MagnitudeFloor): number | null {

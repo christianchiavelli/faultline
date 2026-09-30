@@ -43,26 +43,57 @@
     @if (days().length) {
       <table class="ledger">
         <caption class="visually-hidden">
-          Seismic events in the last 24 hours, newest first{{
-            folds() && !unfolded() ? ': the latest ' + latest + ' of ' + visible().length : ''
-          }}.
+          Seismic events in the last 24 hours,
+          {{
+            orderWords().first
+          }}{{
+            folds() && !unfolded()
+              ? ': the ' + orderWords().few + ' ' + latest + ' of ' + visible().length
+              : ''
+          }}. The UTC, Mag and Depth headings sort the list.
         </caption>
         <thead>
           <tr>
-            <th scope="col" class="col-time">UTC</th>
-            <th scope="col" class="col-mag numeric">Mag</th>
+            <th
+              scope="col"
+              class="col-time"
+              [attr.aria-sort]="order() === 'newest' ? 'descending' : null"
+            >
+              <a class="sort" [routerLink]="[]" [queryParams]="sorts().newest"
+                >UTC<ui-icon [name]="order() === 'newest' ? 'arrow-down' : 'sort'"
+              /></a>
+            </th>
+            <th
+              scope="col"
+              class="col-mag numeric"
+              [attr.aria-sort]="order() === 'largest' ? 'descending' : null"
+            >
+              <a class="sort" [routerLink]="[]" [queryParams]="sorts().largest"
+                ><ui-icon [name]="order() === 'largest' ? 'arrow-down' : 'sort'" />Mag</a
+              >
+            </th>
             <th scope="col" class="col-where">Where</th>
             <th scope="col" class="col-region">Region</th>
             <th scope="col" class="col-position numeric">Lat, lon</th>
-            <th scope="col" class="col-depth numeric">Depth km</th>
+            <th
+              scope="col"
+              class="col-depth numeric"
+              [attr.aria-sort]="order() === 'deepest' ? 'descending' : null"
+            >
+              <a class="sort" [routerLink]="[]" [queryParams]="sorts().deepest"
+                ><ui-icon [name]="order() === 'deepest' ? 'arrow-down' : 'sort'" />Depth km</a
+              >
+            </th>
             <th scope="col" class="col-status">Status</th>
           </tr>
         </thead>
         @for (day of days(); track day.day) {
           <tbody>
-            <tr class="day">
-              <th scope="rowgroup" colspan="7">{{ day.day | date: 'EEEE d MMMM' : 'UTC' }}</th>
-            </tr>
+            @if (day.day !== null) {
+              <tr class="day">
+                <th scope="rowgroup" colspan="7">{{ day.day | date: 'EEEE d MMMM' : 'UTC' }}</th>
+              </tr>
+            }
             @for (row of day.rows; track row.id) {
               <tr [class.row--fresh]="row.fresh">
                 <td class="time">
@@ -136,7 +167,7 @@
             >
           } @else {
             <span
-              >The latest <span class="mono">{{ latest }}</span> of
+              >The {{ orderWords().few }} <span class="mono">{{ latest }}</span> of
               <span class="mono">{{ visible().length }}</span></span
             >
           }
@@ -147,7 +178,11 @@
             [routerLink]="[]"
             [queryParams]="foldParams()"
             (click)="toggle($event)"
-            >{{ unfolded() ? 'Show only the latest ' + latest : 'Show all ' + visible().length }}</a
+            >{{
+              unfolded()
+                ? 'Show only the ' + orderWords().few + ' ' + latest
+                : 'Show all ' + visible().length
+            }}</a
           >
         </p>
       }

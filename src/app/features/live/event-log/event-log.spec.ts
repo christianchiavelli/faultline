@@ -152,7 +152,8 @@ describe('EventLog, folded', () => {
     expect(text('.more a')).toBe('Show all 14');
     expect(element.querySelector('.more a')?.getAttribute('href')).toBe('/?mag=any&rows=all');
     expect(text('caption')).toBe(
-      'Seismic events in the last 24 hours, newest first: the latest 10 of 14.',
+      'Seismic events in the last 24 hours, newest first: the latest 10 of 14. ' +
+        'The UTC, Mag and Depth headings sort the list.',
     );
   });
 
@@ -163,6 +164,30 @@ describe('EventLog, folded', () => {
     expect(text('.more span')).toBe('All 14');
     expect(text('.more a')).toBe('Show only the latest 10');
     expect(element.querySelector('.more a')?.getAttribute('href')).toBe('/?mag=any');
+  });
+
+  it('sorts by size as one list, since the days would interleave, and folds to the largest', async () => {
+    const day = aDay(14).map((quake, i) => ({
+      ...quake,
+      magnitude: { value: (i % 7) + 1, type: 'ml' },
+    }));
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const fixture = TestBed.createComponent(EventLog);
+    fixture.componentRef.setInput('quakes', day);
+    fixture.componentRef.setInput('query', { ...at('any'), order: 'largest' });
+    fixture.componentRef.setInput('now', NOW);
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector('tr.day')).toBeNull();
+    expect(element.querySelector('tbody .value')?.textContent).toBe('7.0');
+    expect(element.querySelector('.more span')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      'The largest 10 of 14',
+    );
+    expect(element.querySelector('th[aria-sort="descending"]')?.textContent?.trim()).toBe('Mag');
+    expect(
+      [...element.querySelectorAll('th a.sort')].map((link) => link.getAttribute('href')),
+    ).toEqual(['/?mag=any', '/?mag=any&sort=largest', '/?mag=any&sort=deepest']);
   });
 
   it('has nothing to fold when the list fits', async () => {

@@ -3,7 +3,13 @@ import { DEPTH_CLASSES, depthClassOf, type DepthClass } from '@shared/domain/dep
 import { regionSlug, splitPlace } from '@shared/domain/place';
 import { EARTHQUAKE_KIND, type QuakeSummary } from '@shared/domain/quake';
 import { capitalise, fold, searchWords } from '@ui/text';
-import { MAGNITUDE_FLOORS, logParams, minimumMagnitude, type LogQuery } from './log-query';
+import {
+  MAGNITUDE_FLOORS,
+  logParams,
+  minimumMagnitude,
+  type LogOrder,
+  type LogQuery,
+} from './log-query';
 
 /** An event, with what the log filters it by worked out once. */
 export interface LogEntry {
@@ -187,4 +193,21 @@ export function describeFilters(facets: readonly Facet[], search = ''): string {
     return [facet.key === 'region' ? current.label : current.label.toLowerCase()];
   });
   return [...filters, ...(search ? [`“${search}”`] : [])].join(' · ');
+}
+
+const byTime = (a: LogEntry, b: LogEntry) => b.quake.time - a.quake.time;
+
+/** Largest or deepest first, missing values last, and the newest first among equals. */
+const ORDERS: Record<LogOrder, (a: LogEntry, b: LogEntry) => number> = {
+  newest: byTime,
+  largest: (a, b) =>
+    (b.quake.magnitude?.value ?? -Infinity) - (a.quake.magnitude?.value ?? -Infinity) ||
+    byTime(a, b),
+  deepest: (a, b) =>
+    (b.quake.location.depthKm ?? -Infinity) - (a.quake.location.depthKm ?? -Infinity) ||
+    byTime(a, b),
+};
+
+export function sortEntries(entries: readonly LogEntry[], order: LogOrder): LogEntry[] {
+  return [...entries].sort(ORDERS[order]);
 }
