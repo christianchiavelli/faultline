@@ -24,7 +24,7 @@ export interface ExportQuery {
   /** Epoch milliseconds, exclusive. */
   readonly to: number;
   readonly minMagnitude: number | null;
-  /** Kilometres below sea level, from inclusive and to exclusive; `null` for no bound. */
+  /** Kilometres below sea level, both bounds inclusive, as the USGS applies them; `null` for none. */
   readonly minDepthKm: number | null;
   readonly maxDepthKm: number | null;
   /** A circle around a point, or the whole world. */

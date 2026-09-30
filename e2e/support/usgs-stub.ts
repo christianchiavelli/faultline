@@ -267,7 +267,7 @@ function matches(event: StubEvent, time: number, search: Search): boolean {
     (minMagnitude === null || (event.mag !== null && event.mag >= minMagnitude)) &&
     (!search.review || event.status === search.review) &&
     (search.minDepth === null || event.coordinates[2] >= search.minDepth) &&
-    (search.maxDepth === null || event.coordinates[2] < search.maxDepth) &&
+    (search.maxDepth === null || event.coordinates[2] <= search.maxDepth) &&
     (!search.earthquakesOnly || (event.type ?? 'earthquake') === 'earthquake') &&
     (!circle || distanceKm(event, circle) <= circle.km)
   );
