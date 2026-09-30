@@ -28,7 +28,7 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - Angular 22 idioms: standalone components (never set `standalone`), OnPush is the default (never set it), `input()`/`output()`, signals and `computed()`, `@if`/`@for`, `inject()`, `@Service()` for new singletons, host bindings in `host: {}`.
 - Data: `httpResource` via `core/api/quakes.ts`; read values behind `hasValue()`. No stores: URL state goes through router input binding. The log's is one `LogQuery` (`event-log/log-query.ts`): a parameter per filter, named after what it sets, holding a word that reads on its own, defaults left out and the rest written in one order. Server state that needs a client cache, like the export's live count, is TanStack Query, provided through `QUERY_CLIENT` in the lazy chunk that uses it, never in the app config.
 - Styles: component CSS reads semantic tokens only (`src/styles/tokens.css`). New colours are added as primitives and exposed through a semantic token with `light-dark()`. No Tailwind, no component library.
-- Layout: a page of sections is `.bands`, and each section a `.band`, edge to edge, its content on the page's column through a subgrid (`layout.css`). The bands take turns: the page's own colour, then `.band--raised`, then the page's again (see `live-page.html`). Never give a band's content a width of its own to line it up with the page; the subgrid already does.
+- Layout: a page of sections is `.page-bands`, and each section a `.page-band`, edge to edge, its content on the page's column through a subgrid (`layout.css`). The bands take turns: the page's own colour, then `.page-band--raised`, then the page's again (see `live-page.html`). Never give a band's content a width of its own to line it up with the page; the subgrid already does.
 - Selectors: `fl-` for app components, `ui-` for design-system components.
 - Dialogs: `ui-dialog`, on the native `<dialog>`; never a hand-built overlay. A dialog's code is its own chunk, rendered with `@defer (when open(); prefetch on idle)`.
 - Filters that are links show the count their view would hold, the other filters kept (see `facets.ts`); an option that would empty the list is text, not a link.
@@ -43,7 +43,7 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 ## Gotchas
 
 - The server DOM throws on `document.cookie`; read cookies from the `REQUEST` headers on the server (see `core/theme.ts`).
-- The footer takes its gap and its rule from `--footer-space` and `--footer-rule`, which a page in bands sets to nothing through `body:has(.bands)`: its last band already ends it. A new page in bands needs nothing more; a page that is not keeps both.
+- The footer takes its gap and its rule from `--footer-space` and `--footer-rule`, which a page in bands sets to nothing through `body:has(.page-bands)`: its last band already ends it. A new page in bands needs nothing more; a page that is not keeps both.
 - Nothing may start a timer on the server. Browser-only work goes in `afterNextRender` (see `core/poll.ts`, `core/clock.ts`).
 - SVGs that must fill a sized box are positioned absolutely: an SVG's intrinsic aspect ratio otherwise sizes the grid row (see `helicorder.css`).
 - The USGS FDSN service answers 404 for unknown ids and 409 for deleted events; the API maps them to 404 and 410.
@@ -58,6 +58,7 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - A library pipe or directive used only inside a `@defer` block is imported through its package's whole namespace, which keeps every export of it in the first load. Put the block's content in a component of the app instead (see `log-sheet.ts`).
 - A `<table>` restyled with `display: grid` or `block` loses its semantics in some browsers. The log's spells out its roles in the markup so the phone layout can restyle it (see `event-log.html`).
 - A USGS place name is a locality, then the region after the last comma; the Californian networks write `CA` and `MX`, and a remote event has only a Flinn–Engdahl region. Read it with `splitPlace()` in `shared/domain/place.ts`, never by hand.
+- A class in `src/styles` applies to every element of that name, whatever component it is in: a global name must be one no component uses for something else. The page bands were `.band` until they padded the trace's reading band out to five lines.
 - In a unit spec, a TanStack query in flight is a pending task, so `whenStable()` waits for an answer the spec has yet to give. Render with `TestBed.tick()` instead (see `export-dialog.spec.ts`).
 
 ## Design changes

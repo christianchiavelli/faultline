@@ -131,6 +131,12 @@ test('reads any event off the trace, even one too small to draw, and opens it', 
   await expect(card).toContainText('6 km SW of Pāhala, Hawaii');
   await expect(card).toContainText('1.2 km above sea level');
   await expect(card).toContainText('Reviewed');
+  // The band behind the line read lights that one line, and no more.
+  const [band, paper] = await Promise.all([
+    page.locator('fl-helicorder .band').boundingBox(),
+    page.locator('fl-helicorder .paper').boundingBox(),
+  ]);
+  expect(band!.height).toBeCloseTo(paper!.height / 24, 0);
 
   await page.mouse.move(origin.x + 2, origin.y + 200);
   await expect(card).toBeHidden();

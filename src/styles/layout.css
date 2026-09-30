@@ -13,9 +13,10 @@
   /*
    * A page in bands: each section runs edge to edge while its content keeps to
    * the page's column. The outer tracks are the gutters, so a band can span
-   * them and everything in it still lines up with the rest of the page.
+   * them and everything in it still lines up with the rest of the page. Named
+   * for the page, since "band" alone is a name components already use.
    */
-  .bands {
+  .page-bands {
     display: grid;
     grid-template-columns:
       [full-start] minmax(var(--page-gutter), 1fr)
@@ -28,7 +29,7 @@
     }
   }
 
-  .band {
+  .page-band {
     display: grid;
     grid-column: full;
     grid-template-columns: subgrid;
@@ -43,13 +44,13 @@
   }
 
   /* The bands take turns, a raised one between two of the page's own. A chart on it is drawn on the band itself. */
-  .band--raised {
+  .page-band--raised {
     --surface-chart: var(--surface-raised);
     background: var(--surface-raised);
   }
 
   /* A page in bands ends on its last one: the footer follows it with no gap or rule of its own. */
-  body:has(.bands) {
+  body:has(.page-bands) {
     --footer-space: 0;
     --footer-rule: none;
   }

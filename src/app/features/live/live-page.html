@@ -1,6 +1,6 @@
 <!-- In bands: the day's record on the page's own colour, then its sections taking turns with a raised one. -->
-<article class="bands">
-  <div class="band opening">
+<article class="page-bands">
+  <div class="page-band opening">
     <header class="intro">
       <p class="eyebrow">Live · the last 24 hours</p>
       <h1 class="title">24 hours of a restless planet</h1>
@@ -129,7 +129,7 @@
   </div>
 
   @if (feed(); as feed) {
-    <section class="band band--raised where" aria-labelledby="where-title">
+    <section class="page-band page-band--raised where" aria-labelledby="where-title">
       <header class="section-header">
         <h2 class="section-title" id="where-title">Where</h2>
         <p class="section-lede">
@@ -144,7 +144,7 @@
       }
     </section>
 
-    <section class="band sizes" aria-labelledby="sizes-title">
+    <section class="page-band sizes" aria-labelledby="sizes-title">
       <header class="section-header">
         <h2 class="section-title" id="sizes-title">How big</h2>
         <p class="section-lede">
@@ -160,7 +160,7 @@
     </section>
 
     <!-- The log is a section of its own; this band only gives it its colour, placeholder included. -->
-    <div class="band band--raised">
+    <div class="page-band page-band--raised">
       @defer (on viewport; hydrate on viewport) {
         <fl-event-log [quakes]="feed.quakes" [query]="query()" [now]="now()">
           <fl-export-button [preset]="exportPreset()" />
