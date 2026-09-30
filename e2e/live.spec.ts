@@ -46,7 +46,7 @@ test('filters the log through the address bar and keeps the reader in place', as
 
   await filters.getByRole('link', { name: /^M4\.5\+/ }).click();
 
-  await expect(page).toHaveURL(/\?min=4\.5$/);
+  await expect(page).toHaveURL(/\?mag=4\.5$/);
   await expect(rows).toHaveCount(3);
   await expect(filters.getByRole('link', { name: /^M4\.5\+/ })).toHaveAttribute(
     'aria-current',
@@ -73,7 +73,7 @@ test('opens an event from anywhere on its row in the log', async ({ page }) => {
 });
 
 test('is upfront about the awkward records', async ({ page }) => {
-  await page.goto('/?min=all&rows=all');
+  await page.goto('/?mag=any&rows=all');
   const log = page.getByRole('region', { name: 'Every event' });
 
   await expect(log.locator('tbody tr:not(.day)')).toHaveCount(14);
@@ -213,7 +213,7 @@ test('weighs the day against an average day on Earth', async ({ page }) => {
 test('folds the log to its latest ten, and unfolds it through the address bar', async ({
   page,
 }) => {
-  await page.goto('/?min=all');
+  await page.goto('/?mag=any');
   await waitForHydration(page);
   const log = page.getByRole('region', { name: 'Every event' });
   const rows = log.locator('tbody tr:not(.day)');
@@ -238,7 +238,7 @@ test('holds a new event that lands while the log is in view, and shows it on req
   page,
 }) => {
   await page.clock.install();
-  await page.goto('/?min=all');
+  await page.goto('/?mag=any');
   await waitForHydration(page);
   const log = page.getByRole('region', { name: 'Every event' });
   const first = log.locator('tbody tr:not(.day)').first();
@@ -262,7 +262,7 @@ test('holds a new event that lands while the log is in view, and shows it on req
 
 test('lets a new event straight in while the log is below the fold', async ({ page }) => {
   await page.clock.install();
-  await page.goto('/?min=all');
+  await page.goto('/?mag=any');
   await waitForHydration(page);
   const log = page.getByRole('region', { name: 'Every event' });
   // Rendered once, then left behind: the reader is back up at the trace.

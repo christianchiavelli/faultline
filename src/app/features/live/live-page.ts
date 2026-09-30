@@ -11,7 +11,8 @@ import { AgoPipe } from '@ui/ago.pipe';
 import { capitalise } from '@ui/text';
 import { WorldChart } from '../common/world-chart/world-chart';
 import { ExportButton } from '../export/export-button';
-import { EventLog, parseMagnitudeFilter } from './event-log/event-log';
+import { EventLog } from './event-log/event-log';
+import { parseLogQuery } from './event-log/log-query';
 import { Helicorder } from './helicorder/helicorder';
 import { MagnitudeChart } from './magnitude-chart/magnitude-chart';
 
@@ -40,9 +41,8 @@ const FEED_LATE_MS = 5 * 60_000;
   styleUrl: './live-page.css',
 })
 export class LivePage {
-  /** `?min=` from the URL, bound by the router. The filter lives in the address bar, not in a store. */
-  readonly min = input<string>();
-  /** `?rows=all` unfolds the log past its latest events, in the address bar for the same reason. */
+  /** The log's view, from the query parameters the router binds here (see `log-query.ts`). */
+  readonly mag = input<string>();
   readonly rows = input<string>();
 
   protected readonly now = inject(Clock).now;
@@ -53,8 +53,12 @@ export class LivePage {
     const feed = this.feed();
     return !!feed && (feed.stale || this.now() - feed.generatedAt > FEED_LATE_MS);
   });
-  protected readonly filter = computed(() => parseMagnitudeFilter(this.min()));
-  protected readonly unfolded = computed(() => this.rows() === 'all');
+  protected readonly query = computed(() => parseLogQuery({ mag: this.mag(), rows: this.rows() }));
+  /** The export's own name for "any magnitude". */
+  protected readonly exportMagnitude = computed(() => {
+    const magnitude = this.query().magnitude;
+    return magnitude === 'any' ? 'all' : magnitude;
+  });
   protected readonly summary = computed(() => summarise(this.feed()?.quakes ?? []));
 
   protected readonly largest = computed(() => {

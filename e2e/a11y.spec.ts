@@ -8,12 +8,12 @@ import {
   waitForHydrationOf,
 } from './support/page';
 
-const PAGES = ['/', '/?min=all', '/quakes/us7000big', '/quakes/us7000tonga', '/quakes/zz404'];
+const PAGES = ['/', '/?mag=any', '/quakes/us7000big', '/quakes/us7000tonga', '/quakes/zz404'];
 const THEMES = ['paper', 'film'] as const;
 
 /** The export dialog in its two fullest states: offering suggestions, and a file near an event. */
 const DIALOGS = [
-  { path: '/?min=all', button: 'Export…', period: '30 days' },
+  { path: '/?mag=any', button: 'Export…', period: '30 days' },
   { path: '/quakes/us7000big', button: 'Export the events near this one…', period: null },
 ];
 
@@ -55,7 +55,7 @@ for (const theme of THEMES) {
 
     test('the log holding a new event meets WCAG 2.2 AA', async ({ page }) => {
       await page.clock.install();
-      await page.goto('/?min=all');
+      await page.goto('/?mag=any');
       await waitForHydration(page);
       const log = page.getByRole('region', { name: 'Every event' });
       await waitForHydrationOf(page.locator('fl-event-log'));

@@ -75,7 +75,7 @@ test('closes on Escape and hands focus back', async ({ page }) => {
 });
 
 test('narrows a search too large for one file, with counted suggestions', async ({ page }) => {
-  const dialog = await openFrom(page, '/?min=all', 'Export…');
+  const dialog = await openFrom(page, '/?mag=any', 'Export…');
   await expect(dialog.getByRole('radio', { name: 'All', exact: true })).toBeChecked();
 
   await choose(dialog, '30 days');

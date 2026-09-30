@@ -7,7 +7,7 @@ import { expect, test } from '@playwright/test';
  */
 const TITLES = {
   '/': 'Faultline',
-  '/?min=all': 'Faultline',
+  '/?mag=any': 'Faultline',
   '/quakes/us7000big': 'M6.2 South of the Fiji Islands | Faultline',
   '/quakes/zz404': 'Event not found | Faultline',
   '/quakes/zzgone': 'Event deleted | Faultline',

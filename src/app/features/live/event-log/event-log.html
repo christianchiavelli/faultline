@@ -7,8 +7,7 @@
           <a
             class="segmented__item"
             [routerLink]="[]"
-            [queryParams]="{ min: filter.value }"
-            queryParamsHandling="merge"
+            [queryParams]="filter.params"
             [attr.aria-current]="filter.current ? 'true' : null"
           >
             {{ filter.label }} <span class="filter__count mono">{{ filter.count }}</span>
@@ -117,8 +116,7 @@
             #fold
             class="more__link"
             [routerLink]="[]"
-            [queryParams]="{ rows: unfolded() ? null : 'all' }"
-            queryParamsHandling="merge"
+            [queryParams]="foldParams()"
             (click)="toggle($event)"
             >{{ unfolded() ? 'Show only the latest ' + latest : 'Show all ' + visible().length }}</a
           >

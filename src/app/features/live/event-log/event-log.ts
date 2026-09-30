@@ -18,14 +18,7 @@ import { RouterLink } from '@angular/router';
 import { magnitudeScale } from '@shared/domain/magnitude';
 import { EARTHQUAKE_KIND, type QuakeSummary } from '@shared/domain/quake';
 import { capitalise } from '@ui/text';
-
-export const MAGNITUDE_FILTERS = [
-  { value: 'all', label: 'All', min: null },
-  { value: '2.5', label: 'M2.5+', min: 2.5 },
-  { value: '4.5', label: 'M4.5+', min: 4.5 },
-] as const;
-
-export type MagnitudeFilter = (typeof MAGNITUDE_FILTERS)[number]['value'];
+import { MAGNITUDE_FLOORS, logParams, minimumMagnitude, type LogQuery } from './log-query';
 
 /**
  * About a laptop screen of the log. The rest is one link away, in the address
@@ -36,20 +29,8 @@ export const LATEST = 10;
 /** How long rows just shown stay tinted, so the eye finds where they went. */
 const FRESH_MS = 4_000;
 
-/**
- * M2.5 by default: below it the log is mostly the dense micro-seismicity of a
- * few Californian and Alaskan networks, and the trace above already shows it.
- */
-export function parseMagnitudeFilter(value: string | null | undefined): MagnitudeFilter {
-  return MAGNITUDE_FILTERS.find((filter) => filter.value === value)?.value ?? '2.5';
-}
-
 function passes(quake: QuakeSummary, min: number | null): boolean {
   return min === null || (quake.magnitude?.value ?? -Infinity) >= min;
-}
-
-function minimumOf(filter: MagnitudeFilter): number | null {
-  return MAGNITUDE_FILTERS.find((candidate) => candidate.value === filter)!.min;
 }
 
 @Component({
@@ -60,9 +41,9 @@ function minimumOf(filter: MagnitudeFilter): number | null {
 })
 export class EventLog {
   readonly quakes = input.required<readonly QuakeSummary[]>();
-  readonly filter = input.required<MagnitudeFilter>();
-  /** Every event at this filter, not only the latest: `?rows=all`. */
-  readonly unfolded = input(false);
+  readonly query = input.required<LogQuery>();
+
+  protected readonly unfolded = computed(() => this.query().unfolded);
 
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #injector = inject(Injector);
@@ -88,23 +69,32 @@ export class EventLog {
     return held.size ? this.quakes().filter((quake) => !held.has(quake.id)) : this.quakes();
   });
 
-  readonly filters = computed(() =>
-    MAGNITUDE_FILTERS.map((filter) => ({
-      ...filter,
-      count: this.#listed().filter((quake) => passes(quake, filter.min)).length,
-      current: filter.value === this.filter(),
-    })),
+  readonly filters = computed(() => {
+    const query = this.query();
+    return MAGNITUDE_FLOORS.map((floor) => ({
+      ...floor,
+      count: this.#listed().filter((quake) => passes(quake, floor.min)).length,
+      current: floor.value === query.magnitude,
+      params: logParams({ ...query, magnitude: floor.value }),
+    }));
+  });
+
+  /** The fold link's address: the same view, folded the other way. */
+  protected readonly foldParams = computed(() =>
+    logParams({ ...this.query(), unfolded: !this.query().unfolded }),
   );
 
+  readonly #minimum = computed(() => minimumMagnitude(this.query().magnitude));
+
   readonly visible = computed(() => {
-    const min = minimumOf(this.filter());
+    const min = this.#minimum();
     return this.#listed().filter((quake) => passes(quake, min));
   });
 
   /** Held events this filter would show. */
   readonly waiting = computed(() => {
     const held = this.#held();
-    const min = minimumOf(this.filter());
+    const min = this.#minimum();
     return this.quakes().filter((quake) => held.has(quake.id) && passes(quake, min)).length;
   });
 
@@ -140,7 +130,7 @@ export class EventLog {
     });
     // A new filter redraws the whole list, so whatever was held comes in with it.
     effect(() => {
-      this.filter();
+      this.#minimum();
       untracked(() => this.#takeHeld());
     });
     effect(() => {

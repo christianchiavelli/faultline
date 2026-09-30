@@ -6,7 +6,7 @@ import { recordApiCalls, scrollThrough, waitForHydration } from './support/page'
  * deferred sections included, must not ask the API again, whether the answer
  * was an event or an error.
  */
-const PAGES = ['/', '/?min=all', '/quakes/us7000big', '/quakes/zz404', '/quakes/zzgone'];
+const PAGES = ['/', '/?mag=any', '/quakes/us7000big', '/quakes/zz404', '/quakes/zzgone'];
 
 for (const path of PAGES) {
   test(`${path} hydrates without calling the API`, async ({ page }) => {

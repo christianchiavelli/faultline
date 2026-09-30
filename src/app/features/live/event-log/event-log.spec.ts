@@ -2,7 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import type { Quake, QuakeSummary } from '@shared/domain/quake';
 import { aQuake } from '@shared/testing/quake-fixture';
-import { EventLog, LATEST, parseMagnitudeFilter, type MagnitudeFilter } from './event-log';
+import { EventLog, LATEST } from './event-log';
+import { parseLogQuery, type LogQuery, type MagnitudeFloor } from './log-query';
+
+const at = (magnitude: MagnitudeFloor, unfolded = false): LogQuery => ({ magnitude, unfolded });
 
 const quakes: Quake[] = [
   aQuake({ id: 'big', magnitude: { value: 5.3, type: 'mww' }, place: 'south of the Fiji Islands' }),
@@ -15,11 +18,11 @@ const quakes: Quake[] = [
   aQuake({ id: 'blast', magnitude: { value: 1.9, type: 'md' }, kind: 'quarry blast' }),
 ];
 
-async function render(filter: MagnitudeFilter) {
+async function render(query: LogQuery) {
   TestBed.configureTestingModule({ providers: [provideRouter([])] });
   const fixture = TestBed.createComponent(EventLog);
   fixture.componentRef.setInput('quakes', quakes);
-  fixture.componentRef.setInput('filter', filter);
+  fixture.componentRef.setInput('query', query);
   await fixture.whenStable();
   return fixture.nativeElement as HTMLElement;
 }
@@ -29,7 +32,7 @@ const rows = (element: HTMLElement) =>
 
 describe('EventLog', () => {
   it('shows M2.5 and above by default, with a count on every filter', async () => {
-    const element = await render(parseMagnitudeFilter(undefined));
+    const element = await render(parseLogQuery({}));
 
     expect(rows(element)).toHaveLength(2);
     expect(
@@ -41,20 +44,20 @@ describe('EventLog', () => {
   });
 
   it('capitalises places written to follow a magnitude', async () => {
-    expect(rows(await render('4.5'))[0]).toContain('South of the Fiji Islands');
+    expect(rows(await render(at('4.5')))[0]).toContain('South of the Fiji Islands');
   });
 
   it('marks events that are not earthquakes, and provisional ones', async () => {
-    const all = rows(await render('all'));
+    const all = rows(await render(at('any')));
 
     expect(all.find((row) => row.includes('quarry blast'))).toBeDefined();
     expect(all.filter((row) => row.includes('Automatic'))).toHaveLength(1);
   });
 
   it('explains negative depths only when one is on screen', async () => {
-    expect((await render('all')).textContent).toContain('above sea level');
+    expect((await render(at('any'))).textContent).toContain('above sea level');
     TestBed.resetTestingModule();
-    expect((await render('4.5')).textContent).not.toContain('above sea level');
+    expect((await render(at('4.5'))).textContent).not.toContain('above sea level');
   });
 });
 
@@ -69,13 +72,12 @@ function aDay(length: number): Quake[] {
 
 async function renderLog(
   day: readonly QuakeSummary[],
-  { filter = 'all', unfolded = false }: { filter?: MagnitudeFilter; unfolded?: boolean } = {},
+  { magnitude = 'any', unfolded = false }: { magnitude?: MagnitudeFloor; unfolded?: boolean } = {},
 ) {
   TestBed.configureTestingModule({ providers: [provideRouter([])] });
   const fixture = TestBed.createComponent(EventLog);
   fixture.componentRef.setInput('quakes', day);
-  fixture.componentRef.setInput('filter', filter);
-  fixture.componentRef.setInput('unfolded', unfolded);
+  fixture.componentRef.setInput('query', at(magnitude, unfolded));
   await fixture.whenStable();
   const element = fixture.nativeElement as HTMLElement;
   const text = (selector: string) =>
@@ -92,7 +94,7 @@ describe('EventLog, folded', () => {
     expect(rows(element)).toHaveLength(LATEST);
     expect(text('.more span')).toBe('The latest 10 of 14');
     expect(text('.more a')).toBe('Show all 14');
-    expect(element.querySelector('.more a')?.getAttribute('href')).toBe('/?rows=all');
+    expect(element.querySelector('.more a')?.getAttribute('href')).toBe('/?mag=any&rows=all');
     expect(text('caption')).toBe(
       'Seismic events in the last 24 hours, newest first: the latest 10 of 14.',
     );
@@ -104,7 +106,7 @@ describe('EventLog, folded', () => {
     expect(rows(element)).toHaveLength(14);
     expect(text('.more span')).toBe('All 14');
     expect(text('.more a')).toBe('Show only the latest 10');
-    expect(element.querySelector('.more a')?.getAttribute('href')).toBe('/');
+    expect(element.querySelector('.more a')?.getAttribute('href')).toBe('/?mag=any');
   });
 
   it('has nothing to fold when the list fits', async () => {
@@ -119,7 +121,7 @@ describe('EventLog, folded', () => {
     element
       .querySelector<HTMLAnchorElement>('.more a')!
       .dispatchEvent(new MouseEvent('click', { button: 0, bubbles: true, cancelable: true }));
-    fixture.componentRef.setInput('unfolded', true);
+    fixture.componentRef.setInput('query', at('any', true));
     TestBed.tick();
 
     expect((document.activeElement as HTMLElement).dataset['id']).toBe(`q${LATEST}`);
@@ -191,13 +193,13 @@ describe('EventLog, live', () => {
   it('only calls out held events the filter would show, and lets them in with a new filter', async () => {
     logAt(0);
     const small = aQuake({ id: 'new', time: NOW + 60_000, magnitude: { value: 1.1, type: 'md' } });
-    const { fixture, element } = await renderLog(aDay(12), { filter: '2.5' });
+    const { fixture, element } = await renderLog(aDay(12), { magnitude: '2.5' });
 
     fixture.componentRef.setInput('quakes', [small, ...aDay(12)]);
     TestBed.tick();
     expect(element.querySelector('.fresh')).toBeNull();
 
-    fixture.componentRef.setInput('filter', 'all');
+    fixture.componentRef.setInput('query', at('any'));
     TestBed.tick();
     expect(element.querySelector('[data-id="new"]')).not.toBeNull();
     expect(element.querySelector('.fresh')).toBeNull();
