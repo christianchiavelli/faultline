@@ -229,7 +229,29 @@
       transition: background-color var(--duration-fast) var(--ease-out);
     }
 
-    & tbody tr:has(a:hover, a:focus-visible) {
+    /*
+     * A row that stands for one thing is one target: its `.ledger__link`
+     * stretches over the whole row, so a click anywhere on it opens the link,
+     * while a keyboard or a screen reader still meets a single link per row.
+     */
+    & tbody tr:has(.ledger__link) {
+      position: relative;
+    }
+
+    & .ledger__link::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+    }
+
+    /* What explains itself on hover sits above the link, or its title would never show. */
+    & tbody [title] {
+      position: relative;
+      z-index: 1;
+    }
+
+    & tbody tr:has(.ledger__link):hover,
+    & tbody tr:has(.ledger__link:focus-visible) {
       background: var(--surface-sunken);
     }
 

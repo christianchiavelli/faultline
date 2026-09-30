@@ -59,6 +59,19 @@ test('filters the log through the address bar and keeps the reader in place', as
   await expect(rows).toHaveCount(6);
 });
 
+test('opens an event from anywhere on its row in the log', async ({ page }) => {
+  await page.goto('/');
+  await waitForHydration(page);
+  const row = page
+    .getByRole('region', { name: 'Every event' })
+    .getByRole('row', { name: /Kermadec Islands region/ });
+
+  // Forced: the row's link lies over the cell, which is the point.
+  await row.getByRole('cell').first().click({ force: true });
+
+  await expect(page).toHaveURL(/\/quakes\/us7000kerm$/);
+});
+
 test('is upfront about the awkward records', async ({ page }) => {
   await page.goto('/?min=all&rows=all');
   const log = page.getByRole('region', { name: 'Every event' });

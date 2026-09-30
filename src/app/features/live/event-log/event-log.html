@@ -69,9 +69,13 @@
                   }
                 </td>
                 <td class="place">
-                  <a #place [routerLink]="['/quakes', row.id]" [attr.data-id]="row.id">{{
-                    row.place
-                  }}</a>
+                  <a
+                    #place
+                    class="ledger__link"
+                    [routerLink]="['/quakes', row.id]"
+                    [attr.data-id]="row.id"
+                    >{{ row.place }}</a
+                  >
                   @if (row.kind; as kind) {
                     <span class="tag kind">{{ kind }}</span>
                   }

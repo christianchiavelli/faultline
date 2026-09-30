@@ -67,10 +67,11 @@
   & a {
     text-decoration-color: transparent;
   }
+}
 
-  & a:hover {
-    text-decoration-color: currentColor;
-  }
+/* Anywhere on its row, the pointer is on its link: the place underlines to say so. */
+.ledger tbody tr:hover .place a {
+  text-decoration-color: currentColor;
 }
 
 .kind {
