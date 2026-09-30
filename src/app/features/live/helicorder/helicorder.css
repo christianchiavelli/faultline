@@ -65,6 +65,8 @@
 
 .paper {
   position: relative;
+  /* What the markers measure the room left on their line against. */
+  container-type: inline-size;
   background: var(--surface-chart);
   border-block: var(--hairline) solid var(--rule-strong);
   box-shadow:
@@ -109,10 +111,16 @@
   stroke-width: 1.2px;
 }
 
-/* Sits on the line just after the coda, where the trace is quiet again. */
+/*
+ * Sits on the line just after the coda, where the trace is quiet again, unless
+ * the line ends first: then it moves back just enough to end at the edge.
+ * Hanging past it, a label near the end of an hour widened the page on a
+ * phone, and the browser zoomed the whole page out to fit it.
+ */
 .marker {
   position: absolute;
-  translate: 0.3rem -50%;
+  left: calc(var(--at) * 1%);
+  translate: min(0.3rem, (100 - var(--at)) * 1cqi - 100%) -50%;
   padding: 0 0.3rem;
   background: var(--surface-chart);
   font-size: var(--text-2xs);

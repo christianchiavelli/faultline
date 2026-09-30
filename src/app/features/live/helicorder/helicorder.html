@@ -46,7 +46,7 @@
         <a
           class="marker mono"
           [routerLink]="['/quakes', marker.id]"
-          [style.left.%]="marker.left"
+          [style.--at]="marker.left"
           [style.top.%]="marker.top"
           [attr.aria-label]="marker.label"
           >{{ marker.text }}</a

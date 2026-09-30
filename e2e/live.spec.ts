@@ -63,3 +63,28 @@ test('is upfront about the awkward records', async ({ page }) => {
     page.getByText('1 record from the USGS failed validation and is not shown.'),
   ).toBeVisible();
 });
+
+test('keeps a label at the very end of its hour inside the trace, on any screen', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const paper = page.locator('fl-helicorder .paper');
+  const labels = page.locator('fl-helicorder .marker');
+  await expect(labels).toHaveCount(3);
+
+  // Where a label lands follows the minute of its event, so pin them all to the end of their line.
+  await labels.evaluateAll((elements) => {
+    for (const element of elements) (element as HTMLElement).style.setProperty('--at', '100');
+  });
+
+  const edge = await paper.evaluate((element) => element.getBoundingClientRect().right);
+  for (const right of await labels.evaluateAll((elements) =>
+    elements.map((element) => element.getBoundingClientRect().right),
+  )) {
+    expect(right).toBeLessThanOrEqual(edge + 0.5);
+  }
+  // Hanging past the edge, a label widened the page and a phone zoomed out to fit it.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    page.viewportSize()!.width,
+  );
+});
