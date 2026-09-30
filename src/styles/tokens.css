@@ -16,6 +16,7 @@
 @layer tokens {
   :root {
     /* Paper: the drum of a seismograph. Warm, barely chromatic. */
+    --paper-25: oklch(99.3% 0.003 85);
     --paper-50: oklch(98.4% 0.006 85);
     --paper-100: oklch(96.3% 0.011 84);
     --paper-200: oklch(93.4% 0.015 82);
@@ -35,6 +36,7 @@
     /* Film: photographic drum paper, a light trace on a dark record. */
     --film-950: oklch(15.8% 0.006 70);
     --film-900: oklch(18.9% 0.008 70);
+    --film-850: oklch(20.5% 0.009 70);
     --film-800: oklch(23.5% 0.01 70);
     --film-700: oklch(30.5% 0.012 70);
     --film-600: oklch(39% 0.013 70);
@@ -44,8 +46,9 @@
     --pen-film-100: oklch(29% 0.07 30);
     --pen-film-500: oklch(69% 0.165 32);
 
-    /* Surfaces */
+    /* Surfaces. Raised is a step forward of the page: a band that takes turns with it, or what floats over it. */
     --surface-page: light-dark(var(--paper-100), var(--film-950));
+    --surface-raised: light-dark(var(--paper-25), var(--film-850));
     --surface-chart: light-dark(var(--paper-50), var(--film-900));
     --surface-sunken: light-dark(var(--paper-200), var(--film-800));
     --surface-inverse: light-dark(var(--ink-900), var(--chalk-100));
@@ -120,6 +123,8 @@
 
     --page-gutter: clamp(1rem, 0.3rem + 3vw, 3rem);
     --page-max: 86rem;
+    /* Above and below the content of a band: more than inside a section, so each reads as one. */
+    --band-space: clamp(3rem, 2rem + 2.5vw, 4rem);
 
     /* Paper has no rounded corners and casts no shadows. */
     --radius-tag: 2px;

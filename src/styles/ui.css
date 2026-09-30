@@ -24,10 +24,19 @@
     letter-spacing: var(--tracking-tight);
   }
 
+  /* A step below the page's title, and well above the text: the page reads as chapters. */
   .section-title {
-    font-size: var(--text-lg);
-    font-weight: 680;
-    letter-spacing: -0.01em;
+    font-size: var(--text-xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  /* The sentence under a section's heading: what the section shows, or how to read it. */
+  .section-lede {
+    max-width: var(--measure);
+    font-size: var(--text-md);
+    line-height: 1.5;
+    color: var(--content-secondary);
   }
 
   .lede {

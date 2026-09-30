@@ -9,4 +9,48 @@
     gap: var(--stack-gap, var(--space-4));
     align-content: start;
   }
+
+  /*
+   * A page in bands: each section runs edge to edge while its content keeps to
+   * the page's column. The outer tracks are the gutters, so a band can span
+   * them and everything in it still lines up with the rest of the page.
+   */
+  .bands {
+    display: grid;
+    grid-template-columns:
+      [full-start] minmax(var(--page-gutter), 1fr)
+      [content-start] minmax(0, var(--page-max))
+      [content-end] minmax(var(--page-gutter), 1fr)
+      [full-end];
+
+    & > * {
+      grid-column: content;
+    }
+  }
+
+  .band {
+    display: grid;
+    grid-column: full;
+    grid-template-columns: subgrid;
+    align-content: start;
+    row-gap: var(--space-6);
+    padding-block: var(--band-space);
+    background: var(--surface-page);
+
+    & > * {
+      grid-column: content;
+    }
+  }
+
+  /* The bands take turns, a raised one between two of the page's own. A chart on it is drawn on the band itself. */
+  .band--raised {
+    --surface-chart: var(--surface-raised);
+    background: var(--surface-raised);
+  }
+
+  /* A page in bands ends on its last one: the footer follows it with no gap or rule of its own. */
+  body:has(.bands) {
+    --footer-space: 0;
+    --footer-rule: none;
+  }
 }

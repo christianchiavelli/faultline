@@ -18,10 +18,11 @@ import { Component } from '@angular/core';
     </footer>
   `,
   styles: `
+    /* A page in bands sets both to nothing: its last band already ends it (see layout.css). */
     :host {
       display: block;
-      margin-block-start: var(--space-20);
-      border-top: var(--hairline) solid var(--rule-strong);
+      margin-block-start: var(--footer-space, var(--space-20));
+      border-top: var(--footer-rule, var(--hairline) solid var(--rule-strong));
     }
 
     .footer {
