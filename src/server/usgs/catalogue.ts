@@ -10,7 +10,11 @@ import { detailSchema, featureSchema, feedSchema } from './schema';
 /** The USGS regenerates the summary feeds once a minute; asking more often returns the same file. */
 const feedCache = createSwrCache<FeedSnapshot>({
   freshForMs: 60_000,
-  staleForMs: 10 * 60_000,
+  // Short on purpose. The live page calls a feed older than five minutes
+  // delayed, so after a quiet spell the first reader waits a moment for the
+  // current file instead of being handed a ten-minute-old one. When the USGS is
+  // down, the old copy is still served, flagged stale.
+  staleForMs: 60_000,
   onBackgroundError: (key, error) => console.warn(`[usgs] feed ${key} refresh failed`, error),
 });
 
