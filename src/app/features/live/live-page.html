@@ -129,6 +129,21 @@
       }
     </section>
 
+    <section class="sizes" aria-labelledby="sizes-title">
+      <header class="section-header">
+        <h2 class="section-title" id="sizes-title">How big</h2>
+        <p class="note">
+          Small earthquakes far outnumber large ones, about ten to one for each step of magnitude:
+          the Gutenberg–Richter law.
+        </p>
+      </header>
+      @defer (on viewport; hydrate on viewport) {
+        <fl-magnitude-chart [quakes]="feed.quakes" />
+      } @placeholder {
+        <div class="sizes-placeholder" aria-hidden="true"></div>
+      }
+    </section>
+
     @defer (on viewport; hydrate on viewport) {
       <fl-event-log [quakes]="feed.quakes" [filter]="filter()">
         <fl-export-button [minMagnitude]="filter()" />

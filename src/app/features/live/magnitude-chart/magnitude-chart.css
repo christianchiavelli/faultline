@@ -1,0 +1,323 @@
+:host {
+  display: block;
+  --gutter: 3rem;
+}
+
+.chart {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.plot {
+  display: grid;
+  grid-template-columns: var(--gutter) minmax(0, 1fr);
+  grid-template-rows: auto clamp(16rem, 40vh, 23rem) auto;
+}
+
+.plot__unit,
+.plot__axis {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--content-secondary);
+}
+
+.plot__unit {
+  grid-column: 1 / -1;
+  padding-block-end: var(--space-2);
+}
+
+.plot__axis {
+  padding-block-start: var(--space-2);
+}
+
+.plot__counts {
+  position: relative;
+  font-size: var(--text-2xs);
+  color: var(--content-tertiary);
+
+  & span {
+    position: absolute;
+    right: var(--space-2);
+    top: calc(var(--at) * 1%);
+    translate: 0 -50%;
+  }
+}
+
+.plot__magnitudes {
+  position: relative;
+  height: 1.5rem;
+  font-size: var(--text-2xs);
+  color: var(--content-tertiary);
+
+  & span {
+    position: absolute;
+    top: var(--space-2);
+    left: calc(var(--at) * 1%);
+    translate: -50% 0;
+  }
+
+  & span:first-child {
+    translate: 0 0;
+  }
+
+  & span:last-child {
+    translate: -100% 0;
+  }
+}
+
+.paper {
+  position: relative;
+  background: var(--surface-chart);
+  border-block: var(--hairline) solid var(--rule-strong);
+  box-shadow:
+    inset 1px 0 0 var(--rule),
+    inset -1px 0 0 var(--rule);
+}
+
+/* Out of flow, as the trace is: the paper sizes the drawing, never the other way round. */
+.lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+
+  & line {
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+.grid line {
+  stroke: var(--grid-minor);
+  stroke-width: 1px;
+}
+
+.grid .grid__major {
+  stroke: var(--grid-major);
+}
+
+.bar {
+  fill: var(--trace-ink);
+}
+
+.bar--pen {
+  fill: var(--trace-pen);
+}
+
+.law {
+  stroke: var(--content-secondary);
+  stroke-width: 1.5px;
+  stroke-dasharray: 7 5;
+}
+
+.complete {
+  stroke: var(--content-accent);
+  stroke-width: 1px;
+  stroke-dasharray: 2 3;
+}
+
+/* Hatched in CSS rather than an SVG pattern, which the stretched drawing would skew. */
+.gap {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(-45deg, var(--grid-major) 0 1px, transparent 1px 7px);
+}
+
+.count {
+  position: absolute;
+  left: calc(var(--x) * 1%);
+  top: calc(var(--y) * 1%);
+  translate: -50% calc(-100% - 0.2rem);
+  font-size: var(--text-2xs);
+  color: var(--content-secondary);
+}
+
+.count--pen {
+  font-weight: 600;
+  color: var(--content-accent);
+}
+
+.count--zero {
+  color: var(--content-tertiary);
+}
+
+.complete__label {
+  position: absolute;
+  left: calc(var(--x) * 1%);
+  top: 0;
+  translate: -50% calc(-100% - 0.15rem);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--content-accent);
+}
+
+.note {
+  position: absolute;
+  max-width: 15rem;
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  color: var(--content-secondary);
+
+  & b {
+    display: block;
+    font-weight: 650;
+    color: var(--content-primary);
+  }
+}
+
+/* Above the tallest small-event bar, and never above the paper. */
+.note--centred {
+  left: calc(var(--x) * 1%);
+  top: max(0%, calc(var(--y) * 1% - 3.6rem));
+  translate: -50% 0;
+  text-align: center;
+}
+
+.note--law {
+  left: calc(var(--x) * 1% + 0.5rem);
+  top: 3%;
+}
+
+/* Inside the hatching, under the law, and lifted clear of a tall bar beneath it. */
+.note--gap {
+  left: calc(var(--x) * 1% + 0.25rem);
+  top: min(44%, calc(var(--y) * 1% - 5.2rem));
+  max-width: 7.75rem;
+  margin-inline-start: -0.3rem;
+  padding: 0.15rem 0.3rem;
+  background: var(--surface-chart);
+}
+
+.note--pen {
+  left: calc(var(--x) * 1% + 0.5rem);
+  top: 38%;
+
+  & b {
+    color: var(--content-accent);
+  }
+}
+
+.legend {
+  margin-inline-start: var(--gutter);
+  padding-block-start: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--content-tertiary);
+}
+
+.legend__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend__item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+
+  & b {
+    font-weight: 650;
+    color: var(--content-primary);
+  }
+}
+
+.swatch {
+  flex: none;
+  translate: 0 0.1rem;
+}
+
+/* Holds the column in the phone's list, for an item with nothing to key. */
+.swatch--none {
+  display: none;
+}
+
+.swatch--ink,
+.swatch--pen {
+  width: 0.4rem;
+  height: 0.8rem;
+  background: var(--trace-ink);
+}
+
+.swatch--pen {
+  background: var(--trace-pen);
+}
+
+.swatch--bars {
+  width: 0.4rem;
+  height: 0.8rem;
+  margin-inline-end: 0.55rem;
+  background: var(--trace-ink);
+  box-shadow: 0.55rem 0 0 var(--trace-pen);
+}
+
+.swatch--law {
+  width: 1.5rem;
+  border-top: 1.5px dashed var(--content-secondary);
+  translate: 0 -0.2rem;
+}
+
+.swatch--gap {
+  width: 1rem;
+  height: 0.8rem;
+  background: repeating-linear-gradient(-45deg, var(--content-tertiary) 0 1px, transparent 1px 4px);
+}
+
+/* On a wide screen the notes sit on the chart itself; the caption keeps them for a screen reader. */
+@media (width >= 40rem) {
+  .legend__item--note,
+  .legend__title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* A phone has no room for notes on the chart: they join the caption, each with its key. */
+@media (width < 40rem) {
+  :host {
+    --gutter: 2.25rem;
+  }
+
+  .plot {
+    grid-template-rows: auto 17rem auto;
+  }
+
+  .plot__odd,
+  .note {
+    display: none;
+  }
+
+  .count {
+    font-size: 0.625rem;
+  }
+
+  .legend {
+    margin-inline-start: 0;
+    color: var(--content-secondary);
+  }
+
+  .legend__list {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .legend__item {
+    display: grid;
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    line-height: 1.4;
+  }
+
+  .swatch--none {
+    display: block;
+  }
+
+  .swatch--bars {
+    margin-inline-end: 0;
+  }
+}

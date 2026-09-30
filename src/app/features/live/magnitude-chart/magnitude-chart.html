@@ -1,0 +1,176 @@
+<figure class="chart">
+  <!-- Drawn for the eye; the table and the caption below say the same in words. -->
+  <div class="plot" aria-hidden="true">
+    <span class="plot__unit mono">Events a day</span>
+
+    <div class="plot__counts mono">
+      @for (count of chart().counts; track count.value) {
+        <span [style.--at]="count.y">{{ count.value | number: '1.0-1' }}</span>
+      }
+    </div>
+
+    <div class="paper">
+      <div class="gap" [style.clip-path]="gapShape()"></div>
+
+      <svg class="lines" viewBox="0 0 1000 1000" preserveAspectRatio="none" focusable="false">
+        <g class="grid">
+          @for (rule of chart().grid.across; track rule.x) {
+            <line
+              [class.grid__major]="rule.major"
+              [attr.x1]="rule.x * 10"
+              [attr.x2]="rule.x * 10"
+              y1="0"
+              y2="1000"
+            />
+          }
+          @for (rule of chart().grid.down; track rule.y) {
+            <line
+              [class.grid__major]="rule.major"
+              x1="0"
+              x2="1000"
+              [attr.y1]="rule.y * 10"
+              [attr.y2]="rule.y * 10"
+            />
+          }
+        </g>
+        @for (bin of bars(); track bin.from) {
+          <rect
+            class="bar"
+            [class.bar--pen]="bin.worldwide"
+            [attr.x]="(bin.x - chart().barWidth / 2) * 10"
+            [attr.width]="chart().barWidth * 10"
+            [attr.y]="bin.y * 10"
+            [attr.height]="(100 - bin.y) * 10"
+          />
+        }
+        <line
+          class="law"
+          [attr.x1]="chart().law.x1 * 10"
+          [attr.y1]="chart().law.y1 * 10"
+          [attr.x2]="chart().law.x2 * 10"
+          [attr.y2]="chart().law.y2 * 10"
+        />
+        <line
+          class="complete"
+          [attr.x1]="chart().complete * 10"
+          [attr.x2]="chart().complete * 10"
+          y1="0"
+          y2="1000"
+        />
+      </svg>
+
+      @for (bin of labelled(); track bin.from) {
+        <span
+          class="count mono"
+          [class.count--pen]="bin.worldwide && bin.count > 0"
+          [class.count--zero]="bin.count === 0"
+          [style.--x]="bin.x"
+          [style.--y]="bin.y"
+          >{{ bin.count }}</span
+        >
+      }
+      <span class="complete__label mono" [style.--x]="chart().complete">M{{ complete }}</span>
+
+      @if (chart().dense; as dense) {
+        <p class="note note--centred" [style.--x]="dense.x" [style.--y]="dense.y">
+          <b>Where seismometers are dense</b> {{ regions() }}, mostly
+        </p>
+      }
+      <p class="note note--law" [style.--x]="notes().law">
+        <b>An average day on Earth</b> about ten times as many for each step down
+      </p>
+      <p class="note note--gap" [style.--x]="notes().gap" [style.--y]="chart().gap.peak">
+        <b>Mostly missing</b> {{ chart().gap.located }} located, where an average day has about
+        {{ roughly(chart().gap.expected) | number }}
+      </p>
+      <p class="note note--pen" [style.--x]="notes().planet">
+        <b>The whole planet</b> from M{{ complete }} the USGS aims to locate every earthquake on
+        Earth
+      </p>
+    </div>
+
+    <span class="plot__axis mono">Mag</span>
+    <div class="plot__magnitudes mono">
+      @for (magnitude of chart().magnitudes; track magnitude.value) {
+        <span [class.plot__odd]="magnitude.value % 2 !== 0" [style.--at]="magnitude.x">{{
+          signed(magnitude.value)
+        }}</span>
+      }
+    </div>
+  </div>
+
+  <!-- Hidden by its wrapper: a table grows to fit its cells, whatever width it is given. -->
+  <div class="visually-hidden">
+    <table>
+      <caption>
+        Earthquakes in the last 24 hours by magnitude, against an average day worldwide
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Magnitude</th>
+          <th scope="col">Last 24 hours</th>
+          <th scope="col">Average day</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (bin of labelled(); track bin.from) {
+          <tr>
+            <th scope="row">{{ range(bin) }}</th>
+            <td>{{ bin.count }}</td>
+            <td>
+              @if (bin.expected === null) {
+                —
+              } @else {
+                {{ roughly(bin.expected) | number: '1.0-3' }}
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <figcaption class="legend">
+    <ul class="legend__list" role="list">
+      @if (chart().dense) {
+        <li class="legend__item legend__item--note">
+          <span class="swatch swatch--ink"></span>
+          <span><b>Where seismometers are dense.</b> {{ regions() }}, mostly</span>
+        </li>
+      }
+      <li class="legend__item legend__item--note">
+        <span class="swatch swatch--gap"></span>
+        <span
+          ><b>Mostly missing.</b> {{ chart().gap.located }} located, where an average day has about
+          {{ roughly(chart().gap.expected) | number }}</span
+        >
+      </li>
+      <li class="legend__item legend__item--note">
+        <span class="swatch swatch--pen"></span>
+        <span
+          ><b>The whole planet.</b> From M{{ complete }} the USGS aims to locate every earthquake on
+          Earth</span
+        >
+      </li>
+      <li class="legend__item">
+        <span class="swatch swatch--bars"></span>
+        <span
+          >Earthquakes in the last 24 hours, in half-magnitude steps. Red: M{{ complete }} and
+          above.</span
+        >
+      </li>
+      <li class="legend__item">
+        <span class="swatch swatch--law"></span>
+        <span
+          ><b class="legend__title">An average day on Earth.</b> The Gutenberg–Richter law at the
+          rate the USGS has recorded since 1990, about {{ fivesADay | number: '1.1-1' }} M5s a
+          day.</span
+        >
+      </li>
+      <li class="legend__item">
+        <span class="swatch swatch--none"></span>
+        <span>Log scale: each line up is ten times as many.</span>
+      </li>
+    </ul>
+  </figcaption>
+</figure>

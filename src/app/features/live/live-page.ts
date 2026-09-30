@@ -13,6 +13,7 @@ import { WorldChart } from '../common/world-chart/world-chart';
 import { ExportButton } from '../export/export-button';
 import { EventLog, parseMagnitudeFilter } from './event-log/event-log';
 import { Helicorder } from './helicorder/helicorder';
+import { MagnitudeChart } from './magnitude-chart/magnitude-chart';
 
 const FEED_REFRESH_MS = 60_000;
 
@@ -31,6 +32,7 @@ const FEED_LATE_MS = 5 * 60_000;
     AgoPipe,
     Helicorder,
     WorldChart,
+    MagnitudeChart,
     EventLog,
     ExportButton,
   ],

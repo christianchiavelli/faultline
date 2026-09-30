@@ -51,7 +51,8 @@
   margin-block-start: var(--space-2);
 }
 
-.where {
+.where,
+.sizes {
   display: grid;
   gap: var(--space-4);
 }
@@ -64,6 +65,10 @@
 .chart-placeholder {
   aspect-ratio: 1000 / 487;
   background: var(--surface-sunken);
+}
+
+.sizes-placeholder {
+  min-height: 28rem;
 }
 
 .log-placeholder {

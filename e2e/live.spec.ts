@@ -13,7 +13,9 @@ test('renders the whole day on the server, before any script runs', async ({ bro
   await expect(
     page.getByRole('link', { name: 'M6.2 Mww, South of the Fiji Islands' }),
   ).toBeVisible();
-  await expect(page.getByRole('table')).toContainText('Kermadec Islands region');
+  await expect(page.getByRole('table', { name: /^Seismic events/ })).toContainText(
+    'Kermadec Islands region',
+  );
 
   await context.close();
 });
@@ -165,4 +167,23 @@ test('steps through the trace from the keyboard, as through a slider', async ({ 
 
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/quakes\/pr0001$/);
+});
+
+test('weighs the day against an average day on Earth', async ({ page }) => {
+  await page.goto('/');
+  const sizes = page.getByRole('region', { name: 'How big' });
+  const table = sizes.getByRole('table', { name: /by magnitude/ });
+
+  // From the smallest event, M1.3, to the largest, M6.2, empty sizes included.
+  await expect(table.getByRole('row')).toHaveCount(12);
+  await expect(table.getByRole('row', { name: /^M2\.5 to 3 / }).getByRole('cell')).toHaveText([
+    '2',
+    '870',
+  ]);
+  await expect(sizes.locator('figcaption')).toContainText(
+    'Where seismometers are dense. California, mostly',
+  );
+  await expect(sizes.locator('figcaption')).toContainText(
+    'Mostly missing. 3 located, where an average day has about 1,300',
+  );
 });
