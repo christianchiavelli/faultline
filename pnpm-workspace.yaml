@@ -16,11 +16,20 @@ allowBuilds:
   lmdb: false
   msgpackr-extract: false
 
-# TanStack Query looks `PendingTasks` up on the whole `@angular/core` namespace,
-# to support Angular 16 to 18, which lack it. A namespace used as a value
-# cannot be tree-shaken, so every export of Angular landed in the first load:
-# 160 kB more on every page, for a dialog most visits never open. The patch
-# imports it by name. It is keyed by package, not version, so an upgrade that
-# touches the file fails the install instead of dropping the fix unnoticed.
+# Two fixes to dependencies. Each is keyed by package rather than version, so
+# an upgrade that touches the patched file fails the install instead of
+# dropping the fix unnoticed; drop a patch once its fix ships upstream.
+#
+# @angular/core: an event on a block that incremental hydration is already
+# hydrating, as `hydrate on viewport` starts to the moment the block scrolls
+# in, is queued for replay and never replayed. The event log's Export button
+# lost its first press that way. The patch replays it once the block is ready.
+#
+# @tanstack/angular-query-experimental: it looks `PendingTasks` up on the
+# whole `@angular/core` namespace, to support Angular 16 to 18, which lack it.
+# A namespace used as a value cannot be tree-shaken, so every export of
+# Angular landed in the first load: 160 kB more on every page, for a dialog
+# most visits never open. The patch imports it by name.
 patchedDependencies:
+  '@angular/core': patches/@angular__core.patch
   '@tanstack/angular-query-experimental': patches/@tanstack__angular-query-experimental.patch

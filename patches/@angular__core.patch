@@ -1,0 +1,14 @@
+diff --git a/fesm2022/_debug_node-chunk.mjs b/fesm2022/_debug_node-chunk.mjs
+index f39c5d8291791ee67018d575184936f7a29fb7a3..5c1376006ae2c6d6e764d079f8772303b2bb83cf 100644
+--- a/fesm2022/_debug_node-chunk.mjs
++++ b/fesm2022/_debug_node-chunk.mjs
+@@ -13680,6 +13680,9 @@ async function triggerHydrationFromBlockName(injector, blockName, replayQueuedEv
+   const dehydratedBlockRegistry = injector.get(DEHYDRATED_BLOCK_REGISTRY);
+   const blocksBeingHydrated = dehydratedBlockRegistry.hydrating;
+   if (blocksBeingHydrated.has(blockName)) {
++    // Patched: an event that lands while another trigger is hydrating the
++    // block waits for that hydration and is replayed, instead of dropped.
++    blocksBeingHydrated.get(blockName).promise.then(() => replayQueuedEventsFn?.([blockName]), () => {});
+     return;
+   }
+   const {

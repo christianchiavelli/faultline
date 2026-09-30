@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
+  '@angular/core': a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7
   '@tanstack/angular-query-experimental': 528a635c3fa036aef714db161521a38871bd3390087e97ec282862ee7aa675b0
 
 importers:
@@ -13,34 +14,34 @@ importers:
     dependencies:
       '@angular/common':
         specifier: ^22.2.0
-        version: 22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
+        version: 22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
       '@angular/compiler':
         specifier: ^22.2.0
         version: 22.2.0
       '@angular/core':
         specifier: ^22.2.0
-        version: 22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)
+        version: 22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)
       '@angular/forms':
         specifier: ^22.2.0
-        version: 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
+        version: 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
       '@angular/platform-browser':
         specifier: ^22.2.0
-        version: 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))
+        version: 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))
       '@angular/platform-server':
         specifier: ^22.2.0
-        version: 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/compiler@22.2.0)(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
+        version: 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/compiler@22.2.0)(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
       '@angular/router':
         specifier: ^22.2.0
-        version: 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
+        version: 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
       '@angular/ssr':
         specifier: ^22.2.0
-        version: 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-server@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/compiler@22.2.0)(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2))(@angular/router@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2))
+        version: 22.2.0(e63611e51463b2cc17af41b05692fdd1)
       '@fortawesome/free-solid-svg-icons':
         specifier: ^7.3.1
         version: 7.3.1
       '@tanstack/angular-query-experimental':
         specifier: ^5.104.0
-        version: 5.104.0(patch_hash=528a635c3fa036aef714db161521a38871bd3390087e97ec282862ee7aa675b0)(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(csstype@3.2.3)
+        version: 5.104.0(patch_hash=528a635c3fa036aef714db161521a38871bd3390087e97ec282862ee7aa675b0)(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(csstype@3.2.3)
       compression:
         specifier: ^1.8.2
         version: 1.8.2
@@ -62,7 +63,7 @@ importers:
         version: 22.5.0(chokidar@5.0.0)(eslint@10.11.0)(typescript@6.0.3)
       '@angular/build':
         specifier: ^22.2.0
-        version: 22.2.0(56fbb81144ff2dc4ef4c3d4f46eb3df7)
+        version: 22.2.0(b3d79e56250fc674eb7d797fa510f8e1)
       '@angular/cli':
         specifier: ^22.2.0
         version: 22.2.0(@types/node@24.19.0)(chokidar@5.0.0)
@@ -3482,7 +3483,7 @@ snapshots:
       eslint: 10.11.0
       typescript: 6.0.3
 
-  '@angular/build@22.2.0(56fbb81144ff2dc4ef4c3d4f46eb3df7)':
+  '@angular/build@22.2.0(b3d79e56250fc674eb7d797fa510f8e1)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular-devkit/architect': 0.2202.0(chokidar@5.0.0)
@@ -3516,10 +3517,10 @@ snapshots:
       vite: 8.3.0(@types/node@24.19.0)(esbuild@0.28.2)(sass-embedded@1.104.1)(sass@1.104.1)
       xxhash-wasm: 1.1.0
     optionalDependencies:
-      '@angular/core': 22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)
-      '@angular/platform-browser': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))
-      '@angular/platform-server': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/compiler@22.2.0)(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
-      '@angular/ssr': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-server@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/compiler@22.2.0)(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2))(@angular/router@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2))
+      '@angular/core': 22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)
+      '@angular/platform-browser': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))
+      '@angular/platform-server': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/compiler@22.2.0)(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
+      '@angular/ssr': 22.2.0(e63611e51463b2cc17af41b05692fdd1)
       lmdb: 3.5.6
       postcss: 8.5.28
       vitest: 5.0.2(@types/node@24.19.0)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.1)(vite@8.3.0(@types/node@24.19.0)(esbuild@0.28.2)(sass-embedded@1.104.1)(sass@1.104.1))
@@ -3555,9 +3556,9 @@ snapshots:
       - '@types/node'
       - chokidar
 
-  '@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)':
+  '@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)':
     dependencies:
-      '@angular/core': 22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)
+      '@angular/core': 22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)
       rxjs: 7.8.2
       tslib: 2.8.1
 
@@ -3579,56 +3580,56 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)':
+  '@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)':
     dependencies:
       rxjs: 7.8.2
       tslib: 2.8.1
     optionalDependencies:
       '@angular/compiler': 22.2.0
 
-  '@angular/forms@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)':
+  '@angular/forms@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)':
     dependencies:
-      '@angular/common': 22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
-      '@angular/core': 22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)
-      '@angular/platform-browser': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))
+      '@angular/common': 22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@angular/core': 22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)
+      '@angular/platform-browser': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))
       '@standard-schema/spec': 1.1.0
       rxjs: 7.8.2
       tslib: 2.8.1
       zod: 4.6.5
 
-  '@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))':
+  '@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))':
     dependencies:
-      '@angular/common': 22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
-      '@angular/core': 22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)
+      '@angular/common': 22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@angular/core': 22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)
       tslib: 2.8.1
 
-  '@angular/platform-server@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/compiler@22.2.0)(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)':
+  '@angular/platform-server@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/compiler@22.2.0)(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)':
     dependencies:
-      '@angular/common': 22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@angular/common': 22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
       '@angular/compiler': 22.2.0
-      '@angular/core': 22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)
-      '@angular/platform-browser': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))
+      '@angular/core': 22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)
+      '@angular/platform-browser': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))
       rxjs: 7.8.2
       tslib: 2.8.1
       xhr2: 0.2.1
 
-  '@angular/router@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)':
+  '@angular/router@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)':
     dependencies:
-      '@angular/common': 22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
-      '@angular/core': 22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)
-      '@angular/platform-browser': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))
+      '@angular/common': 22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@angular/core': 22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)
+      '@angular/platform-browser': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))
       rxjs: 7.8.2
       tslib: 2.8.1
 
-  '@angular/ssr@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-server@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/compiler@22.2.0)(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2))(@angular/router@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2))':
+  '@angular/ssr@22.2.0(e63611e51463b2cc17af41b05692fdd1)':
     dependencies:
-      '@angular/common': 22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
-      '@angular/core': 22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)
-      '@angular/router': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
+      '@angular/common': 22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@angular/core': 22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)
+      '@angular/router': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
       beasties: 0.5.4
       tslib: 2.8.1
     optionalDependencies:
-      '@angular/platform-server': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/compiler@22.2.0)(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
+      '@angular/platform-server': 22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/compiler@22.2.0)(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(@angular/platform-browser@22.2.0(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)))(rxjs@7.8.2)
 
   '@asamuzakjp/css-color@7.1.2':
     dependencies:
@@ -4545,10 +4546,10 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@tanstack/angular-query-experimental@5.104.0(patch_hash=528a635c3fa036aef714db161521a38871bd3390087e97ec282862ee7aa675b0)(@angular/common@22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(csstype@3.2.3)':
+  '@tanstack/angular-query-experimental@5.104.0(patch_hash=528a635c3fa036aef714db161521a38871bd3390087e97ec282862ee7aa675b0)(@angular/common@22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(csstype@3.2.3)':
     dependencies:
-      '@angular/common': 22.2.0(@angular/core@22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
-      '@angular/core': 22.2.0(@angular/compiler@22.2.0)(rxjs@7.8.2)
+      '@angular/common': 22.2.0(@angular/core@22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@angular/core': 22.2.0(patch_hash=a16ac94eda35a16a6e6d7fc4177cdcac84587e876f56706d5b22a24450cd7bc7)(@angular/compiler@22.2.0)(rxjs@7.8.2)
       '@tanstack/query-core': 5.104.0
     optionalDependencies:
       '@tanstack/query-devtools': 5.104.0(csstype@3.2.3)
