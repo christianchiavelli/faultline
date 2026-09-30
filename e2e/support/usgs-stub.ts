@@ -8,6 +8,11 @@
  * place name outside ASCII, an explosion, an event with no magnitude yet and
  * one record that fails validation.
  *
+ * The same day answers searches, counted and as CSV, the way the FDSN event
+ * service does. Before it the catalogue is far busier than the real one, and
+ * only counted, never listed: enough to take a month past what one export
+ * holds.
+ *
  * Run by Playwright with plain `node`, which strips the types.
  */
 import { createServer, type ServerResponse } from 'node:http';
@@ -27,6 +32,7 @@ interface StubEvent {
 }
 
 const HOUR = 3_600_000;
+const DAY = 24 * HOUR;
 const PORT = Number(process.env['PORT'] ?? 4310);
 
 const EVENTS: readonly StubEvent[] = [
@@ -135,8 +141,10 @@ const ORIGINS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   },
 };
 
+const timeOf = (event: StubEvent, now: number) => Math.round(now - event.hoursAgo * HOUR);
+
 function feature(event: StubEvent, now: number) {
-  const time = Math.round(now - event.hoursAgo * HOUR);
+  const time = timeOf(event, now);
   return {
     type: 'Feature',
     id: event.id,
@@ -159,6 +167,120 @@ function feature(event: StubEvent, now: number) {
   };
 }
 
+/** Events a day before the known day, by the smallest magnitude asked for. */
+const BACKGROUND_PER_DAY: readonly (readonly [floor: number, perDay: number])[] = [
+  [6, 2],
+  [4.5, 50],
+  [2.5, 500],
+  [-Infinity, 5_000],
+];
+
+interface Search {
+  readonly start: number;
+  /** Inclusive, as `endtime` is. */
+  readonly end: number;
+  readonly minMagnitude: number | null;
+  readonly circle: {
+    readonly latitude: number;
+    readonly longitude: number;
+    readonly km: number;
+  } | null;
+  readonly reviewedOnly: boolean;
+  readonly earthquakesOnly: boolean;
+}
+
+function readSearch(params: URLSearchParams): Search {
+  const number = (name: string) => (params.has(name) ? Number(params.get(name)) : null);
+  const [latitude, longitude, km] = [
+    number('latitude'),
+    number('longitude'),
+    number('maxradiuskm'),
+  ];
+  return {
+    start: Date.parse(params.get('starttime') ?? ''),
+    end: Date.parse(params.get('endtime') ?? ''),
+    minMagnitude: number('minmagnitude'),
+    circle:
+      latitude !== null && longitude !== null && km !== null ? { latitude, longitude, km } : null,
+    reviewedOnly: params.get('reviewstatus') === 'reviewed',
+    earthquakesOnly: params.get('eventtype') === 'earthquake',
+  };
+}
+
+function matches(event: StubEvent, time: number, search: Search): boolean {
+  const { minMagnitude, circle } = search;
+  return (
+    time >= search.start &&
+    time <= search.end &&
+    (minMagnitude === null || (event.mag !== null && event.mag >= minMagnitude)) &&
+    (!search.reviewedOnly || event.status === 'reviewed') &&
+    (!search.earthquakesOnly || (event.type ?? 'earthquake') === 'earthquake') &&
+    (!circle || distanceKm(event, circle) <= circle.km)
+  );
+}
+
+/** Great-circle distance, on a sphere of the Earth's mean radius. */
+function distanceKm(event: StubEvent, to: { latitude: number; longitude: number }): number {
+  const [longitude, latitude] = event.coordinates;
+  const rad = Math.PI / 180;
+  const a =
+    Math.sin(((to.latitude - latitude) * rad) / 2) ** 2 +
+    Math.cos(latitude * rad) *
+      Math.cos(to.latitude * rad) *
+      Math.sin(((to.longitude - longitude) * rad) / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(a));
+}
+
+function listed(search: Search, now: number) {
+  return EVENTS.map((event) => ({ event, time: timeOf(event, now) }))
+    .filter(({ event, time }) => matches(event, time, search))
+    .sort((a, b) => a.time - b.time);
+}
+
+/** Spread over the whole world, too thin to land in any one circle. */
+function background(search: Search, now: number): number {
+  if (search.circle) return 0;
+  const days = Math.max(0, Math.min(search.end, now - DAY) - search.start) / DAY;
+  const floor = search.minMagnitude ?? -Infinity;
+  const [, perDay] = BACKGROUND_PER_DAY.find(([from]) => floor >= from)!;
+  return Math.round(days * perDay);
+}
+
+const CSV_HEADER =
+  'time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,type,' +
+  'horizontalError,depthError,magError,magNst,status,locationSource,magSource';
+
+/** A row as the service writes one: the place always quoted, unknown values empty. */
+function csvRow(event: StubEvent, time: number): string {
+  const [longitude, latitude, depth] = event.coordinates;
+  const net = event.id.slice(0, 2);
+  const updated = new Date(time + 40 * 60_000).toISOString();
+  return [
+    new Date(time).toISOString(),
+    latitude,
+    longitude,
+    depth,
+    event.mag ?? '',
+    event.magType ?? '',
+    '',
+    '',
+    '',
+    '',
+    net,
+    event.id,
+    updated,
+    `"${event.place}"`,
+    event.type ?? 'earthquake',
+    '',
+    '',
+    '',
+    '',
+    event.status,
+    net,
+    net,
+  ].join(',');
+}
+
 function send(res: ServerResponse, status: number, body: unknown): void {
   const text = typeof body === 'string';
   res.writeHead(status, { 'content-type': text ? 'text/plain' : 'application/json' });
@@ -179,6 +301,22 @@ createServer((req, res) => {
       metadata: { generated: now, count: features.length },
       features,
     });
+  }
+
+  if (url.pathname === '/fdsnws/event/1/count') {
+    const search = readSearch(url.searchParams);
+    const count = listed(search, now).length + background(search, now);
+    return send(res, 200, { count, maxAllowed: 20_000 });
+  }
+
+  if (url.pathname === '/fdsnws/event/1/query' && url.searchParams.get('format') === 'csv') {
+    const limit = Number(url.searchParams.get('limit') ?? 20_000);
+    const rows = listed(readSearch(url.searchParams), now)
+      .slice(0, limit)
+      .map(({ event, time }) => csvRow(event, time));
+    // No match is the header alone, as the service sends it.
+    res.writeHead(200, { 'content-type': 'text/csv; charset=utf-8' });
+    return res.end([CSV_HEADER, ...rows].map((line) => `${line}\n`).join(''));
   }
 
   if (url.pathname === '/fdsnws/event/1/query') {

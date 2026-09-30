@@ -37,3 +37,15 @@ export async function scrollThrough(page: Page): Promise<void> {
     window.scrollTo(0, 0);
   });
 }
+
+/** Waits out the transitions under `locator`, so what is measured or audited is where it lands. */
+export async function settled(locator: Locator): Promise<void> {
+  await locator.evaluate((element) =>
+    Promise.all(
+      element
+        .getAnimations({ subtree: true })
+        // One cut short, or on an element since removed, rejects: it has landed too.
+        .map((animation) => animation.finished.catch(() => undefined)),
+    ),
+  );
+}
