@@ -1,123 +1,138 @@
-<article class="live page">
-  <header class="intro">
-    <p class="eyebrow">Live · the last 24 hours</p>
-    <h1 class="title">24 hours of a restless planet</h1>
-    <p class="lede">
-      Every event the USGS catalogued in the last day, drawn the way a drum seismograph draws it:
-      one line per hour, one burst per event.
-    </p>
+<!-- In bands: the day's record on the page's own colour, then its sections taking turns with a raised one. -->
+<article class="bands">
+  <div class="band opening">
+    <header class="intro">
+      <p class="eyebrow">Live · the last 24 hours</p>
+      <h1 class="title">24 hours of a restless planet</h1>
+      <p class="lede">
+        Every event the USGS catalogued in the last day, drawn the way a drum seismograph draws it:
+        one line per hour, one burst per event.
+      </p>
+
+      @if (feed(); as feed) {
+        <p class="status mono">
+          <span class="status__dot" [class.status__dot--stale]="late()" aria-hidden="true"></span>
+          @if (late()) {
+            <span>Feed delayed</span>
+          } @else {
+            <span>Live</span>
+          }
+          <span class="status__sep" aria-hidden="true">/</span>
+          <span>
+            USGS feed {{ feed.generatedAt | date: 'HH:mm:ss' : 'UTC' }} UTC,
+            {{ feed.generatedAt | ago: now() }}
+          </span>
+          <span class="status__sep" aria-hidden="true">/</span>
+          <span>refreshes every minute</span>
+        </p>
+      }
+    </header>
 
     @if (feed(); as feed) {
-      <p class="status mono">
-        <span class="status__dot" [class.status__dot--stale]="late()" aria-hidden="true"></span>
-        @if (late()) {
-          <span>Feed delayed</span>
-        } @else {
-          <span>Live</span>
-        }
-        <span class="status__sep" aria-hidden="true">/</span>
-        <span>
-          USGS feed {{ feed.generatedAt | date: 'HH:mm:ss' : 'UTC' }} UTC,
-          {{ feed.generatedAt | ago: now() }}
-        </span>
-        <span class="status__sep" aria-hidden="true">/</span>
-        <span>refreshes every minute</span>
-      </p>
+      @if (feed.stale) {
+        <p class="callout">
+          <strong>The USGS feed is not answering.</strong>
+          <span>
+            This is the last copy we received, generated
+            {{ feed.generatedAt | date: 'HH:mm' : 'UTC' }} UTC. It will update on its own when the
+            feed is back.
+          </span>
+        </p>
+      }
+
+      <fl-helicorder class="trace" [quakes]="feed.quakes" [now]="now()" />
+
+      <dl class="readouts">
+        <div class="readout">
+          <dt>Events</dt>
+          <dd>
+            <span class="readout__value">{{ summary().total }}</span>
+            <span class="readout__hint">
+              {{ summary().earthquakes }} earthquakes
+              @for (other of otherKinds(); track other) {
+                · {{ other }}
+              }
+            </span>
+          </dd>
+        </div>
+
+        <div class="readout">
+          <dt>Largest</dt>
+          <dd>
+            @if (largest(); as largest) {
+              <span class="readout__value">
+                M{{ largest.value
+                }}<abbr
+                  class="readout__unit"
+                  [title]="largest.scale.name + '. ' + largest.scale.summary"
+                  >{{ largest.scale.code }}</abbr
+                >
+              </span>
+              <span class="readout__hint">
+                <a [routerLink]="['/quakes', largest.quake.id]">{{ largest.place }}</a>
+                · {{ largest.quake.time | date: 'HH:mm' : 'UTC' }} UTC
+              </span>
+            } @else {
+              <span class="readout__value">—</span>
+            }
+          </dd>
+        </div>
+
+        <div class="readout">
+          <dt>Energy</dt>
+          <dd>
+            @if (summary().largestEnergyShare; as share) {
+              <span class="readout__value">{{ share | percent: '1.0-0' }}</span>
+              <span class="readout__hint">
+                of all the earthquake energy of the day came from that one event. Each magnitude
+                step is about 32× the energy.
+              </span>
+            } @else {
+              <span class="readout__value">—</span>
+            }
+          </dd>
+        </div>
+
+        <div class="readout">
+          <dt>Reviewed</dt>
+          <dd>
+            @if (summary().reviewedShare !== null) {
+              <span class="readout__value">{{ summary().reviewedShare | percent: '1.0-0' }}</span>
+              <span class="readout__hint">
+                checked by a seismologist. The rest are automatic and may still move, change size or
+                disappear.
+              </span>
+            } @else {
+              <span class="readout__value">—</span>
+            }
+          </dd>
+        </div>
+      </dl>
+
+      @if (feed.skipped > 0) {
+        <p class="note">
+          {{ feed.skipped }} record{{ feed.skipped === 1 ? '' : 's' }} from the USGS failed
+          validation and {{ feed.skipped === 1 ? 'is' : 'are' }} not shown.
+        </p>
+      }
+    } @else if (recent.error()) {
+      <div class="callout failure" role="alert">
+        <strong>The USGS feed did not answer.</strong>
+        <span>It usually recovers within a minute or two.</span>
+        <button type="button" class="text-button" (click)="recent.reload()">Try again</button>
+      </div>
+    } @else {
+      <div class="loading" aria-busy="true">
+        <p class="note">Unrolling the last 24 hours…</p>
+      </div>
     }
-  </header>
+  </div>
 
   @if (feed(); as feed) {
-    @if (feed.stale) {
-      <p class="callout">
-        <strong>The USGS feed is not answering.</strong>
-        <span>
-          This is the last copy we received, generated
-          {{ feed.generatedAt | date: 'HH:mm' : 'UTC' }} UTC. It will update on its own when the
-          feed is back.
-        </span>
-      </p>
-    }
-
-    <fl-helicorder class="trace" [quakes]="feed.quakes" [now]="now()" />
-
-    <dl class="readouts">
-      <div class="readout">
-        <dt>Events</dt>
-        <dd>
-          <span class="readout__value">{{ summary().total }}</span>
-          <span class="readout__hint">
-            {{ summary().earthquakes }} earthquakes
-            @for (other of otherKinds(); track other) {
-              · {{ other }}
-            }
-          </span>
-        </dd>
-      </div>
-
-      <div class="readout">
-        <dt>Largest</dt>
-        <dd>
-          @if (largest(); as largest) {
-            <span class="readout__value">
-              M{{ largest.value
-              }}<abbr
-                class="readout__unit"
-                [title]="largest.scale.name + '. ' + largest.scale.summary"
-                >{{ largest.scale.code }}</abbr
-              >
-            </span>
-            <span class="readout__hint">
-              <a [routerLink]="['/quakes', largest.quake.id]">{{ largest.place }}</a>
-              · {{ largest.quake.time | date: 'HH:mm' : 'UTC' }} UTC
-            </span>
-          } @else {
-            <span class="readout__value">—</span>
-          }
-        </dd>
-      </div>
-
-      <div class="readout">
-        <dt>Energy</dt>
-        <dd>
-          @if (summary().largestEnergyShare; as share) {
-            <span class="readout__value">{{ share | percent: '1.0-0' }}</span>
-            <span class="readout__hint">
-              of all the earthquake energy of the day came from that one event. Each magnitude step
-              is about 32× the energy.
-            </span>
-          } @else {
-            <span class="readout__value">—</span>
-          }
-        </dd>
-      </div>
-
-      <div class="readout">
-        <dt>Reviewed</dt>
-        <dd>
-          @if (summary().reviewedShare !== null) {
-            <span class="readout__value">{{ summary().reviewedShare | percent: '1.0-0' }}</span>
-            <span class="readout__hint">
-              checked by a seismologist. The rest are automatic and may still move, change size or
-              disappear.
-            </span>
-          } @else {
-            <span class="readout__value">—</span>
-          }
-        </dd>
-      </div>
-    </dl>
-
-    @if (feed.skipped > 0) {
-      <p class="note">
-        {{ feed.skipped }} record{{ feed.skipped === 1 ? '' : 's' }} from the USGS failed validation
-        and {{ feed.skipped === 1 ? 'is' : 'are' }} not shown.
-      </p>
-    }
-
-    <section class="where" aria-labelledby="where-title">
+    <section class="band band--raised where" aria-labelledby="where-title">
       <header class="section-header">
         <h2 class="section-title" id="where-title">Where</h2>
-        <p class="note">
+        <p class="section-lede">
           Equal Earth projection, so every region keeps its true area. The dots trace the plate
           boundaries almost everywhere.
         </p>
@@ -129,10 +144,10 @@
       }
     </section>
 
-    <section class="sizes" aria-labelledby="sizes-title">
+    <section class="band sizes" aria-labelledby="sizes-title">
       <header class="section-header">
         <h2 class="section-title" id="sizes-title">How big</h2>
-        <p class="note">
+        <p class="section-lede">
           Small earthquakes far outnumber large ones, about ten to one for each step of magnitude:
           the Gutenberg–Richter law.
         </p>
@@ -144,22 +159,15 @@
       }
     </section>
 
-    @defer (on viewport; hydrate on viewport) {
-      <fl-event-log [quakes]="feed.quakes" [query]="query()" [now]="now()">
-        <fl-export-button [preset]="exportPreset()" />
-      </fl-event-log>
-    } @placeholder {
-      <div class="log-placeholder" aria-hidden="true"></div>
-    }
-  } @else if (recent.error()) {
-    <div class="callout failure" role="alert">
-      <strong>The USGS feed did not answer.</strong>
-      <span>It usually recovers within a minute or two.</span>
-      <button type="button" class="text-button" (click)="recent.reload()">Try again</button>
-    </div>
-  } @else {
-    <div class="loading" aria-busy="true">
-      <p class="note">Unrolling the last 24 hours…</p>
+    <!-- The log is a section of its own; this band only gives it its colour, placeholder included. -->
+    <div class="band band--raised">
+      @defer (on viewport; hydrate on viewport) {
+        <fl-event-log [quakes]="feed.quakes" [query]="query()" [now]="now()">
+          <fl-export-button [preset]="exportPreset()" />
+        </fl-event-log>
+      } @placeholder {
+        <div class="log-placeholder" aria-hidden="true"></div>
+      }
     </div>
   }
 </article>

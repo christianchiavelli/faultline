@@ -2,9 +2,9 @@
   display: block;
 }
 
-.live {
-  display: grid;
-  gap: var(--space-8);
+/* The day's record, from the headline to its readouts, closer together than the sections below. */
+.opening {
+  row-gap: var(--space-8);
   padding-block-start: var(--space-10);
 }
 
@@ -53,13 +53,12 @@
 
 .where,
 .sizes {
-  display: grid;
-  gap: var(--space-4);
+  row-gap: var(--space-8);
 }
 
 .section-header {
   display: grid;
-  gap: var(--space-1);
+  gap: var(--space-2);
 }
 
 .chart-placeholder {
