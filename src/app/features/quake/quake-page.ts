@@ -11,8 +11,10 @@ import { alertMeaning } from '@shared/domain/alert';
 import { magnitudeScale, radiatedEnergy } from '@shared/domain/magnitude';
 import { networkName } from '@shared/domain/network';
 import { AgoPipe } from '@ui/ago.pipe';
+import { arrival } from '@ui/arrival';
 import { formatDuration } from '@ui/duration';
 import { Icon } from '@ui/icon';
+import { Skeleton } from '@ui/skeleton';
 import { capitalise } from '@ui/text';
 import { WorldChart } from '../common/world-chart/world-chart';
 import { ExportButton } from '../export/export-button';
@@ -23,9 +25,17 @@ const WIDE_GAP_DEG = 180;
 /** Joules in one tonne of TNT, the unit outreach material uses for seismic energy. */
 const TNT_TONNE_J = 4.184e9;
 
+/** The waiting readouts, labelled as the event's will be, with the epicentre's value set smaller like the real one. */
+const READOUTS = [
+  { label: 'Depth', small: false },
+  { label: 'Epicentre', small: true },
+  { label: 'Solution', small: false },
+  { label: 'Energy', small: false },
+] as const;
+
 @Component({
   selector: 'fl-quake-page',
-  imports: [RouterLink, DatePipe, DecimalPipe, AgoPipe, Icon, WorldChart, ExportButton],
+  imports: [RouterLink, DatePipe, DecimalPipe, AgoPipe, Icon, Skeleton, WorldChart, ExportButton],
   templateUrl: './quake-page.html',
   styleUrl: './quake-page.css',
 })
@@ -37,6 +47,8 @@ export class QuakePage {
   protected readonly detail = quakeDetailResource(() => this.id());
 
   protected readonly data = computed(() => (this.detail.hasValue() ? this.detail.value() : null));
+  protected readonly arriving = arrival(this.data);
+  protected readonly readouts = READOUTS;
 
   protected readonly view = computed(() => {
     const data = this.data();

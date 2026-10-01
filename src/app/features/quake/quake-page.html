@@ -8,7 +8,7 @@
     </nav>
 
     @if (view(); as view) {
-      <header class="hero">
+      <header class="hero" [animate.enter]="arriving()">
         <div class="hero__magnitude">
           @if (view.magnitude; as magnitude) {
             <p
@@ -52,7 +52,7 @@
       <dl class="readouts">
         <div class="readout">
           <dt>Depth</dt>
-          <dd>
+          <dd [animate.enter]="arriving()">
             @if (view.depthKm !== null) {
               <span class="readout__value"
                 >{{ view.depthKm | number: '1.1-1' }}<span class="readout__unit">km</span></span
@@ -76,7 +76,7 @@
 
         <div class="readout">
           <dt>Epicentre</dt>
-          <dd>
+          <dd [animate.enter]="arriving()">
             <span class="readout__value readout__value--small">
               {{ view.quake.location.latitude | number: '1.3-3' }},
               {{ view.quake.location.longitude | number: '1.3-3' }}
@@ -93,7 +93,7 @@
 
         <div class="readout">
           <dt>Solution</dt>
-          <dd>
+          <dd [animate.enter]="arriving()">
             <span class="readout__value">
               @if (view.origin?.stationsUsed; as stations) {
                 {{ stations }}<span class="readout__unit">stations</span>
@@ -118,7 +118,7 @@
 
         <div class="readout">
           <dt>Energy</dt>
-          <dd>
+          <dd [animate.enter]="arriving()">
             @if (view.energy; as energy) {
               <span class="readout__value"
                 >{{ energy.mantissa }}×10<sup>{{ energy.exponent }}</sup
@@ -145,12 +145,50 @@
         <p><a routerLink="/">Back to the live record</a></p>
       </div>
     } @else {
-      <p class="note loading" aria-busy="true">Looking the event up in the USGS catalogue…</p>
+      <!-- The page's heading while it waits, for whoever finds their way by headings. -->
+      <h1 class="visually-hidden">Looking the event up in the USGS catalogue…</h1>
+      <!-- The event's shape before its words: the hero's lines, then the readouts' labels and rules. -->
+      <div class="hero" aria-hidden="true">
+        <div class="hero__magnitude">
+          <p class="numeral mono"><ui-skeleton width="calc(3ch - 0.18em)" /></p>
+          <p class="scale">
+            <span class="scale__code"><ui-skeleton width="6.5rem" /></span>
+          </p>
+        </div>
+        <div class="hero__text">
+          <p class="eyebrow"><ui-skeleton width="8rem" /></p>
+          <p class="title">
+            <ui-skeleton width="84%" />
+            <ui-skeleton width="52%" />
+          </p>
+          <p class="when mono"><ui-skeleton width="19rem" /></p>
+          <p class="lede">
+            <ui-skeleton />
+            <ui-skeleton width="64%" />
+          </p>
+        </div>
+      </div>
+      <dl class="readouts" aria-hidden="true">
+        @for (readout of readouts; track readout.label) {
+          <div class="readout">
+            <dt>{{ readout.label }}</dt>
+            <dd>
+              <span class="readout__value" [class.readout__value--small]="readout.small">
+                <ui-skeleton width="6.5rem" />
+              </span>
+              <span class="readout__hint">
+                <ui-skeleton width="84%" />
+                <ui-skeleton width="50%" />
+              </span>
+            </dd>
+          </div>
+        }
+      </dl>
     }
   </div>
 
   @if (view(); as view) {
-    <div class="page-band page-band--raised">
+    <div class="page-band page-band--raised" [animate.enter]="arriving()">
       <!-- One grid for both: their headings share a row and their frames the next, so they start and end on the same rules. -->
       <div class="context">
         <section class="where" aria-labelledby="where-title">

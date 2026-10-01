@@ -24,7 +24,8 @@ const detail: QuakeDetailResponse = {
   },
 };
 
-async function render(respond: (http: HttpTestingController) => void) {
+/** The page with the event asked for and not yet answered: a request in flight keeps it from stable. */
+function start() {
   const response: ResponseInit = {};
   TestBed.configureTestingModule({
     providers: [
@@ -37,7 +38,12 @@ async function render(respond: (http: HttpTestingController) => void) {
   const fixture = TestBed.createComponent(QuakePage);
   fixture.componentRef.setInput('id', 'us6000ty57');
   TestBed.tick();
-  respond(TestBed.inject(HttpTestingController));
+  return { fixture, response, http: TestBed.inject(HttpTestingController) };
+}
+
+async function render(respond: (http: HttpTestingController) => void) {
+  const { fixture, response, http } = start();
+  respond(http);
   await fixture.whenStable();
   return { element: fixture.nativeElement as HTMLElement, response };
 }
@@ -56,6 +62,30 @@ const fact = (element: HTMLElement, label: string) =>
   described(element.querySelectorAll('.facts > div'), label);
 
 describe('QuakePage', () => {
+  it('shows the shape of the event while the catalogue looks it up, and says so in words', async () => {
+    const { fixture, http } = start();
+    const element = fixture.nativeElement as HTMLElement;
+    const shape = element.querySelector('.readouts')!;
+
+    expect(element.querySelector('.hero')?.getAttribute('aria-hidden')).toBe('true');
+    expect(shape.getAttribute('aria-hidden')).toBe('true');
+    expect([...shape.querySelectorAll('dt')].map((dt) => dt.textContent)).toEqual([
+      'Depth',
+      'Epicentre',
+      'Solution',
+      'Energy',
+    ]);
+    expect(element.querySelector('h1')?.textContent).toBe(
+      'Looking the event up in the USGS catalogue…',
+    );
+
+    http.expectOne('/api/quakes/us6000ty57').flush(detail);
+    await fixture.whenStable();
+
+    expect(element.querySelector('ui-skeleton')).toBeNull();
+    expect(element.querySelector('h1')?.textContent).toBe('North of Svalbard');
+  });
+
   it('leads with the magnitude and the scale it was measured on', async () => {
     const { element } = await render((http) =>
       http.expectOne('/api/quakes/us6000ty57').flush(detail),
