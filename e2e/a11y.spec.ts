@@ -61,6 +61,15 @@ for (const theme of THEMES) {
       expect(await audit(page)).toEqual([]);
     });
 
+    test('the theme menu, open, meets WCAG 2.2 AA', async ({ page }) => {
+      await page.goto('/');
+      await waitForHydration(page);
+      await page.getByRole('button', { name: /^Theme:/ }).click();
+      await expect(page.getByRole('group', { name: 'Theme' })).toBeVisible();
+
+      expect(await audit(page)).toEqual([]);
+    });
+
     test('every region, open in its popover, meets WCAG 2.2 AA', async ({ page, isMobile }) => {
       test.skip(isMobile, 'A phone keeps its filters in a sheet');
       await page.goto('/?mag=any');

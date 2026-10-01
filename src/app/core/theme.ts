@@ -31,11 +31,6 @@ export class Theme {
     this.#document.cookie = `${COOKIE}=${preference}; Path=/; Max-Age=31536000; SameSite=Lax`;
   }
 
-  /** System, then paper, then film: the order a single toggle button walks. */
-  next(): ThemePreference {
-    return THEMES[(THEMES.indexOf(this.#preference()) + 1) % THEMES.length]!;
-  }
-
   #readCookie(): ThemePreference {
     // The server DOM throws on `document.cookie`; there, the request header is the only source.
     const cookies = this.#isBrowser

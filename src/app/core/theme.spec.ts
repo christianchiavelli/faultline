@@ -29,14 +29,15 @@ describe('Theme', () => {
     expect(TestBed.inject(Theme).preference()).toBe('system');
   });
 
-  it('walks system, paper, film, and remembers the choice', () => {
+  it('paints a choice at once and remembers it, and System hands back to the device', () => {
     const theme = TestBed.inject(Theme);
 
-    theme.set(theme.next());
-    expect(theme.preference()).toBe('paper');
-    theme.set(theme.next());
+    theme.set('film');
     expect(theme.preference()).toBe('film');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('film');
     expect(document.cookie).toContain('fl-theme=film');
-    expect(theme.next()).toBe('system');
+
+    theme.set('system');
+    expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
   });
 });

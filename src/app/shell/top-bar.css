@@ -31,7 +31,7 @@
 .instruments {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   margin-inline-start: auto;
 }
 
@@ -45,20 +45,6 @@
   font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--content-tertiary);
-}
-
-/* A fixed width, so the bar does not shift as the label changes. */
-.theme {
-  min-width: 5.5rem;
-}
-
-/* Half paper, half film: the current scheme on the left, its opposite on the right */
-.theme__swatch {
-  width: 0.75rem;
-  aspect-ratio: 1;
-  border: var(--hairline) solid var(--content-primary);
-  border-radius: 50%;
-  background: linear-gradient(90deg, var(--surface-page) 50%, var(--content-primary) 50%);
 }
 
 @media (width < 48rem) {

@@ -1,0 +1,98 @@
+/* Half paper, half film: the current scheme on the left, its opposite on the right. */
+.swatch {
+  width: 1rem;
+  aspect-ratio: 1;
+  border: var(--hairline) solid var(--content-primary);
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--surface-page) 50%, var(--content-primary) 50%);
+}
+
+.choices {
+  display: grid;
+  width: 15rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.choice {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) 1rem;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2);
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: start;
+  color: var(--content-primary);
+
+  &:hover {
+    background: var(--surface-sunken);
+  }
+}
+
+.choice__name {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+
+.choice__hint {
+  display: block;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--content-secondary);
+}
+
+.choice__tick {
+  visibility: hidden;
+}
+
+.choice[aria-pressed='true'] {
+  & .choice__name {
+    text-decoration: underline;
+    text-decoration-thickness: var(--hairline);
+    text-underline-offset: 0.25em;
+  }
+
+  & .choice__tick {
+    visibility: visible;
+  }
+}
+
+/* Each scrap in its own scheme, whatever the page's: the tokens follow `color-scheme`. */
+.preview {
+  display: block;
+  width: 2.25rem;
+  height: 1.5rem;
+  border: var(--hairline) solid var(--rule-strong);
+}
+
+.scheme--paper {
+  color-scheme: light;
+}
+
+.scheme--film {
+  color-scheme: dark;
+}
+
+.record {
+  fill: var(--surface-chart);
+}
+
+.trace,
+.burst {
+  fill: none;
+  stroke-width: 1;
+}
+
+.trace {
+  stroke: var(--trace-ink);
+}
+
+.burst {
+  stroke: var(--trace-pen);
+}
