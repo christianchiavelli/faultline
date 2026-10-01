@@ -61,13 +61,32 @@ export async function settled(locator: Locator): Promise<void> {
     Promise.all(
       element
         .getAnimations({ subtree: true })
-        // A loop never lands: the pen breathes for as long as it is there.
+        // A loop never lands: the pen, or a line still on its way, breathes while it is there.
         .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
         // One cut short, or on an element since removed, rejects: it has landed too.
         .map((animation) => animation.finished.catch(() => undefined)),
     ),
   );
 }
+
+/**
+ * Holds the answers to every request matching `pattern` until released, the
+ * way a slow network would, so what a page shows while it waits stays on the
+ * screen to be looked at. Released, later requests pass straight through.
+ */
+export async function hold(page: Page, pattern: string | RegExp): Promise<() => void> {
+  let release!: () => void;
+  const released = new Promise<void>((resolve) => (release = resolve));
+  await page.route(pattern, async (route) => {
+    const response = await route.fetch();
+    await released;
+    await route.fulfill({ response });
+  });
+  return release;
+}
+
+/** One event, asked of the API: not the day's feed, nor the export's count or its file. */
+export const EVENT_API = /\/api\/quakes\/(?!recent|count|export)[^/?]+$/;
 
 const HOUR = 3_600_000;
 
