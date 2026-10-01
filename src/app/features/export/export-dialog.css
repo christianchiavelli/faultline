@@ -89,6 +89,7 @@
   padding: var(--space-3);
   border: var(--hairline) solid var(--rule);
   cursor: pointer;
+  transition: background-color var(--motion-feedback) var(--ease-out);
 
   &:hover {
     background: var(--surface-sunken);
@@ -122,7 +123,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-xl);
   line-height: 1;
-  transition: color var(--duration-fast) var(--ease-out);
+  transition: color var(--motion-feedback) var(--ease-out);
 
   & small {
     margin-inline-start: var(--space-2);
@@ -180,6 +181,7 @@
   text-align: start;
   font-size: var(--text-sm);
   font-weight: 600;
+  transition: background-color var(--motion-feedback) var(--ease-out);
 
   & span {
     font-family: var(--font-mono);

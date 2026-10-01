@@ -13,6 +13,7 @@
   background: none;
   color: var(--content-primary);
   anchor-name: var(--anchor);
+  transition: background-color var(--motion-feedback) var(--ease-out);
 
   &:hover,
   &:has(+ .panel:popover-open) {
@@ -22,7 +23,8 @@
 
 /*
  * Under its button, running on from its left edge, or back from its right
- * where the screen ends first; above it where there is no room below.
+ * where the screen ends first; above it where there is no room below. It comes
+ * and goes as every popover does (`motion.css`).
  */
 .panel {
   position-anchor: var(--anchor);

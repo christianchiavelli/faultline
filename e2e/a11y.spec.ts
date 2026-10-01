@@ -56,7 +56,10 @@ for (const theme of THEMES) {
       await waitForHydration(page);
       await page.getByRole('slider', { name: 'Events on the trace' }).focus();
       await page.keyboard.press('ArrowLeft');
-      await expect(page.locator('fl-helicorder .card')).toBeVisible();
+      const card = page.locator('fl-helicorder .card');
+      await expect(card).toBeVisible();
+      // Contrast is measured on what has come in, not on its way.
+      await settled(card);
 
       expect(await audit(page)).toEqual([]);
     });
@@ -65,7 +68,9 @@ for (const theme of THEMES) {
       await page.goto('/');
       await waitForHydration(page);
       await page.getByRole('button', { name: /^Theme:/ }).click();
-      await expect(page.getByRole('group', { name: 'Theme' })).toBeVisible();
+      const menu = page.getByRole('group', { name: 'Theme' });
+      await expect(menu).toBeVisible();
+      await settled(menu);
 
       expect(await audit(page)).toEqual([]);
     });
@@ -76,9 +81,9 @@ for (const theme of THEMES) {
       await waitForHydration(page);
       await waitForHydrationOf(page.locator('fl-event-log'));
       await page.getByRole('button', { name: 'All 8 regions' }).click();
-      await expect(
-        page.getByRole('group', { name: 'Every region in the last 24 hours' }),
-      ).toBeVisible();
+      const regions = page.getByRole('group', { name: 'Every region in the last 24 hours' });
+      await expect(regions).toBeVisible();
+      await settled(regions);
 
       expect(await audit(page)).toEqual([]);
     });
@@ -103,7 +108,9 @@ for (const theme of THEMES) {
       const log = page.getByRole('region', { name: 'Every event' });
       await waitForHydrationOf(page.locator('fl-event-log'));
       await arrive(page, { id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
-      await expect(log.getByRole('status', { name: 'New events' })).toContainText('1 new event');
+      const waiting = log.getByRole('status', { name: 'New events' });
+      await expect(waiting).toContainText('1 new event');
+      await settled(waiting);
 
       expect(await audit(page)).toEqual([]);
     });

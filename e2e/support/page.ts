@@ -61,6 +61,8 @@ export async function settled(locator: Locator): Promise<void> {
     Promise.all(
       element
         .getAnimations({ subtree: true })
+        // A loop never lands: the pen breathes for as long as it is there.
+        .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
         // One cut short, or on an element since removed, rejects: it has landed too.
         .map((animation) => animation.finished.catch(() => undefined)),
     ),

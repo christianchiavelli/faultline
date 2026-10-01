@@ -69,6 +69,8 @@ const FRESH_MS = 4_000;
   ],
   templateUrl: './event-log.html',
   styleUrl: './event-log.css',
+  // The tint's fade runs as long as the rows stay fresh: one number for both.
+  host: { '[style.--fresh-for]': 'freshFor' },
 })
 export class EventLog {
   readonly quakes = input.required<readonly QuakeSummary[]>();
@@ -190,6 +192,7 @@ export class EventLog {
 
   readonly latest = LATEST;
   readonly events = { '=1': 'event', other: 'events' };
+  protected readonly freshFor = `${FRESH_MS}ms`;
 
   constructor() {
     effect(() => {

@@ -264,6 +264,8 @@ describe('EventLog, live', () => {
     expect(row.classList).toContain('row--fresh');
     expect((document.activeElement as HTMLElement).dataset['id']).toBe('new');
 
+    // The tint fades over the time the rows stay fresh, set in one place.
+    expect(fixture.nativeElement.style.getPropertyValue('--fresh-for')).toBe('4000ms');
     vi.advanceTimersByTime(4_000);
     TestBed.tick();
     expect(row.classList).not.toContain('row--fresh');

@@ -295,7 +295,7 @@
   color: var(--content-secondary);
 }
 
-/* New events held above the list, in the pen's tint: what the reader should see first. */
+/* New events held above the list, in the pen's tint: what the reader should see first. It slides down into place. */
 .fresh {
   display: flex;
   flex-wrap: wrap;
@@ -306,6 +306,16 @@
   padding: var(--space-2) var(--space-3);
   background: var(--surface-accent);
   font-size: var(--text-sm);
+  transition:
+    opacity var(--motion-enter) var(--ease-out),
+    translate var(--motion-enter) var(--ease-out);
+}
+
+@starting-style {
+  .fresh {
+    opacity: 0;
+    translate: 0 -0.375rem;
+  }
 }
 
 .fresh__count {
@@ -322,9 +332,20 @@
   background: var(--trace-pen);
 }
 
-/* Rows just shown, tinted for a few seconds so the eye finds where they went. */
+/*
+ * Rows just shown keep the pen's tint long enough for the eye to find where
+ * they went, then let it go, over as long as the component keeps them fresh
+ * (`--fresh-for`). Only colour changes, so reduced motion keeps it.
+ */
 .ledger tbody .row--fresh {
-  background: color-mix(in oklch, var(--surface-accent) 70%, transparent);
+  animation: fresh var(--fresh-for) linear forwards;
+}
+
+@keyframes fresh {
+  0%,
+  55% {
+    background-color: color-mix(in oklch, var(--surface-accent) 70%, transparent);
+  }
 }
 
 /* The fold: how much of the list is on the page, and the link to the rest. */

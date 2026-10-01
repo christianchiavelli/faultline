@@ -49,6 +49,7 @@
   font-weight: 600;
   color: var(--content-primary);
   text-decoration: none;
+  transition: background-color var(--motion-feedback) var(--ease-out);
 
   & ui-icon {
     font-size: 0.8em;

@@ -28,6 +28,7 @@
   font: inherit;
   text-align: start;
   color: var(--content-primary);
+  transition: background-color var(--motion-feedback) var(--ease-out);
 
   &:hover {
     background: var(--surface-sunken);

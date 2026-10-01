@@ -235,7 +235,7 @@
     }
 
     & tbody tr {
-      transition: background-color var(--duration-fast) var(--ease-out);
+      transition: background-color var(--motion-feedback) var(--ease-out);
     }
 
     /*
@@ -298,6 +298,7 @@
     font-size: var(--text-sm);
     font-weight: 650;
     text-decoration: none;
+    transition: background-color var(--motion-feedback) var(--ease-out);
 
     &:hover {
       background: color-mix(in oklch, var(--surface-inverse) 86%, var(--surface-page));
@@ -321,6 +322,7 @@
     text-transform: uppercase;
     white-space: nowrap;
     color: var(--content-primary);
+    transition: background-color var(--motion-feedback) var(--ease-out);
 
     &:hover {
       background: var(--surface-sunken);
@@ -363,6 +365,9 @@
     white-space: nowrap;
     color: var(--content-secondary);
     cursor: pointer;
+    transition:
+      background-color var(--motion-feedback) var(--ease-out),
+      color var(--motion-feedback) var(--ease-out);
 
     &:hover {
       background: var(--surface-sunken);

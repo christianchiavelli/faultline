@@ -224,6 +224,10 @@
   font-size: var(--text-sm);
   line-height: 1.35;
   translate: var(--shift) -100%;
+  /* Comes up over the line it reads; `translate` is taken by where it sits. */
+  transition:
+    opacity var(--motion-enter) var(--ease-out),
+    transform var(--motion-enter) var(--ease-out);
 
   /* Moving up from the line into the card crosses the gap, not the line above. */
   &::after {
@@ -242,6 +246,18 @@
   &::after {
     top: auto;
     bottom: 100%;
+  }
+}
+
+@starting-style {
+  .card {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+
+  /* Under the line, it comes down to it. */
+  .card--below {
+    transform: translateY(-0.25rem);
   }
 }
 
@@ -326,7 +342,7 @@
   border-radius: 50%;
   background: var(--trace-pen);
   box-shadow: 0 0 0 0.25rem color-mix(in oklch, var(--trace-pen) 18%, transparent);
-  animation: pen-breathe 2.4s var(--ease-out) infinite;
+  animation: pen-breathe var(--motion-pulse) var(--ease-out) infinite;
 }
 
 @keyframes pen-breathe {

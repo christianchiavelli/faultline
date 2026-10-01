@@ -29,7 +29,7 @@
   aspect-ratio: 1;
   border-radius: 50%;
   background: var(--trace-pen);
-  animation: blink 2.4s steps(1) infinite;
+  animation: blink var(--motion-pulse) steps(1) infinite;
 }
 
 .status__dot--stale {

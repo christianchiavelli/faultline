@@ -40,7 +40,9 @@
     text-decoration-thickness: var(--hairline);
     text-decoration-color: var(--rule);
     text-underline-offset: 0.22em;
-    transition: text-decoration-color var(--duration-fast) var(--ease-out);
+    transition:
+      color var(--motion-feedback) var(--ease-out),
+      text-decoration-color var(--motion-feedback) var(--ease-out);
 
     &:hover {
       text-decoration-color: currentColor;
@@ -65,16 +67,5 @@
   hr {
     border: 0;
     border-top: var(--hairline) solid var(--rule);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
   }
 }

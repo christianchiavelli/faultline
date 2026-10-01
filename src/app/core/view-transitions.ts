@@ -2,10 +2,13 @@ import type { ActivatedRouteSnapshot, ViewTransitionInfo } from '@angular/router
 
 /**
  * A new page cross-fades in, the bar holding still (`motion.css`). Changing a
- * filter is the same page, so it swaps in place.
+ * filter is the same page, so it swaps in place; and under reduced motion
+ * every page swaps at once, without taking the snapshots a cross-fade needs.
  */
 export function crossFadeNewPages({ transition, from, to }: ViewTransitionInfo): void {
-  if (pathOf(from) === pathOf(to)) transition.skipTransition();
+  if (pathOf(from) === pathOf(to) || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    transition.skipTransition();
+  }
 }
 
 /**

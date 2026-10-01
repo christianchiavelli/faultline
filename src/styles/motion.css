@@ -1,21 +1,46 @@
 /*
- * Route changes cross-fade through the View Transitions API. The two pages
- * blend where they are the same, so the top bar holds still while the page
- * under it changes. A name of its own would fly it in from where the last
- * page had scrolled it, off the top of the screen.
+ * Motion that belongs to no one component: how a page gives way to the next,
+ * and how a popover opens. Each duration is a role from `tokens.css`, which
+ * reduced motion sets to zero.
  */
 @layer base {
+  /*
+   * Route changes cross-fade through the View Transitions API. The two pages
+   * blend where they are the same, so the top bar holds still while the page
+   * under it changes. A name of its own would fly it in from where the last
+   * page had scrolled it, off the top of the screen.
+   */
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation-duration: var(--duration-base);
+    animation-duration: var(--motion-navigate);
     animation-timing-function: var(--ease-out);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    ::view-transition-group(*),
-    ::view-transition-old(*),
-    ::view-transition-new(*) {
-      animation: none !important;
+  /*
+   * A popover drops in from what opened it and leaves faster than it came,
+   * kept in the top layer and on the screen until it has faded.
+   */
+  [popover] {
+    opacity: 0;
+    translate: 0 -0.25rem;
+    transition:
+      opacity var(--motion-exit) var(--ease-in),
+      translate var(--motion-exit) var(--ease-in),
+      overlay var(--motion-exit) allow-discrete,
+      display var(--motion-exit) allow-discrete;
+
+    &:popover-open {
+      opacity: 1;
+      translate: 0 0;
+      transition-duration: var(--motion-enter);
+      transition-timing-function: var(--ease-out);
+    }
+  }
+
+  @starting-style {
+    [popover]:popover-open {
+      opacity: 0;
+      translate: 0 -0.25rem;
     }
   }
 }
