@@ -183,24 +183,36 @@
   text-align: center;
 }
 
+/* Where the law comes onto the paper, on its left: no line runs there. */
 .note--law {
-  left: calc(var(--x) * 1% + 0.5rem);
+  right: calc((100 - var(--x)) * 1% + 0.75rem);
   top: 3%;
+  max-width: min(15rem, calc(var(--x) * 1% - 1.25rem));
+  text-align: right;
 }
 
-/* Inside the hatching, under the law, and lifted clear of a tall bar beneath it. */
+/*
+ * Either side of M4.5 at the top, where the law has yet to come down: what
+ * the catalogue mostly misses before it, the whole planet after it. The gap's
+ * note carries the hatching's swatch, as the stretch it counts lies below.
+ */
 .note--gap {
-  left: calc(var(--x) * 1% + 0.25rem);
-  top: min(44%, calc(var(--y) * 1% - 5.2rem));
+  right: calc((100 - var(--x)) * 1% + 0.75rem);
+  top: 3%;
   max-width: 7.75rem;
-  margin-inline-start: -0.3rem;
-  padding: 0.15rem 0.3rem;
-  background: var(--surface-chart);
+  text-align: right;
+
+  & .swatch {
+    display: inline-block;
+    margin-inline-end: 0.4rem;
+    vertical-align: -0.1rem;
+    translate: none;
+  }
 }
 
 .note--pen {
-  left: calc(var(--x) * 1% + 0.5rem);
-  top: 38%;
+  left: calc(var(--x) * 1% + 0.75rem);
+  top: 3%;
 
   & b {
     color: var(--content-accent);
@@ -275,7 +287,12 @@
   background: repeating-linear-gradient(-45deg, var(--content-tertiary) 0 1px, transparent 1px 4px);
 }
 
-/* On a wide screen the notes sit on the chart itself; the caption keeps them for a screen reader. */
+/*
+ * On a wide screen the notes sit on the chart itself; the caption keeps them
+ * for a screen reader. The gap's note needs a wider one: on a narrower screen
+ * it spans more magnitudes, back to where the law runs through it, so until
+ * then it stays in the caption.
+ */
 @media (width >= 40rem) {
   .legend__item--note,
   .legend__title {
@@ -285,6 +302,23 @@
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
+  }
+}
+
+@media (width >= 80rem) {
+  .legend__item--gap {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (width < 80rem) {
+  .note--gap {
+    display: none;
   }
 }
 

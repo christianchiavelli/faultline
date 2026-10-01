@@ -95,26 +95,28 @@ export async function traceOrigin(page: Page, id: string): Promise<{ x: number; 
 }
 
 /**
- * Delivers one more event with the page's next poll of the feed, the way a
- * quake that has just happened reaches an open page. Needs the page clock
- * installed before the page loads, to bring that poll forward.
+ * Delivers more events with the page's next poll of the feed, the way a quake
+ * that has just happened reaches an open page. Needs the page clock installed
+ * before the page loads, to bring that poll forward.
  */
 export async function arrive(
   page: Page,
-  quake: { readonly id: string; readonly place: string; readonly magnitude: number },
+  ...quakes: readonly { readonly id: string; readonly place: string; readonly magnitude: number }[]
 ): Promise<void> {
   await page.route('**/api/quakes/recent?window=day', async (route) => {
     const response = await route.fetch();
     const body = (await response.json()) as { quakes: unknown[] };
-    body.quakes.unshift({
-      id: quake.id,
-      time: Date.now() - 60_000,
-      magnitude: { value: quake.magnitude, type: 'md' },
-      place: quake.place,
-      location: { latitude: 38.8, longitude: -122.75, depthKm: 2.1 },
-      review: 'automatic',
-      kind: 'earthquake',
-    });
+    body.quakes.unshift(
+      ...quakes.map((quake) => ({
+        id: quake.id,
+        time: Date.now() - 60_000,
+        magnitude: { value: quake.magnitude, type: 'md' },
+        place: quake.place,
+        location: { latitude: 38.8, longitude: -122.75, depthKm: 2.1 },
+        review: 'automatic',
+        kind: 'earthquake',
+      })),
+    );
     await route.fulfill({ response, json: body });
   });
   await page.clock.fastForward('01:00');

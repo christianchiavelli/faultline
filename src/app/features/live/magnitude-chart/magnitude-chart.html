@@ -76,14 +76,15 @@
           <b>Where seismometers are dense</b> {{ regions() }}, mostly
         </p>
       }
-      <p class="note note--law" [style.--x]="notes().law">
+      <p class="note note--law" [style.--x]="chart().law.x1">
         <b>An average day on Earth</b> about ten times as many for each step down
       </p>
-      <p class="note note--gap" [style.--x]="notes().gap" [style.--y]="chart().gap.peak">
-        <b>Mostly missing</b> {{ chart().gap.located }} located, where an average day has about
+      <p class="note note--gap" [style.--x]="chart().complete">
+        <b><span class="swatch swatch--gap"></span>Mostly missing</b>
+        {{ chart().gap.located }} located, where an average day has about
         {{ roughly(chart().gap.expected) | number }}
       </p>
-      <p class="note note--pen" [style.--x]="notes().planet">
+      <p class="note note--pen" [style.--x]="chart().complete">
         <b>The whole planet</b> from M{{ complete }} the USGS aims to locate every earthquake on
         Earth
       </p>
@@ -138,7 +139,7 @@
           <span><b>Where seismometers are dense.</b> {{ regions() }}, mostly</span>
         </li>
       }
-      <li class="legend__item legend__item--note">
+      <li class="legend__item legend__item--gap">
         <span class="swatch swatch--gap"></span>
         <span
           ><b>Mostly missing.</b> {{ chart().gap.located }} located, where an average day has about

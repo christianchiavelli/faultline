@@ -75,8 +75,6 @@ describe('distribution', () => {
 
     expect(chart.gap.located).toBe(2);
     expect(chart.gap.expected).toBeCloseTo(1256, 0);
-    // One event from M3 to 3.5, whose bar tops out at a count of 1: four fifths of the way down.
-    expect(chart.gap.peak).toBeCloseTo(80, 9);
   });
 
   it('names the regions behind the small events, busiest first', () => {

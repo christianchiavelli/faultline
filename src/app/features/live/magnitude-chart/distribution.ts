@@ -60,8 +60,6 @@ export interface Distribution {
   readonly gap: Line & {
     readonly located: number;
     readonly expected: number;
-    /** The top of the tallest bar in its middle, where its label goes. */
-    readonly peak: number;
   };
   readonly complete: number;
   /** The small events' hump, and the regions they come from. */
@@ -114,8 +112,6 @@ export function distribution(quakes: readonly QuakeSummary[]): Distribution {
   const reach = (count: number) => 5 + Math.log10(lawAt(5) / count);
 
   const inGap = bins.filter((bin) => bin.from >= GAP.from && bin.from < GAP.to);
-  // The label sits over the gap's middle two bins, clear of the law above and the bars below.
-  const middle = inGap.filter((bin) => bin.from >= GAP.from + STEP && bin.from < GAP.to - STEP);
 
   return {
     from,
@@ -158,7 +154,6 @@ export function distribution(quakes: readonly QuakeSummary[]): Distribution {
       y2: down(lawAt(GAP.to)),
       located: inGap.reduce((sum, bin) => sum + bin.count, 0),
       expected: expectedPerDay(GAP.from, GAP.to),
-      peak: Math.min(100, ...middle.map((bin) => bin.y)),
     },
     complete: across(COMPLETE_WORLDWIDE_FROM),
     dense: denseHump(bins, measured),

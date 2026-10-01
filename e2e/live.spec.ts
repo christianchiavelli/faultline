@@ -220,6 +220,96 @@ test('weighs the day against an average day on Earth', async ({ page }) => {
   );
 });
 
+test('keeps its notes clear of the bars, their counts and both lines, however wide the screen', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'A phone keeps the notes in the caption');
+  await page.clock.install();
+  await page.goto('/');
+  await waitForHydration(page);
+  const sizes = page.getByRole('region', { name: 'How big' });
+  const chart = sizes.locator('fl-magnitude-chart');
+  await waitForHydrationOf(chart);
+
+  // A busy hour of M3s raises the bars in the gap.
+  await arrive(
+    page,
+    ...Array.from({ length: 5 }, (_, i) => ({
+      id: `ak900${i}`,
+      place: '20 km N of Willow, Alaska',
+      magnitude: 3.2,
+    })),
+  );
+  await expect(
+    sizes
+      .getByRole('row', { name: /^M3 to 3\.5 / })
+      .getByRole('cell')
+      .first(),
+  ).toHaveText('6');
+
+  const screens = [
+    [1440, 900],
+    [1280, 600],
+    [1024, 768],
+    [768, 1024],
+  ] as const;
+  for (const [width, height] of screens) {
+    await page.setViewportSize({ width, height });
+    const layout = await chart.evaluate((element) => {
+      const paper = element.querySelector('.paper')!.getBoundingClientRect();
+      const end = (line: Element, n: 1 | 2) => ({
+        x: paper.left + (Number(line.getAttribute(`x${n}`)) / 1000) * paper.width,
+        y: paper.top + (Number(line.getAttribute(`y${n}`)) / 1000) * paper.height,
+      });
+      const law = element.querySelector('line.law')!;
+      const [from, to] = [end(law, 1), end(law, 2)];
+      const complete = end(element.querySelector('line.complete')!, 1).x;
+
+      const shown = (selector: string) =>
+        [...element.querySelectorAll(selector)].filter((el) => {
+          const box = el.getBoundingClientRect();
+          return box.width > 1 && box.height > 1;
+        });
+      // The words, not the box: the centred note's box runs up to the top of the paper.
+      const words = (note: Element) => {
+        const range = document.createRange();
+        range.selectNodeContents(note);
+        return [...range.getClientRects()].filter((rect) => rect.width > 0 && rect.height > 0);
+      };
+      const meet = (a: DOMRect, b: DOMRect) =>
+        a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+      const onLaw = (rect: DOMRect) =>
+        Array.from({ length: 501 }, (_, i) => i / 500).some((t) => {
+          const x = from.x + (to.x - from.x) * t;
+          const y = from.y + (to.y - from.y) * t;
+          return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
+        });
+      const marks = [...shown('.count'), ...shown('rect.bar')];
+
+      const clashes = shown('.note').flatMap((note) =>
+        words(note).flatMap((rect) => [
+          ...marks
+            .filter((mark) => meet(rect, mark.getBoundingClientRect()))
+            .map((mark) => `${note.className} over ${mark.textContent?.trim() || 'a bar'}`),
+          ...(onLaw(rect) ? [`${note.className} on the law`] : []),
+          ...(rect.left < complete && complete < rect.right ? [`${note.className} on M4.5`] : []),
+        ]),
+      );
+      return {
+        clashes: [...new Set(clashes)],
+        gap: ['.note--gap', '.legend__item--gap'].filter((selector) => shown(selector).length),
+      };
+    });
+
+    expect(layout.clashes, `at ${width}×${height}`).toEqual([]);
+    // Said once: on the chart where it has room, in the caption where it does not.
+    expect(layout.gap, `at ${width}×${height}`).toEqual([
+      width >= 1280 ? '.note--gap' : '.legend__item--gap',
+    ]);
+  }
+});
+
 test('folds the log to its latest ten, and unfolds it through the address bar', async ({
   page,
 }) => {
