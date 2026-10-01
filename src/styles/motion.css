@@ -1,7 +1,7 @@
 /*
  * Motion that belongs to no one component: how a page gives way to the next,
- * and how a popover opens. Each duration is a role from `tokens.css`, which
- * reduced motion sets to zero.
+ * how content that was waited for comes in, and how a popover opens. Each
+ * duration is a role from `tokens.css`, which reduced motion sets to zero.
  */
 @layer base {
   /*
@@ -14,6 +14,21 @@
   ::view-transition-new(root) {
     animation-duration: var(--motion-navigate);
     animation-timing-function: var(--ease-out);
+  }
+
+  /*
+   * Content the page waited for fades in where it is going to stay. Angular
+   * adds the class with `animate.enter`, through `arrival()`, which leaves out
+   * what the server already drew.
+   */
+  .arrival {
+    animation: arrival var(--motion-enter) var(--ease-out);
+  }
+
+  @keyframes arrival {
+    from {
+      opacity: 0;
+    }
   }
 
   /*

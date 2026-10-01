@@ -138,11 +138,13 @@
      *   feedback  a control answering the hand: hover, press, the choice in
      *             force. Only colour changes; nothing moves.
      *   enter     what comes onto the page: a menu, a dialog, the trace's card,
-     *   exit      the count of new events. Opacity and a short travel, and out
-     *             faster than in, so what leaves never holds up what is next.
+     *   exit      content that was waited for. Opacity and a short travel, and
+     *             out faster than in, so what leaves never holds up what is next.
      *   navigate  one page giving way to the next, the bar holding still.
-     *   pulse     what is live, at the pen's pace: the pen and the Live dot.
-     *             One whole breath.
+     *   pulse     what is live, at the pen's pace: the pen, the Live dot, a line
+     *             of text still on its way. One whole breath.
+     *   wait      how long a wait goes unremarked: an answer quicker than this
+     *             shows no placeholder at all.
      *
      * Out is for what arrives or answers, slowing into place; in is for what
      * leaves, gathering speed as it goes.
@@ -152,6 +154,7 @@
     --motion-exit: 140ms;
     --motion-navigate: 220ms;
     --motion-pulse: 2.4s;
+    --motion-wait: 150ms;
     --ease-out: cubic-bezier(0.22, 0.8, 0.26, 1);
     --ease-in: cubic-bezier(0.4, 0, 1, 1);
 

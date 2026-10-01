@@ -1,0 +1,28 @@
+/*
+ * One line box of the text around it, with the bar centred in it at about the
+ * height of that text's capitals: square, like the rest of the paper. A wash
+ * of the ink rather than a surface, so it shows alike on the page and on a
+ * raised band, in either theme.
+ */
+:host {
+  --bar: color-mix(in oklch, var(--content-primary) 7%, transparent);
+  display: block;
+  max-width: 100%;
+  height: 1lh;
+  background: linear-gradient(var(--bar) 0 0) 0 50% / 100% 0.7em no-repeat;
+  animation:
+    shows var(--motion-enter) var(--ease-out) var(--motion-wait) backwards,
+    breathes var(--motion-pulse) ease-in-out calc(var(--motion-wait) + var(--motion-enter)) infinite;
+}
+
+@keyframes shows {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes breathes {
+  50% {
+    opacity: 0.45;
+  }
+}

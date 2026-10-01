@@ -168,6 +168,17 @@
     color: var(--content-secondary);
   }
 
+  /*
+   * In one column a hint has the page's width, so a waiting one is a line, not
+   * two. Important, to win over the skeleton's own display: a component's
+   * styles are unlayered.
+   */
+  @media (width < 36rem) {
+    .readout__hint ui-skeleton + ui-skeleton {
+      display: none !important;
+    }
+  }
+
   /* Tags: how sure the catalogue is. A solid rule once reviewed, dashed while provisional */
 
   .tag {
