@@ -61,6 +61,7 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - A `<table>` restyled with `display: grid` or `block` loses its semantics in some browsers. The log's spells out its roles in the markup so the phone layout can restyle it (see `event-log.html`).
 - A USGS place name is a locality, then the region after the last comma; the Californian networks write `CA` and `MX`, and a remote event has only a Flinn–Engdahl region. Read it with `splitPlace()` in `shared/domain/place.ts`, never by hand.
 - A class in `src/styles` applies to every element of that name, whatever component it is in: a global name must be one no component uses for something else. The page bands were `.band` until they padded the trace's reading band out to five lines.
+- A schema in `src/shared` writes its own error messages. `zod/mini` has no locale, and the first classic schema the server builds registers English for the whole process, so a default message reads differently in the browser and the BFF, and in a spec depends on what ran before it (see `export.ts`).
 - In a unit spec, a TanStack query in flight is a pending task, so `whenStable()` waits for an answer the spec has yet to give. Render with `TestBed.tick()` instead (see `export-dialog.spec.ts`).
 
 ## Design changes

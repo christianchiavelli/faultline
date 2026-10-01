@@ -123,7 +123,7 @@ const decimal = (...bounds: z.core.$ZodCheck<number>[]) =>
 
 const flag = z.optional(
   z.pipe(
-    z.literal('true'),
+    z.literal('true', 'Expected true, or nothing.'),
     z.transform(() => true),
   ),
 );
@@ -141,7 +141,7 @@ export const exportQuerySchema = z.pipe(
       lon: decimal(z.gte(-180), z.lte(180)),
       // Half the planet: the most the USGS accepts.
       radiuskm: decimal(z.positive(), z.lte(20_001.6)),
-      review: z.optional(z.enum(['reviewed', 'automatic'])),
+      review: z.optional(z.enum(['reviewed', 'automatic'], 'Expected reviewed or automatic.')),
       earthquakes: flag,
     })
     .check(

@@ -64,7 +64,11 @@ describe('exportQuerySchema', () => {
     ],
     [
       { from: '2026-09-28T00:00:00Z', to: '2026-09-29T00:00:00Z', review: 'maybe' },
-      'Invalid input',
+      'Expected reviewed or automatic.',
+    ],
+    [
+      { from: '2026-09-28T00:00:00Z', to: '2026-09-29T00:00:00Z', earthquakes: 'false' },
+      'Expected true, or nothing.',
     ],
   ])('refuses %j', (params, message) => {
     const result = parse(params);
