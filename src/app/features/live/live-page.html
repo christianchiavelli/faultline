@@ -2,7 +2,6 @@
 <article class="page-bands">
   <div class="page-band opening">
     <header class="intro">
-      <p class="eyebrow">Live · the last 24 hours</p>
       <h1 class="title">24 hours of a restless planet</h1>
       <p class="lede">
         Every event the USGS catalogued in the last day, drawn the way a drum seismograph draws it:
@@ -17,13 +16,13 @@
           } @else {
             <span>Live</span>
           }
-          <span class="status__sep" aria-hidden="true">/</span>
+          <span class="status__sep" aria-hidden="true">·</span>
           <span>
-            USGS feed {{ feed.generatedAt | date: 'HH:mm:ss' : 'UTC' }} UTC,
-            {{ feed.generatedAt | ago: now() }}
+            USGS feed
+            <time [attr.datetime]="feed.generatedAt | date: 'yyyy-MM-ddTHH:mm:ssZ' : 'UTC'"
+              >{{ feed.generatedAt | date: 'HH:mm' : 'UTC' }} UTC</time
+            >, {{ feed.generatedAt | ago: now() }}
           </span>
-          <span class="status__sep" aria-hidden="true">/</span>
-          <span>refreshes every minute</span>
         </p>
       }
     </header>
