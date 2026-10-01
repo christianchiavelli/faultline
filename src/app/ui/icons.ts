@@ -9,6 +9,7 @@
  */
 export const ICONS = {
   'arrow-down': 'M8 2.5V12.5M4.5 9L8 12.5L11.5 9',
+  check: 'M3 8.5L6.5 12L13 4.5',
   'chevron-down': 'M4.5 6.5L8 10L11.5 6.5',
   close: 'M3.5 3.5L12.5 12.5M12.5 3.5L3.5 12.5',
   download: 'M8 2V10.5M4.5 7.5L8 11L11.5 7.5M2.5 14H13.5',

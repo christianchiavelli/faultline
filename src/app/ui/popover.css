@@ -1,0 +1,45 @@
+:host {
+  display: inline-block;
+}
+
+/* The glyph alone, on a square a fingertip can hit. */
+.trigger {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--content-primary);
+  anchor-name: var(--anchor);
+
+  &:hover,
+  &:has(+ .panel:popover-open) {
+    background: var(--surface-sunken);
+  }
+}
+
+/*
+ * Under its button, running on from its left edge, or back from its right
+ * where the screen ends first; above it where there is no room below.
+ */
+.panel {
+  position-anchor: var(--anchor);
+  position-area: block-end span-inline-end;
+  position-try-fallbacks:
+    flip-inline,
+    flip-block,
+    flip-block flip-inline;
+  inset: auto;
+  max-width: calc(100vw - 2 * var(--page-gutter));
+  margin: var(--space-1) 0;
+  padding: var(--space-4);
+  border: var(--hairline) solid var(--rule-strong);
+  background: var(--surface-raised);
+  color: var(--content-primary);
+
+  & > .eyebrow {
+    margin-bottom: var(--space-2);
+  }
+}
