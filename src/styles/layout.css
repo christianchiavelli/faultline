@@ -49,8 +49,12 @@
     background: var(--surface-raised);
   }
 
-  /* A page in bands ends on its last one: the footer follows it with no gap or rule of its own. */
-  body:has(.page-bands) {
+  /*
+   * A page whose last band is raised ends on it: the footer follows with no gap
+   * or rule of its own. One that ends on its own colour, as a page in bands does
+   * while it loads, keeps both.
+   */
+  body:has(.page-bands > .page-band--raised:last-child) {
     --footer-space: 0;
     --footer-rule: none;
   }
