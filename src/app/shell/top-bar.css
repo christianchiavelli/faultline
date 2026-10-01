@@ -2,7 +2,6 @@
   display: block;
   border-bottom: var(--hairline) solid var(--rule-strong);
   background: var(--surface-page);
-  view-transition-name: top-bar;
 }
 
 .bar {

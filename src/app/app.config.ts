@@ -11,11 +11,11 @@ import {
   withComponentInputBinding,
   withInMemoryScrolling,
   withViewTransitions,
-  type ActivatedRouteSnapshot,
 } from '@angular/router';
 import { routes } from './app.routes';
 import { transferApiErrors } from './core/api/transfer-errors';
 import { PageTitleStrategy } from './core/page-title';
+import { crossFadeNewPages } from './core/view-transitions';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,10 +27,7 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'disabled', anchorScrolling: 'enabled' }),
       withViewTransitions({
         skipInitialTransition: true,
-        // A cross-fade marks a new page. Changing a filter is the same page, so it swaps in place.
-        onViewTransitionCreated: ({ transition, from, to }) => {
-          if (pathOf(from) === pathOf(to)) transition.skipTransition();
-        },
+        onViewTransitionCreated: crossFadeNewPages,
       }),
     ),
     { provide: TitleStrategy, useClass: PageTitleStrategy },
@@ -38,7 +35,3 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay(), withIncrementalHydration()),
   ],
 };
-
-function pathOf(snapshot: ActivatedRouteSnapshot): string {
-  return snapshot.pathFromRoot.map((route) => route.url.join('/')).join('/');
-}

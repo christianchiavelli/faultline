@@ -1,7 +1,8 @@
 /*
- * Route changes cross-fade through the View Transitions API. The shell keeps
- * its own transition name so the top bar stays put while the page underneath
- * changes, instead of the whole window blinking.
+ * Route changes cross-fade through the View Transitions API. The two pages
+ * blend where they are the same, so the top bar holds still while the page
+ * under it changes. A name of its own would fly it in from where the last
+ * page had scrolled it, off the top of the screen.
  */
 @layer base {
   ::view-transition-old(root),
