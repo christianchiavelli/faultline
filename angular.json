@@ -88,6 +88,7 @@
             "lintFilePatterns": [
               "src/**/*.ts",
               "src/**/*.html",
+              "src/**/*.css",
               "e2e/**/*.ts",
               "playwright.config.ts"
             ]

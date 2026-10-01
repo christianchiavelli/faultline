@@ -1,4 +1,5 @@
 // @ts-check
+import css from '@eslint/css';
 import eslint from '@eslint/js';
 import angular from 'angular-eslint';
 import { defineConfig } from 'eslint/config';
@@ -86,6 +87,21 @@ export default defineConfig([
     rules: {
       '@angular-eslint/template/prefer-control-flow': 'error',
       '@angular-eslint/template/prefer-self-closing-tags': 'error',
+    },
+  },
+  {
+    files: ['**/*.css'],
+    plugins: { css },
+    language: 'css/css',
+    rules: {
+      // Durations are roles (`tokens.css`): one written in place drifts from the rest of its kind.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'Declaration[property=/^(animation|transition)/] Dimension[unit=/^m?s$/i]',
+          message: 'A duration is a motion role: use a --motion-* token from tokens.css.',
+        },
+      ],
     },
   },
 ]);

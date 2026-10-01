@@ -132,7 +132,8 @@
 
     /*
      * Motion, by role. A duration in a component is one of these, never a
-     * number of its own, so whatever plays one part moves like the rest of it:
+     * number of its own (the lint says so), so whatever plays one part moves
+     * like the rest of it:
      *
      *   feedback  a control answering the hand: hover, press, the choice in
      *             force. Only colour changes; nothing moves.
