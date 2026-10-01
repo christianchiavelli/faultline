@@ -9,7 +9,7 @@
       </p>
 
       @if (feed(); as feed) {
-        <p class="status mono">
+        <p class="status mono" [animate.enter]="arriving()">
           <span class="status__dot" [class.status__dot--stale]="late()" aria-hidden="true"></span>
           @if (late()) {
             <span>Feed delayed</span>
@@ -23,6 +23,11 @@
               >{{ feed.generatedAt | date: 'HH:mm' : 'UTC' }} UTC</time
             >, {{ feed.generatedAt | ago: now() }}
           </span>
+        </p>
+      } @else if (!failed()) {
+        <p class="status mono">
+          <span class="visually-hidden">Unrolling the last 24 hours…</span>
+          <ui-skeleton width="17rem" />
         </p>
       }
     </header>
@@ -38,13 +43,24 @@
           </span>
         </p>
       }
+    } @else if (failed()) {
+      <div class="callout failure" role="alert">
+        <strong>The USGS feed did not answer.</strong>
+        <span>It usually recovers within a minute or two.</span>
+        <button type="button" class="text-button" (click)="recent.reload()">Try again</button>
+      </div>
+    }
 
-      <fl-helicorder class="trace" [quakes]="feed.quakes" [now]="now()" />
+    @if (!failed()) {
+      <!-- One drum from the wait to the day: laid out without ink until the events come, so nothing moves when they do. -->
+      <fl-helicorder class="trace" [quakes]="feed()?.quakes ?? null" [now]="now()" />
+    }
 
+    @if (feed(); as feed) {
       <dl class="readouts">
         <div class="readout">
           <dt>Events</dt>
-          <dd>
+          <dd [animate.enter]="arriving()">
             <span class="readout__value">{{ summary().total }}</span>
             <span class="readout__hint">
               {{ summary().earthquakes }} earthquakes
@@ -57,7 +73,7 @@
 
         <div class="readout">
           <dt>Largest</dt>
-          <dd>
+          <dd [animate.enter]="arriving()">
             @if (largest(); as largest) {
               <span class="readout__value">
                 M{{ largest.value
@@ -79,7 +95,7 @@
 
         <div class="readout">
           <dt>Energy</dt>
-          <dd>
+          <dd [animate.enter]="arriving()">
             @if (summary().largestEnergyShare; as share) {
               <span class="readout__value">{{ share | percent: '1.0-0' }}</span>
               <span class="readout__hint">
@@ -94,7 +110,7 @@
 
         <div class="readout">
           <dt>Reviewed</dt>
-          <dd>
+          <dd [animate.enter]="arriving()">
             @if (summary().reviewedShare !== null) {
               <span class="readout__value">{{ summary().reviewedShare | percent: '1.0-0' }}</span>
               <span class="readout__hint">
@@ -114,21 +130,31 @@
           validation and {{ feed.skipped === 1 ? 'is' : 'are' }} not shown.
         </p>
       }
-    } @else if (recent.error()) {
-      <div class="callout failure" role="alert">
-        <strong>The USGS feed did not answer.</strong>
-        <span>It usually recovers within a minute or two.</span>
-        <button type="button" class="text-button" (click)="recent.reload()">Try again</button>
-      </div>
-    } @else {
-      <div class="loading" aria-busy="true">
-        <p class="note">Unrolling the last 24 hours…</p>
-      </div>
+    } @else if (!failed()) {
+      <!-- The readouts' labels and rules, with a line to come under each: the values are the day's. -->
+      <dl class="readouts" aria-hidden="true">
+        @for (label of readouts; track label) {
+          <div class="readout">
+            <dt>{{ label }}</dt>
+            <dd>
+              <span class="readout__value"><ui-skeleton width="5.5rem" /></span>
+              <span class="readout__hint">
+                <ui-skeleton width="88%" />
+                <ui-skeleton width="54%" />
+              </span>
+            </dd>
+          </div>
+        }
+      </dl>
     }
   </div>
 
   @if (feed(); as feed) {
-    <section class="page-band page-band--raised where" aria-labelledby="where-title">
+    <section
+      class="page-band page-band--raised where"
+      aria-labelledby="where-title"
+      [animate.enter]="arriving()"
+    >
       <header class="section-header">
         <h2 class="section-title" id="where-title">Where</h2>
         <p class="section-lede">
@@ -139,11 +165,12 @@
       @defer (on viewport; hydrate on viewport) {
         <fl-world-chart [quakes]="feed.quakes" />
       } @placeholder {
-        <div class="chart-placeholder" aria-hidden="true"></div>
+        <!-- The same map before its dots: the land, the plates and the key are all it waits for. -->
+        <fl-world-chart [quakes]="[]" aria-hidden="true" />
       }
     </section>
 
-    <section class="page-band sizes" aria-labelledby="sizes-title">
+    <section class="page-band sizes" aria-labelledby="sizes-title" [animate.enter]="arriving()">
       <header class="section-header">
         <h2 class="section-title" id="sizes-title">How big</h2>
         <p class="section-lede">
@@ -154,18 +181,38 @@
       @defer (on viewport; hydrate on viewport) {
         <fl-magnitude-chart [quakes]="feed.quakes" />
       } @placeholder {
-        <div class="sizes-placeholder" aria-hidden="true"></div>
+        <!-- The chart's paper and axes as it lays them out, with its key still to come. -->
+        <div class="sizes-placeholder" aria-hidden="true">
+          <span class="sizes-placeholder__unit mono">Events a day</span>
+          <div class="sizes-placeholder__paper"></div>
+          <span class="sizes-placeholder__axis mono">Mag</span>
+          <div class="sizes-placeholder__legend">
+            <ui-skeleton width="min(36rem, 100%)" />
+            <ui-skeleton width="min(24rem, 72%)" />
+          </div>
+        </div>
       }
     </section>
 
     <!-- The log is a section of its own; this band only gives it its colour, placeholder included. -->
-    <div class="page-band page-band--raised">
+    <div class="page-band page-band--raised" [animate.enter]="arriving()">
       @defer (on viewport; hydrate on viewport) {
         <fl-event-log [quakes]="feed.quakes" [query]="query()" [now]="now()">
           <fl-export-button [preset]="exportPreset()" />
         </fl-event-log>
       } @placeholder {
-        <div class="log-placeholder" aria-hidden="true"></div>
+        <!-- The log's heading as it reads, over the ruled lines of its first page. -->
+        <div class="log-placeholder" aria-hidden="true">
+          <div class="log-placeholder__head">
+            <p class="section-title">Every event</p>
+            <p class="section-lede">The day's catalogue, one line per event.</p>
+          </div>
+          <div class="log-placeholder__rows">
+            @for (width of logRows; track $index) {
+              <p class="log-placeholder__row"><ui-skeleton [width]="width" /></p>
+            }
+          </div>
+        </div>
       }
     </div>
   }

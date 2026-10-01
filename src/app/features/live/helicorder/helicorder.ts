@@ -19,6 +19,7 @@ import {
   ROW_WIDTH,
   buildTrace,
   burstDuration,
+  ruleTrace,
   type TraceEvent,
 } from './trace';
 
@@ -58,8 +59,11 @@ let nextId = 0;
   },
 })
 export class Helicorder {
-  readonly quakes = input.required<readonly QuakeSummary[]>();
+  /** The day's events, or `null` while they are on their way: the drum is drawn, the ink is not. */
+  readonly quakes = input.required<readonly QuakeSummary[] | null>();
   readonly now = input.required<number>();
+
+  readonly waiting = computed(() => this.quakes() === null);
 
   readonly #router = inject(Router);
   private readonly paper = viewChild.required<ElementRef<HTMLElement>>('paper');
@@ -72,7 +76,7 @@ export class Helicorder {
   readonly #drawnAt = computed(() => Math.floor(this.now() / 5_000) * 5_000);
 
   readonly #events = computed<readonly TraceEvent[]>(() =>
-    this.quakes().map((quake) => ({
+    (this.quakes() ?? []).map((quake) => ({
       id: quake.id,
       time: quake.time,
       magnitude: quake.magnitude?.value ?? null,
@@ -80,7 +84,11 @@ export class Helicorder {
     })),
   );
 
-  readonly rows = computed(() => buildTrace(this.#events(), this.#drawnAt(), HOURS));
+  readonly rows = computed(() =>
+    this.waiting()
+      ? ruleTrace(this.#drawnAt(), HOURS)
+      : buildTrace(this.#events(), this.#drawnAt(), HOURS),
+  );
   readonly viewBox = `0 0 ${ROW_WIDTH} ${HOURS * ROW_HEIGHT}`;
   readonly gridLines = Array.from({ length: 11 }, (_, i) => (i + 1) * FIVE_MINUTES);
   readonly quarterHour = FIVE_MINUTES * 3;
@@ -102,7 +110,7 @@ export class Helicorder {
   readonly markers = computed<readonly Marker[]>(() => {
     const rows = this.rows();
     const first = rows[0]?.start ?? 0;
-    return this.quakes()
+    return (this.quakes() ?? [])
       .filter(isNotable)
       .sort((a, b) => (b.magnitude?.value ?? 0) - (a.magnitude?.value ?? 0))
       .slice(0, LABELLED)
@@ -151,7 +159,7 @@ export class Helicorder {
   readonly reading = computed(() => {
     const selected = this.#selected();
     const placed = selected && this.placed().find((event) => event.id === selected.id);
-    const quake = placed && this.quakes().find((candidate) => candidate.id === placed.id);
+    const quake = placed && this.quakes()?.find((candidate) => candidate.id === placed.id);
     if (!selected || !placed || !quake) return null;
     return {
       ...describeEvent(quake),
@@ -176,7 +184,7 @@ export class Helicorder {
 
   readonly positionText = computed(() => {
     const id = this.placed()[this.position()]?.id;
-    const quake = id && this.quakes().find((candidate) => candidate.id === id);
+    const quake = id && this.quakes()?.find((candidate) => candidate.id === id);
     return quake ? describeEvent(quake).text : null;
   });
 

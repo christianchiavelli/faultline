@@ -61,27 +61,79 @@
   gap: var(--space-2);
 }
 
-.chart-placeholder {
-  aspect-ratio: 1000 / 487;
-  background: var(--surface-sunken);
-}
-
+/*
+ * The chart's paper and axes, laid out the way `magnitude-chart.css` lays them,
+ * so the chart comes in where its placeholder stood.
+ */
 .sizes-placeholder {
-  min-height: 28rem;
+  --gutter: 3rem;
+  display: grid;
+  grid-template-columns: var(--gutter) minmax(0, 1fr);
+  grid-template-rows: auto clamp(16rem, 40vh, 23rem) auto auto;
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--content-secondary);
 }
 
+.sizes-placeholder__unit {
+  grid-column: 1 / -1;
+  padding-block-end: var(--space-2);
+}
+
+.sizes-placeholder__paper {
+  grid-column: 2;
+  background: var(--surface-chart);
+  border-block: var(--hairline) solid var(--rule-strong);
+  box-shadow:
+    inset 1px 0 0 var(--rule),
+    inset -1px 0 0 var(--rule);
+}
+
+.sizes-placeholder__axis {
+  padding-block-start: var(--space-2);
+}
+
+.sizes-placeholder__legend {
+  grid-column: 2;
+  margin-block-start: var(--space-2);
+  padding-block-start: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 400;
+}
+
+/* The log's heading as `event-log.css` sets it, over the ruled lines of its first page. */
 .log-placeholder {
-  min-height: 40rem;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.log-placeholder__head {
+  display: grid;
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+}
+
+.log-placeholder__rows {
+  border-top: var(--hairline) solid var(--rule-strong);
+  font-size: var(--text-sm);
+}
+
+.log-placeholder__row {
+  padding-block: var(--space-2);
+  border-bottom: var(--hairline) solid var(--rule-faint);
 }
 
 .failure {
   justify-items: start;
 }
 
-.loading {
-  display: grid;
-  place-items: center;
-  min-height: 30rem;
-  border-block: var(--hairline) solid var(--rule-strong);
-  background: var(--surface-chart);
+@media (width < 40rem) {
+  .sizes-placeholder {
+    --gutter: 2.25rem;
+    grid-template-rows: auto 17rem auto auto;
+  }
+
+  .sizes-placeholder__legend {
+    grid-column: 1 / -1;
+  }
 }

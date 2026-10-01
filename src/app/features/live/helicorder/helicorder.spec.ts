@@ -7,7 +7,7 @@ import { Helicorder } from './helicorder';
 const NOW = Date.UTC(2026, 8, 29, 6, 30);
 const HOUR = 3_600_000;
 
-async function render(quakes: readonly QuakeSummary[]) {
+async function render(quakes: readonly QuakeSummary[] | null) {
   TestBed.configureTestingModule({ providers: [provideRouter([])] });
   const fixture = TestBed.createComponent(Helicorder);
   fixture.componentRef.setInput('quakes', quakes);
@@ -89,6 +89,20 @@ describe('Helicorder', () => {
     ]);
 
     expect(element.querySelectorAll('path.pen')).toHaveLength(1);
+  });
+
+  it('lays the drum out before the day comes: its hours and the pen, its lines ruled faint', async () => {
+    const element = await render(null);
+    const trace = element.querySelector('svg.trace')!;
+
+    expect(trace.classList).toContain('trace--waiting');
+    expect(element.querySelectorAll('path.ink')).toHaveLength(24);
+    expect(element.querySelector('path.ink')?.getAttribute('d')).toBe('M0 500h36000');
+    expect(element.querySelector('.hours__current')?.textContent?.trim()).toBe('06');
+    expect(element.querySelector<HTMLElement>('.pen-head')!.style.left).toBe('50%');
+    // Nothing to read on it yet, and nothing that says the day was quiet.
+    expect(element.querySelector('[role="slider"]')).toBeNull();
+    expect(element.querySelector('a.marker')).toBeNull();
   });
 
   it('keeps the pen at the present, halfway along the last line', async () => {

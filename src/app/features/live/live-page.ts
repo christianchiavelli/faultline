@@ -8,6 +8,8 @@ import { pollWhileVisible } from '@core/poll';
 import { magnitudeScale } from '@shared/domain/magnitude';
 import { summarise } from '@shared/domain/summary';
 import { AgoPipe } from '@ui/ago.pipe';
+import { arrival } from '@ui/arrival';
+import { Skeleton } from '@ui/skeleton';
 import { capitalise } from '@ui/text';
 import { WorldChart } from '../common/world-chart/world-chart';
 import { ExportButton } from '../export/export-button';
@@ -24,6 +26,12 @@ const FEED_REFRESH_MS = 60_000;
  */
 const FEED_LATE_MS = 5 * 60_000;
 
+/** What the waiting readouts are labelled, as the day's will be. */
+const READOUTS = ['Events', 'Largest', 'Energy', 'Reviewed'] as const;
+
+/** The waiting log's lines, uneven like the places they stand for. */
+const LOG_ROWS = ['62%', '48%', '71%', '55%', '66%', '44%', '58%', '69%', '51%', '63%'] as const;
+
 @Component({
   selector: 'fl-live-page',
   imports: [
@@ -36,6 +44,7 @@ const FEED_LATE_MS = 5 * 60_000;
     MagnitudeChart,
     EventLog,
     ExportButton,
+    Skeleton,
   ],
   templateUrl: './live-page.html',
   styleUrl: './live-page.css',
@@ -55,6 +64,9 @@ export class LivePage {
   protected readonly recent = recentQuakesResource(() => 'day');
 
   protected readonly feed = computed(() => (this.recent.hasValue() ? this.recent.value() : null));
+  /** Nothing to show but the failure: no copy of the feed at all, not even an old one. */
+  protected readonly failed = computed(() => !this.feed() && !!this.recent.error());
+  protected readonly arriving = arrival(this.feed);
   protected readonly late = computed(() => {
     const feed = this.feed();
     return !!feed && (feed.stale || this.now() - feed.generatedAt > FEED_LATE_MS);
@@ -94,6 +106,9 @@ export class LivePage {
     }
     return [...counts].map(([kind, count]) => `${count} ${count === 1 ? kind : pluralise(kind)}`);
   });
+
+  protected readonly readouts = READOUTS;
+  protected readonly logRows = LOG_ROWS;
 
   constructor() {
     pollWhileVisible(this.recent, FEED_REFRESH_MS);

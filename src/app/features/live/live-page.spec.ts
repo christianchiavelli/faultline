@@ -24,7 +24,8 @@ const feed: RecentQuakesResponse = {
   ],
 };
 
-async function render(respond: (http: HttpTestingController) => void) {
+/** The page with the feed asked for and not yet answered: a request in flight keeps it from stable. */
+function start() {
   const response: ResponseInit = {};
   TestBed.configureTestingModule({
     providers: [
@@ -38,7 +39,12 @@ async function render(respond: (http: HttpTestingController) => void) {
   });
   const fixture = TestBed.createComponent(LivePage);
   TestBed.tick();
-  respond(TestBed.inject(HttpTestingController));
+  return { fixture, response, http: TestBed.inject(HttpTestingController) };
+}
+
+async function render(respond: (http: HttpTestingController) => void) {
+  const { fixture, response, http } = start();
+  respond(http);
   await fixture.whenStable();
   return { element: fixture.nativeElement as HTMLElement, response };
 }
@@ -69,6 +75,30 @@ describe('LivePage', () => {
     expect(response.status).toBeUndefined();
   });
 
+  it('lays the day out while it waits, and inks the same drum when it comes', async () => {
+    const { fixture, http } = start();
+    const element = fixture.nativeElement as HTMLElement;
+    const drum = element.querySelector('fl-helicorder')!;
+    const labels = () => [...element.querySelectorAll('.readouts dt')].map((dt) => dt.textContent);
+
+    expect(drum.querySelector('svg.trace')?.classList).toContain('trace--waiting');
+    expect(element.querySelector('.readouts')?.getAttribute('aria-hidden')).toBe('true');
+    expect(labels()).toEqual(['Events', 'Largest', 'Energy', 'Reviewed']);
+    expect(element.querySelector('.status')?.textContent?.trim()).toBe(
+      'Unrolling the last 24 hours…',
+    );
+
+    recent(http).flush(feed);
+    await fixture.whenStable();
+
+    // Not a new drum swapped in under the reader: the one laid out, inked.
+    expect(element.querySelector('fl-helicorder')).toBe(drum);
+    expect(drum.querySelector('svg.trace')?.classList).not.toContain('trace--waiting');
+    expect(labels()).toEqual(['Events', 'Largest', 'Energy', 'Reviewed']);
+    // The sections below wait for the screen to reach them, behind placeholders of their own.
+    expect(element.querySelector('.opening ui-skeleton')).toBeNull();
+  });
+
   it('says so when the BFF is serving an old copy', async () => {
     const { element } = await render((http) => recent(http).flush({ ...feed, stale: true }));
 
@@ -90,6 +120,9 @@ describe('LivePage', () => {
       'The USGS feed did not answer',
     );
     expect(element.querySelector('[role="alert"] button')?.textContent?.trim()).toBe('Try again');
+    // A drum laid out for a day that is not coming would only promise it.
+    expect(element.querySelector('fl-helicorder')).toBeNull();
+    expect(element.querySelector('ui-skeleton')).toBeNull();
     expect(response.status).toBe(502);
   });
 });

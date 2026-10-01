@@ -106,6 +106,12 @@
 .ink {
   stroke: var(--trace-ink);
   stroke-width: 1px;
+  transition: opacity var(--motion-enter) var(--ease-out);
+}
+
+/* Before the day arrives: the hour lines laid out faint, the paper still to be inked. */
+.trace--waiting .ink {
+  opacity: 0.32;
 }
 
 .pen {

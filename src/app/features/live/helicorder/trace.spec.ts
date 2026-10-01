@@ -1,9 +1,11 @@
 import {
   HOUR_MS,
   ROW_HEIGHT,
+  ROW_WIDTH,
   buildTrace,
   burstAmplitude,
   burstDuration,
+  ruleTrace,
   type TraceEvent,
 } from './trace';
 
@@ -71,6 +73,20 @@ describe('buildTrace', () => {
 
     // Half past the hour is 1,800 s, at ten units per second.
     expect(points(current.ink).at(-1)!.x).toBe(18_000);
+  });
+});
+
+describe('ruleTrace', () => {
+  it('rules each hour straight, on the line its ink will be drawn along', () => {
+    const ruled = ruleTrace(NOW);
+    const drawn = buildTrace([], NOW);
+
+    expect(ruled.map((row) => row.start)).toEqual(drawn.map((row) => row.start));
+    ruled.forEach((row, index) => {
+      const baseline = index * ROW_HEIGHT + ROW_HEIGHT / 2;
+      expect(row.ink).toBe(`M0 ${baseline}h${index < 23 ? ROW_WIDTH : 18_000}`);
+      expect(row.pen).toEqual([]);
+    });
   });
 });
 

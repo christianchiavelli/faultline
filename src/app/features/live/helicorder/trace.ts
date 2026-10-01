@@ -109,18 +109,38 @@ export function buildTrace(
   now: number,
   hours = 24,
 ): readonly TraceRow[] {
-  const lastStart = Math.floor(now / HOUR_MS) * HOUR_MS;
-  const firstStart = lastStart - (hours - 1) * HOUR_MS;
+  const lines = hourLines(now, hours);
+  const firstStart = lines[0]?.start ?? now;
   const bursts = events
     .filter((event) => event.time >= firstStart - MAX_DURATION_MS && event.time <= now)
     .map(toBurst)
     .sort((a, b) => a.start - b.start);
 
-  return Array.from({ length: hours }, (_, index) => {
-    const start = firstStart + index * HOUR_MS;
-    const end = Math.min(start + HOUR_MS, now);
+  return lines.map(({ start, end }, index) => {
     const overlapping = bursts.filter((burst) => burst.start <= end && burst.end >= start);
     return drawRow(start, end, index, overlapping);
+  });
+}
+
+/**
+ * The drum before the day has come: each hour's line ruled straight, with no
+ * ground under it yet, as far as the pen has gone. The lines are the ones
+ * `buildTrace` draws, so the ink lands where they were.
+ */
+export function ruleTrace(now: number, hours = 24): readonly TraceRow[] {
+  return hourLines(now, hours).map(({ start, end }, index) => ({
+    start,
+    ink: `M0 ${index * ROW_HEIGHT + ROW_HEIGHT / 2}h${Math.round((end - start) * UNITS_PER_MS)}`,
+    pen: [],
+  }));
+}
+
+/** The last `hours` hours, oldest first, the current one ending at `now`. */
+function hourLines(now: number, hours: number): readonly { start: number; end: number }[] {
+  const firstStart = (Math.floor(now / HOUR_MS) - (hours - 1)) * HOUR_MS;
+  return Array.from({ length: hours }, (_, index) => {
+    const start = firstStart + index * HOUR_MS;
+    return { start, end: Math.min(start + HOUR_MS, now) };
   });
 }
 
