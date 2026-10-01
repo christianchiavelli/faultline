@@ -1,211 +1,220 @@
-<article class="quake page">
-  <nav class="crumbs" aria-label="Breadcrumb">
-    <a routerLink="/">Live</a>
-    <span aria-hidden="true">/</span>
-    <span class="mono" aria-current="page">{{ id() }}</span>
-  </nav>
+<!-- In bands: the event on the page's own colour, then where it was and how it was recorded on a raised one. -->
+<article class="page-bands">
+  <div class="page-band opening">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a routerLink="/">Live</a>
+      <span aria-hidden="true">/</span>
+      <span class="mono" aria-current="page">{{ id() }}</span>
+    </nav>
 
-  @if (view(); as view) {
-    <header class="hero">
-      <div class="hero__magnitude">
-        @if (view.magnitude; as magnitude) {
-          <p
-            class="numeral mono"
-            [class.numeral--notable]="(view.quake.magnitude?.value ?? 0) >= 4.5"
-          >
-            <span class="visually-hidden">Magnitude </span>{{ magnitude }}
-          </p>
-          <p class="scale">
-            <span class="scale__code mono">{{ view.scale!.code }}</span>
-            <span class="scale__name">{{ view.scale!.name }} magnitude</span>
-          </p>
-        } @else {
-          <p class="numeral numeral--missing mono">—</p>
-          <p class="scale"><span class="scale__name">No magnitude computed yet</span></p>
-        }
-      </div>
-
-      <div class="hero__text">
-        <p class="eyebrow">
-          {{ view.quake.kind }}
-          @if (view.quake.review === 'reviewed') {
-            <span class="tag tag--solid">Reviewed</span>
-          } @else {
-            <span class="tag tag--dashed">Automatic</span>
-          }
-        </p>
-        <h1 class="title">{{ view.place }}</h1>
-        <p class="when mono">
-          <time [attr.datetime]="view.quake.time | date: 'yyyy-MM-ddTHH:mm:ssZ' : 'UTC'">
-            {{ view.quake.time | date: 'EEE d MMM yyyy, HH:mm:ss' : 'UTC' }} UTC
-          </time>
-          <span class="when__ago">{{ view.quake.time | ago: now() }}</span>
-        </p>
-        @if (view.scale; as scale) {
-          <p class="lede">{{ scale.summary }}</p>
-        }
-      </div>
-    </header>
-
-    <dl class="readouts">
-      <div class="readout">
-        <dt>Depth</dt>
-        <dd>
-          @if (view.depthKm !== null) {
-            <span class="readout__value"
-              >{{ view.depthKm | number: '1.1-1' }}<span class="readout__unit">km</span></span
+    @if (view(); as view) {
+      <header class="hero">
+        <div class="hero__magnitude">
+          @if (view.magnitude; as magnitude) {
+            <p
+              class="numeral mono"
+              [class.numeral--notable]="(view.quake.magnitude?.value ?? 0) >= 4.5"
             >
+              <span class="visually-hidden">Magnitude </span>{{ magnitude }}
+            </p>
+            <p class="scale">
+              <span class="scale__code mono">{{ view.scale!.code }}</span>
+              <span class="scale__name">{{ view.scale!.name }} magnitude</span>
+            </p>
+          } @else {
+            <p class="numeral numeral--missing mono">—</p>
+            <p class="scale"><span class="scale__name">No magnitude computed yet</span></p>
+          }
+        </div>
+
+        <div class="hero__text">
+          <p class="eyebrow">
+            {{ view.quake.kind }}
+            @if (view.quake.review === 'reviewed') {
+              <span class="tag tag--solid">Reviewed</span>
+            } @else {
+              <span class="tag tag--dashed">Automatic</span>
+            }
+          </p>
+          <h1 class="title">{{ view.place }}</h1>
+          <p class="when mono">
+            <time [attr.datetime]="view.quake.time | date: 'yyyy-MM-ddTHH:mm:ssZ' : 'UTC'">
+              {{ view.quake.time | date: 'EEE d MMM yyyy, HH:mm:ss' : 'UTC' }} UTC
+            </time>
+            <span class="when__ago">{{ view.quake.time | ago: now() }}</span>
+          </p>
+          @if (view.scale; as scale) {
+            <p class="lede">{{ scale.summary }}</p>
+          }
+        </div>
+      </header>
+
+      <dl class="readouts">
+        <div class="readout">
+          <dt>Depth</dt>
+          <dd>
+            @if (view.depthKm !== null) {
+              <span class="readout__value"
+                >{{ view.depthKm | number: '1.1-1' }}<span class="readout__unit">km</span></span
+              >
+              <span class="readout__hint">
+                @if (view.depthAboveSea) {
+                  Above sea level: shallow events under high ground are located relative to the sea.
+                } @else if (view.depthFixed) {
+                  Fixed by the analyst, not measured: the data could not constrain it.
+                } @else if (view.depthErrorKm !== null) {
+                  ± {{ view.depthErrorKm | number: '1.1-1' }} km
+                } @else {
+                  Uncertainty not published
+                }
+              </span>
+            } @else {
+              <span class="readout__value">—</span>
+            }
+          </dd>
+        </div>
+
+        <div class="readout">
+          <dt>Epicentre</dt>
+          <dd>
+            <span class="readout__value readout__value--small">
+              {{ view.quake.location.latitude | number: '1.3-3' }},
+              {{ view.quake.location.longitude | number: '1.3-3' }}
+            </span>
             <span class="readout__hint">
-              @if (view.depthAboveSea) {
-                Above sea level: shallow events under high ground are located relative to the sea.
-              } @else if (view.depthFixed) {
-                Fixed by the analyst, not measured: the data could not constrain it.
-              } @else if (view.depthErrorKm !== null) {
-                ± {{ view.depthErrorKm | number: '1.1-1' }} km
+              @if (view.origin?.horizontalErrorKm; as error) {
+                ± {{ error | number: '1.1-1' }} km horizontal uncertainty
               } @else {
                 Uncertainty not published
               }
             </span>
-          } @else {
-            <span class="readout__value">—</span>
-          }
-        </dd>
-      </div>
+          </dd>
+        </div>
 
-      <div class="readout">
-        <dt>Epicentre</dt>
-        <dd>
-          <span class="readout__value readout__value--small">
-            {{ view.quake.location.latitude | number: '1.3-3' }},
-            {{ view.quake.location.longitude | number: '1.3-3' }}
-          </span>
-          <span class="readout__hint">
-            @if (view.origin?.horizontalErrorKm; as error) {
-              ± {{ error | number: '1.1-1' }} km horizontal uncertainty
-            } @else {
-              Uncertainty not published
-            }
-          </span>
-        </dd>
-      </div>
-
-      <div class="readout">
-        <dt>Solution</dt>
-        <dd>
-          <span class="readout__value">
-            @if (view.origin?.stationsUsed; as stations) {
-              {{ stations }}<span class="readout__unit">stations</span>
-            } @else {
-              —
-            }
-          </span>
-          <span class="readout__hint">
-            @if (view.origin?.azimuthalGapDeg; as gap) {
-              {{ gap | number: '1.0-0' }}° azimuthal gap.
-              @if (view.wideGap) {
-                Wide: the stations see it from one side, so the position is less certain.
+        <div class="readout">
+          <dt>Solution</dt>
+          <dd>
+            <span class="readout__value">
+              @if (view.origin?.stationsUsed; as stations) {
+                {{ stations }}<span class="readout__unit">stations</span>
               } @else {
-                Stations surround it well.
+                —
               }
-            } @else {
-              Station geometry not published.
-            }
-          </span>
-        </dd>
-      </div>
-
-      <div class="readout">
-        <dt>Energy</dt>
-        <dd>
-          @if (view.energy; as energy) {
-            <span class="readout__value"
-              >{{ energy.mantissa }}×10<sup>{{ energy.exponent }}</sup
-              ><span class="readout__unit">J</span></span
-            >
-            <span class="readout__hint">
-              Radiated as seismic waves, about {{ energy.tnt.value | number }} {{ energy.tnt.unit }}
-              of TNT. One magnitude step up is 32× more.
             </span>
-          } @else {
-            <span class="readout__value">—</span>
-          }
-        </dd>
+            <span class="readout__hint">
+              @if (view.origin?.azimuthalGapDeg; as gap) {
+                {{ gap | number: '1.0-0' }}° azimuthal gap.
+                @if (view.wideGap) {
+                  Wide: the stations see it from one side, so the position is less certain.
+                } @else {
+                  Stations surround it well.
+                }
+              } @else {
+                Station geometry not published.
+              }
+            </span>
+          </dd>
+        </div>
+
+        <div class="readout">
+          <dt>Energy</dt>
+          <dd>
+            @if (view.energy; as energy) {
+              <span class="readout__value"
+                >{{ energy.mantissa }}×10<sup>{{ energy.exponent }}</sup
+                ><span class="readout__unit">J</span></span
+              >
+              <span class="readout__hint">
+                Radiated as seismic waves, about {{ energy.tnt.value | number }}
+                {{ energy.tnt.unit }}
+                of TNT. One magnitude step up is 32× more.
+              </span>
+            } @else {
+              <span class="readout__value">—</span>
+            }
+          </dd>
+        </div>
+      </dl>
+    } @else if (problem(); as problem) {
+      <div class="gone">
+        <p class="eyebrow">Error {{ problem.status }}</p>
+        <h1 class="title">{{ problem.title }}</h1>
+        @if (problem.detail) {
+          <p class="lede">{{ problem.detail }}</p>
+        }
+        <p><a routerLink="/">Back to the live record</a></p>
       </div>
-    </dl>
+    } @else {
+      <p class="note loading" aria-busy="true">Looking the event up in the USGS catalogue…</p>
+    }
+  </div>
 
-    <div class="context">
-      <section class="where" aria-labelledby="where-title">
-        <h2 class="section-title" id="where-title">Where</h2>
-        <p class="export"><fl-export-button [event]="view.quake" /></p>
-        <fl-world-chart
-          [quakes]="[view.quake]"
-          [focus]="view.quake.id"
-          [zoom]="2.5"
-          [showLegend]="false"
-        />
-      </section>
+  @if (view(); as view) {
+    <div class="page-band page-band--raised">
+      <!-- One grid for both: their headings share a row and their frames the next, so they start and end on the same rules. -->
+      <div class="context">
+        <section class="where" aria-labelledby="where-title">
+          <header class="section-head">
+            <h2 class="section-title" id="where-title">Where</h2>
+            <fl-export-button [event]="view.quake" />
+          </header>
+          <fl-world-chart
+            [quakes]="[view.quake]"
+            [focus]="view.quake.id"
+            [zoom]="2.5"
+            [showLegend]="false"
+          />
+        </section>
 
-      <section class="record" aria-labelledby="record-title">
-        <h2 class="section-title" id="record-title">The record</h2>
-        <dl class="facts">
-          <div>
-            <dt>Located by</dt>
-            <dd>
-              <span class="mono">{{ view.network.code }}</span>
-              @if (view.network.name; as name) {
-                · {{ name }}
-              }
-            </dd>
-          </div>
-          <div>
-            <dt>Last revised</dt>
-            <dd>
-              <span class="mono">{{ view.quake.updated | date: 'd MMM, HH:mm' : 'UTC' }} UTC</span>,
-              {{ view.revisedAfter }} after the event
-            </dd>
-          </div>
-          <div>
-            <dt>Felt reports</dt>
-            <dd>
-              @if (view.quake.felt; as felt) {
-                <span class="mono">{{ felt | number }}</span> people answered "Did You Feel It?"
-              } @else {
-                None filed
-              }
-            </dd>
-          </div>
-          <div>
-            <dt>Impact alert</dt>
-            <dd>
-              @if (view.alert; as alert) {
-                <span class="alert alert--{{ alert.level }}">PAGER {{ alert.level }}</span
-                >.
-                {{ alert.meaning }}
-              } @else {
-                None issued. PAGER only runs for events that may cause damage.
-              }
-            </dd>
-          </div>
-        </dl>
-        <p>
-          <a [href]="view.quake.url" rel="external"
-            >The full event page on earthquake.usgs.gov<ui-icon
-              class="trailing-icon"
-              name="external-link"
-          /></a>
-        </p>
-      </section>
+        <section class="record" aria-labelledby="record-title">
+          <header class="section-head">
+            <h2 class="section-title" id="record-title">The record</h2>
+            <a class="out" [href]="view.quake.url" rel="external"
+              >USGS event page<ui-icon class="trailing-icon" name="external-link"
+            /></a>
+          </header>
+          <dl class="facts">
+            <div>
+              <dt>Located by</dt>
+              <dd>
+                <span class="mono">{{ view.network.code }}</span>
+                @if (view.network.name; as name) {
+                  · {{ name }}
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Last revised</dt>
+              <dd>
+                <span class="mono">{{ view.quake.updated | date: 'd MMM, HH:mm' : 'UTC' }} UTC</span
+                >, {{ view.revisedAfter }} after the event
+              </dd>
+            </div>
+            <div>
+              <dt>Felt reports</dt>
+              <dd>
+                @if (view.quake.felt; as felt) {
+                  <span class="mono">{{ felt | number }}</span> people answered "Did You Feel It?"
+                } @else {
+                  None filed
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Impact alert</dt>
+              <dd>
+                @if (view.alert; as alert) {
+                  <span class="alert alert--{{ alert.level }}">PAGER {{ alert.level }}</span
+                  >.
+                  {{ alert.meaning }}
+                } @else {
+                  None issued. PAGER only runs for events that may cause damage.
+                }
+              </dd>
+            </div>
+          </dl>
+        </section>
+      </div>
     </div>
-  } @else if (problem(); as problem) {
-    <div class="gone">
-      <p class="eyebrow">Error {{ problem.status }}</p>
-      <h1 class="title">{{ problem.title }}</h1>
-      @if (problem.detail) {
-        <p class="lede">{{ problem.detail }}</p>
-      }
-      <p><a routerLink="/">Back to the live record</a></p>
-    </div>
-  } @else {
-    <p class="note loading" aria-busy="true">Looking the event up in the USGS catalogue…</p>
   }
 </article>

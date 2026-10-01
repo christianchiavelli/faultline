@@ -2,9 +2,9 @@
   display: block;
 }
 
-.quake {
-  display: grid;
-  gap: var(--space-10);
+/* The event itself: what it was, when and how big, on the page's own colour. */
+.opening {
+  row-gap: var(--space-10);
   padding-block-start: var(--space-8);
 }
 
@@ -82,32 +82,58 @@
   font-size: var(--text-lg);
 }
 
+/*
+ * The map and the record side by side on one grid: each section takes both its
+ * rows through a subgrid, so the headings share the first and the frames the
+ * second, starting and ending on the same rules.
+ */
 .context {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: var(--space-10) var(--space-12);
-  align-items: start;
+  grid-template-rows: auto auto;
+  gap: var(--space-5) var(--space-12);
 }
 
 .where,
 .record {
   display: grid;
-  gap: var(--space-4);
+  grid-row: span 2;
+  grid-template-rows: subgrid;
 }
 
-/* Set a little apart from the heading above and the map it exports from. */
-.export {
-  margin-block: var(--space-2) var(--space-3);
+/* A heading and the one action it leads to, on its baseline. */
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
 }
 
+/* Set like the export opposite, so the two headings carry their actions alike. */
+.out {
+  font-weight: 600;
+  text-decoration-color: currentColor;
+}
+
+.where fl-world-chart {
+  align-self: start;
+}
+
+/* A frame as tall as the map's, ruled as strongly, its four facts in equal parts of it. */
 .facts {
   display: grid;
-  gap: var(--space-4);
+  grid-auto-rows: 1fr;
+  border-block: var(--hairline) solid var(--rule-strong);
 
   & div {
     display: grid;
+    align-content: start;
     gap: var(--space-1);
-    padding-block-start: var(--space-3);
+    padding-block: var(--space-3);
+  }
+
+  & div + div {
     border-top: var(--hairline) solid var(--rule);
   }
 
@@ -148,9 +174,23 @@
   padding-block: var(--space-16);
 }
 
+/* One column: each section on its own, the record's facts as tall as they need. */
 @media (width < 64rem) {
   .context {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: var(--space-10);
+  }
+
+  .where,
+  .record {
+    grid-row: auto;
+    grid-template-rows: none;
+    row-gap: var(--space-5);
+  }
+
+  .facts {
+    grid-auto-rows: auto;
   }
 }
 
