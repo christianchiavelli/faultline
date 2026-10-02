@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import {
   EVENT_API,
+  arriveEmptyHanded,
   hold,
   holdStream,
   scrollThrough,
@@ -77,11 +78,25 @@ for (const theme of THEMES) {
       expect(await audit(page)).toEqual([]);
     });
 
-    test('the event page, waiting on the catalogue, meets WCAG 2.2 AA', async ({ page }) => {
+    test('the event page, opened on what the day knew and waiting for its record, meets WCAG 2.2 AA', async ({
+      page,
+    }) => {
       await page.goto('/');
       await waitForHydration(page);
       const release = await hold(page, EVENT_API);
       await page.getByRole('link', { name: 'M6.2 Mww, South of the Fiji Islands' }).click();
+      await expect(page.getByText('Coming from the USGS catalogue…').first()).toBeAttached();
+      await settled(page.locator('fl-quake-page'));
+
+      expect(await audit(page)).toEqual([]);
+      release();
+    });
+
+    test('the event page, knowing nothing of it yet, meets WCAG 2.2 AA', async ({ page }) => {
+      await page.goto('/');
+      await waitForHydration(page);
+      const release = await hold(page, EVENT_API);
+      await arriveEmptyHanded(page, '/quakes/us7000big');
       await expect(page.getByText('Looking the event up in the USGS catalogue…')).toBeAttached();
 
       expect(await audit(page)).toEqual([]);

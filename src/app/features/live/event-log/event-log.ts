@@ -23,6 +23,7 @@ import { Highlight } from '@ui/highlight';
 import { Icon } from '@ui/icon';
 import { capitalise } from '@ui/text';
 import { dotRadius } from '../../common/world-chart/world-chart';
+import { quakeLinkState, type QuakeLinkState } from '../../quake/quake-link';
 import { facetsOf, matches, sortEntries, toEntries } from './facets';
 import { LogFacets } from './log-facets';
 import { LogFilters } from './log-filters';
@@ -307,6 +308,8 @@ interface Row {
   readonly depthPhrase: string | null;
   readonly reviewed: boolean;
   readonly fresh: boolean;
+  /** What the row's link hands its event's page, so the page opens on it. */
+  readonly link: QuakeLinkState;
 }
 
 function toRow(quake: QuakeSummary, fresh: boolean): Row {
@@ -339,6 +342,7 @@ function toRow(quake: QuakeSummary, fresh: boolean): Row {
           : `${depth.toFixed(1)} km deep`,
     reviewed: quake.review === 'reviewed',
     fresh,
+    link: quakeLinkState(quake),
   };
 }
 

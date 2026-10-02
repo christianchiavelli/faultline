@@ -150,7 +150,9 @@ describe('Helicorder', () => {
       point(readerOf(element), 'pointerdown', 601, 410);
       readerOf(element).dispatchEvent(new MouseEvent('click', { clientX: 601, clientY: 410 }));
 
-      expect(navigate).toHaveBeenCalledWith(['/quakes', 'small']);
+      expect(navigate).toHaveBeenCalledWith(['/quakes', 'small'], {
+        state: { quake: expect.objectContaining({ id: 'small' }) },
+      });
     });
 
     it('reads a tapped event without leaving the page, until a tap elsewhere', async () => {
@@ -219,7 +221,9 @@ describe('Helicorder', () => {
 
       press(reader, 'End');
       press(reader, 'Enter');
-      expect(navigate).toHaveBeenCalledWith(['/quakes', 'latest']);
+      expect(navigate).toHaveBeenCalledWith(['/quakes', 'latest'], {
+        state: { quake: expect.objectContaining({ id: 'latest' }) },
+      });
     });
 
     it('offers nothing to read on a day without events', async () => {

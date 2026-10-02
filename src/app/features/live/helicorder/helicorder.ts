@@ -12,6 +12,7 @@ import { Router, RouterLink } from '@angular/router';
 import { magnitudeScale } from '@shared/domain/magnitude';
 import { isNotable, type QuakeSummary } from '@shared/domain/quake';
 import { capitalise } from '@ui/text';
+import { quakeLinkState, type QuakeLinkState } from '../../quake/quake-link';
 import { describeEvent, eventAt, place } from './reading';
 import {
   HOUR_MS,
@@ -36,6 +37,7 @@ interface Marker {
   readonly top: number;
   readonly text: string;
   readonly label: string;
+  readonly link: QuakeLinkState;
 }
 
 /** What put the card up: a hovering pointer, a tap, or the arrow keys. */
@@ -128,6 +130,7 @@ export class Helicorder {
           top: ((row + 0.5) / rows.length) * 100,
           text: `M${magnitude.value.toFixed(1)}`,
           label: `M${magnitude.value.toFixed(1)} ${scale.code}, ${place}`,
+          link: quakeLinkState(quake),
         };
       });
   });
@@ -165,6 +168,7 @@ export class Helicorder {
       ...describeEvent(quake),
       id: quake.id,
       time: quake.time,
+      link: quakeLinkState(quake),
       source: selected.source,
       row: placed.row,
       at: placed.at * 100,
@@ -214,7 +218,7 @@ export class Helicorder {
       return;
     }
     const id = this.#eventAt(event, REACH.fine);
-    if (id) void this.#router.navigate(['/quakes', id]);
+    if (id) this.#open(id);
   }
 
   protected readMarker(event: PointerEvent, id: string): void {
@@ -273,7 +277,15 @@ export class Helicorder {
 
   #openCursor(): void {
     const id = this.placed()[this.position()]?.id;
-    if (id) void this.#router.navigate(['/quakes', id]);
+    if (id) this.#open(id);
+  }
+
+  /** Opens the event's page on what the drum knows of it, as its links do (`quake-link.ts`). */
+  #open(id: string): void {
+    const quake = this.quakes()?.find((candidate) => candidate.id === id);
+    void this.#router.navigate(['/quakes', id], {
+      state: quake ? quakeLinkState(quake) : undefined,
+    });
   }
 
   #show(id: string | null, source: Source): void {

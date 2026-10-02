@@ -12,6 +12,7 @@ import { Skeleton } from '@ui/skeleton';
 import { capitalise } from '@ui/text';
 import { WorldChart } from '../common/world-chart/world-chart';
 import { ExportButton } from '../export/export-button';
+import { quakeLinkState } from '../quake/quake-link';
 import { EventLog } from './event-log/event-log';
 import { parseLogQuery, toExportPreset, type LogParams } from './event-log/log-query';
 import { Helicorder } from './helicorder/helicorder';
@@ -92,6 +93,7 @@ export class LivePage {
       place: largest.place ? capitalise(largest.place) : 'Location not described',
       value: largest.magnitude.value.toFixed(1),
       scale: magnitudeScale(largest.magnitude.type),
+      link: quakeLinkState(largest),
     };
   });
 

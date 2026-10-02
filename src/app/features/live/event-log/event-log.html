@@ -130,6 +130,7 @@
                     #place
                     class="ledger__link"
                     [routerLink]="['/quakes', row.id]"
+                    [state]="row.link"
                     [attr.data-id]="row.id"
                     ><ui-highlight [text]="row.where" [search]="search()"
                   /></a>

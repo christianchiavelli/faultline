@@ -125,6 +125,11 @@
   align-self: start;
 }
 
+/* A record that did not come says so under its heading, not spread over the map's height. */
+.record .callout {
+  align-self: start;
+}
+
 /* A frame as tall as the map's, ruled as strongly, its four facts in equal parts of it. */
 .facts {
   display: grid;

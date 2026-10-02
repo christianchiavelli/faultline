@@ -92,6 +92,7 @@
         <a
           class="marker mono"
           [routerLink]="['/quakes', marker.id]"
+          [state]="marker.link"
           [style.--at]="marker.left"
           [style.top.%]="marker.top"
           [attr.aria-label]="marker.label"
@@ -124,9 +125,13 @@
             }
             <span class="card__time mono">{{ reading.time | date: 'HH:mm:ss' : 'UTC' }} UTC</span>
           </p>
-          <a class="card__place" [routerLink]="['/quakes', reading.id]" tabindex="-1">{{
-            reading.place
-          }}</a>
+          <a
+            class="card__place"
+            [routerLink]="['/quakes', reading.id]"
+            [state]="reading.link"
+            tabindex="-1"
+            >{{ reading.place }}</a
+          >
           <p class="card__meta">
             @if (reading.depth; as depth) {
               <span

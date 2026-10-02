@@ -10,6 +10,7 @@ import type { Problem } from '@shared/api/contracts';
 import { alertMeaning } from '@shared/domain/alert';
 import { magnitudeScale, radiatedEnergy } from '@shared/domain/magnitude';
 import { networkName } from '@shared/domain/network';
+import type { QuakeSummary } from '@shared/domain/quake';
 import { AgoPipe } from '@ui/ago.pipe';
 import { arrival } from '@ui/arrival';
 import { formatDuration } from '@ui/duration';
@@ -22,6 +23,9 @@ import { ExportButton } from '../export/export-button';
 /** Above this the epicentre is poorly constrained: stations only see it from one side. */
 const WIDE_GAP_DEG = 180;
 
+/** The catalogue never had the event, or has deleted it. */
+const GONE = new Set([404, 410]);
+
 /** Joules in one tonne of TNT, the unit outreach material uses for seismic energy. */
 const TNT_TONNE_J = 4.184e9;
 
@@ -33,6 +37,9 @@ const READOUTS = [
   { label: 'Energy', small: false },
 ] as const;
 
+/** The record's facts, labelled while they are on their way. */
+const FACTS = ['Located by', 'Last revised', 'Felt reports', 'Impact alert'] as const;
+
 @Component({
   selector: 'fl-quake-page',
   imports: [RouterLink, DatePipe, DecimalPipe, AgoPipe, Icon, Skeleton, WorldChart, ExportButton],
@@ -42,38 +49,21 @@ const READOUTS = [
 export class QuakePage {
   /** Route parameter, bound by the router. */
   readonly id = input.required<string>();
+  /** What the link here knew of the event (`quake-link.ts`), bound by the router. */
+  readonly known = input<QuakeSummary | null>(null);
 
   protected readonly now = inject(Clock).now;
   protected readonly detail = quakeDetailResource(() => this.id());
 
   protected readonly data = computed(() => (this.detail.hasValue() ? this.detail.value() : null));
-  protected readonly arriving = arrival(this.data);
+  /** The event as far as the page knows it: the catalogue's record, or what the link knew until it comes. */
+  protected readonly quake = computed(() => this.data()?.quake ?? this.known());
+  /** Fades in only what the page waited for: opened on the link's summary, its hero is just there. */
+  protected readonly arriving = arrival(this.quake);
+  /** The same for what only the catalogue's record holds, which such a page still waits for. */
+  protected readonly recordArriving = arrival(this.data);
   protected readonly readouts = READOUTS;
-
-  protected readonly view = computed(() => {
-    const data = this.data();
-    if (!data) return null;
-    const { quake, origin } = data;
-    const scale = quake.magnitude ? magnitudeScale(quake.magnitude.type) : null;
-    const depth = quake.location.depthKm;
-
-    return {
-      quake,
-      origin,
-      scale,
-      place: quake.place ? capitalise(quake.place) : 'Location not described',
-      network: { code: quake.network, name: networkName(quake.network) },
-      alert: quake.alert ? { level: quake.alert, meaning: alertMeaning(quake.alert) } : null,
-      magnitude: quake.magnitude?.value.toFixed(1) ?? null,
-      energy: quake.magnitude ? describeEnergy(radiatedEnergy(quake.magnitude.value)) : null,
-      depthKm: depth === null ? null : Math.abs(depth),
-      depthErrorKm: origin?.depthErrorKm ?? null,
-      depthAboveSea: depth !== null && depth < 0,
-      depthFixed: origin?.depthType === 'operator assigned',
-      wideGap: (origin?.azimuthalGapDeg ?? 0) > WIDE_GAP_DEG,
-      revisedAfter: formatDuration(quake.updated - quake.time),
-    };
-  });
+  protected readonly facts = FACTS;
 
   protected readonly problem = computed<Problem | null>(() => {
     const error = this.detail.error();
@@ -81,6 +71,51 @@ export class QuakePage {
     return isProblem(error.error)
       ? error.error
       : { type: 'about:blank', title: 'The USGS did not answer', status: error.status };
+  });
+
+  /**
+   * The catalogue has no such event, or no longer: whatever the link knew of
+   * it went with it. Any other failure leaves what the link knew standing.
+   */
+  readonly #gone = computed(() => GONE.has(this.problem()?.status ?? 0));
+
+  /** The record is still on its way: its lines wait in their places. */
+  protected readonly pending = computed(() => !this.data() && !this.problem());
+
+  /** What the event was: everything the page opens on. */
+  protected readonly view = computed(() => {
+    const quake = this.quake();
+    if (!quake || this.#gone()) return null;
+    const scale = quake.magnitude ? magnitudeScale(quake.magnitude.type) : null;
+    const depth = quake.location.depthKm;
+
+    return {
+      quake,
+      scale,
+      place: quake.place ? capitalise(quake.place) : 'Location not described',
+      magnitude: quake.magnitude?.value.toFixed(1) ?? null,
+      energy: quake.magnitude ? describeEnergy(radiatedEnergy(quake.magnitude.value)) : null,
+      depthKm: depth === null ? null : Math.abs(depth),
+      depthAboveSea: depth !== null && depth < 0,
+    };
+  });
+
+  /** What only the catalogue's record says: how well the event is located, by whom, and what it did. */
+  protected readonly record = computed(() => {
+    const data = this.data();
+    if (!data) return null;
+    const { quake, origin } = data;
+
+    return {
+      quake,
+      origin,
+      network: { code: quake.network, name: networkName(quake.network) },
+      alert: quake.alert ? { level: quake.alert, meaning: alertMeaning(quake.alert) } : null,
+      depthErrorKm: origin?.depthErrorKm ?? null,
+      depthFixed: origin?.depthType === 'operator assigned',
+      wideGap: (origin?.azimuthalGapDeg ?? 0) > WIDE_GAP_DEG,
+      revisedAfter: formatDuration(quake.updated - quake.time),
+    };
   });
 
   constructor() {
@@ -95,10 +130,10 @@ export class QuakePage {
         title.setTitle(pageTitle(`${magnitude}${view.place}`));
       } else if (problem) {
         title.setTitle(pageTitle(problemPageName(problem.status)));
-        // Server-rendered error pages carry the real status, so crawlers and
-        // monitors see a 404 for a missing event rather than a 200 page.
-        if (response) response.status = problem.status;
       }
+      // Server-rendered error pages carry the real status, so crawlers and
+      // monitors see a 404 for a missing event rather than a 200 page.
+      if (problem && response) response.status = problem.status;
     });
   }
 }

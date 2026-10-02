@@ -84,7 +84,9 @@
                 >
               </span>
               <span class="readout__hint">
-                <a [routerLink]="['/quakes', largest.quake.id]">{{ largest.place }}</a>
+                <a [routerLink]="['/quakes', largest.quake.id]" [state]="largest.link">{{
+                  largest.place
+                }}</a>
                 · {{ largest.quake.time | date: 'HH:mm' : 'UTC' }} UTC
               </span>
             } @else {

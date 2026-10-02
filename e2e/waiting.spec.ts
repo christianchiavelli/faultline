@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { EVENT_API, hold, waitForHydration } from './support/page';
+import { EVENT_API, arriveEmptyHanded, hold, readout, waitForHydration } from './support/page';
 
 /** Each label of a set of readouts, and where it sits in them. */
 const labelsOf = (readouts: Locator) =>
@@ -46,7 +46,7 @@ async function watchLinesArrive(page: Page): Promise<() => Promise<number[]>> {
 const opacityOf = (locator: Locator) =>
   locator.evaluate((element) => Number(getComputedStyle(element).opacity));
 
-test('lays the event page out while the catalogue answers, and lands the event on it', async ({
+test('opens an event on what the day knew of it, and lands the rest of its record where it waited', async ({
   page,
 }) => {
   await page.goto('/');
@@ -54,6 +54,33 @@ test('lays the event page out while the catalogue answers, and lands the event o
   const seen = await watchLinesArrive(page);
   const release = await hold(page, EVENT_API);
   await page.getByRole('link', { name: 'M6.2 Mww, South of the Fiji Islands' }).click();
+
+  // The event at once: what it was, how big, where and how deep.
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('South of the Fiji Islands');
+  await expect(page).toHaveTitle('M6.2 South of the Fiji Islands | Faultline');
+  await expect(readout(page, 'Depth')).toContainText('560.2km');
+  // Only what the catalogue's record adds waits: how well it is located, by whom, what it did.
+  await expect(readout(page, 'Solution')).toHaveText('Coming from the USGS catalogue…');
+  await expect(page.locator('fl-quake-page .facts')).toHaveAttribute('aria-hidden', 'true');
+  const line = page.locator('fl-quake-page ui-skeleton').first();
+  await expect.poll(() => opacityOf(line)).toBeGreaterThan(0.4);
+  expect(new Set(await seen())).toEqual(new Set([0]));
+  const readouts = page.locator('fl-quake-page .readouts');
+  const waiting = await labelsOf(readouts);
+
+  release();
+  await expect(readout(page, 'Solution')).toContainText('stations');
+  await expect(page.locator('fl-quake-page ui-skeleton')).toHaveCount(0);
+  // The labels the reader saw waiting are the record's, where they were.
+  expect(firstLine(await labelsOf(readouts))).toEqual(firstLine(waiting));
+});
+
+test('lays out an event it knows nothing of yet, and lands the event on it', async ({ page }) => {
+  await page.goto('/');
+  await waitForHydration(page);
+  const seen = await watchLinesArrive(page);
+  const release = await hold(page, EVENT_API);
+  await arriveEmptyHanded(page, '/quakes/us7000big');
 
   // Words for a screen reader; for the eye, the page's shape, kept out of the reader's way.
   await expect(page.getByText('Looking the event up in the USGS catalogue…')).toBeAttached();

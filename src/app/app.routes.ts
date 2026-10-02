@@ -1,4 +1,5 @@
 import type { Routes } from '@angular/router';
+import { handedOver } from './features/quake/quake-link';
 
 export const routes: Routes = [
   {
@@ -10,6 +11,7 @@ export const routes: Routes = [
     path: 'quakes/:id',
     // The page sets its own title once the event has loaded.
     loadComponent: () => import('./features/quake/quake-page').then((m) => m.QuakePage),
+    resolve: { known: handedOver },
   },
   {
     path: '**',

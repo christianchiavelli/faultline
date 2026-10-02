@@ -85,6 +85,18 @@ export async function hold(page: Page, pattern: string | RegExp): Promise<() => 
   return release;
 }
 
+/**
+ * Goes to `path` as Back or Forward would to a history entry holding nothing,
+ * like one from before a link could hand over what it knew: the page there
+ * starts from nothing, and waits for all of its data.
+ */
+export async function arriveEmptyHanded(page: Page, path: string): Promise<void> {
+  await page.evaluate((path) => {
+    history.pushState(null, '', path);
+    dispatchEvent(new PopStateEvent('popstate', { state: null }));
+  }, path);
+}
+
 /** One event, asked of the API: not the day's feed, nor the export's count or its file. */
 export const EVENT_API = /\/api\/quakes\/(?!recent|count|export)[^/?]+$/;
 

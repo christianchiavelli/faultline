@@ -6,10 +6,12 @@ import {
   withIncrementalHydration,
 } from '@angular/platform-browser';
 import {
+  PreloadAllModules,
   TitleStrategy,
   provideRouter,
   withComponentInputBinding,
   withInMemoryScrolling,
+  withPreloading,
   withViewTransitions,
 } from '@angular/router';
 import { routes } from './app.routes';
@@ -29,6 +31,8 @@ export const appConfig: ApplicationConfig = {
         skipInitialTransition: true,
         onViewTransitionCreated: crossFadeNewPages,
       }),
+      // An event's page opens on what its link knew; waiting for its code first would undo that.
+      withPreloading(PreloadAllModules),
     ),
     { provide: TitleStrategy, useClass: PageTitleStrategy },
     provideHttpClient(withFetch(), withInterceptors([transferApiErrors])),
