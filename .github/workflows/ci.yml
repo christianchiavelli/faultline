@@ -36,6 +36,10 @@ jobs:
       - name: Checks and unit tests
         run: pnpm run ci
 
+      # Every message of the templates translated into Portuguese, and none left over.
+      - name: Translations
+        run: pnpm run i18n
+
       # Last, because it is the slowest and a failure above already says more.
       - name: Production build
         run: pnpm run build

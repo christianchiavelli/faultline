@@ -2,6 +2,8 @@
 
 # Compiled output
 /dist
+# Written by `pnpm i18n` from the templates, line numbers and all: the translations are the source
+/src/locale/messages.xlf
 /tmp
 /out-tsc
 /bazel-out

@@ -32,7 +32,9 @@
     "ci": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test:coverage",
     "basemap": "node scripts/build-basemap.ts",
     "fonts": "node scripts/build-fonts.ts",
-    "screenshots": "node scripts/capture-screenshots.ts"
+    "screenshots": "node scripts/capture-screenshots.ts",
+    "dev:pt": "ng serve --configuration pt",
+    "i18n": "ng extract-i18n && node scripts/check-translations.ts"
   },
   "dependencies": {
     "@angular/common": "^22.2.0",
