@@ -84,3 +84,38 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # A runner of its own: a measurement shares the machine with nothing else.
+  vitals:
+    name: Web Vitals
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Fails when a page measures worse than its baseline; the table lands in the run's summary.
+      - name: Build and measure
+        run: pnpm vitals
+
+      # What `pnpm vitals:accept` takes as the next baseline.
+      - name: Upload the measurement
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-vitals
+          path: vitals-report/
+          retention-days: 90
