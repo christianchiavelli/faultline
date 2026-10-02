@@ -1,13 +1,5 @@
 import { DatePipe } from '@angular/common';
-import {
-  Component,
-  computed,
-  inject,
-  input,
-  signal,
-  type ElementRef,
-  viewChild,
-} from '@angular/core';
+import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { magnitudeScale } from '@shared/domain/magnitude';
 import { isNotable, type QuakeSummary } from '@shared/domain/quake';
@@ -68,6 +60,7 @@ export class Helicorder {
   readonly waiting = computed(() => this.quakes() === null);
 
   readonly #router = inject(Router);
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly paper = viewChild.required<ElementRef<HTMLElement>>('paper');
 
   /**
@@ -285,6 +278,7 @@ export class Helicorder {
     const quake = this.quakes()?.find((candidate) => candidate.id === id);
     void this.#router.navigate(['/quakes', id], {
       state: quake ? quakeLinkState(quake) : undefined,
+      info: this.#host.nativeElement,
     });
   }
 

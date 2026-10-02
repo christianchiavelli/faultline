@@ -119,7 +119,9 @@
                 <td role="cell" class="numeric magnitude" [class.magnitude--notable]="row.notable">
                   @if (row.magnitude; as magnitude) {
                     <span class="dot" aria-hidden="true" [style.--dot.px]="row.dot"></span>
-                    <span class="mono value">{{ magnitude }}</span>
+                    <span class="mono value" [attr.data-magnitude-of]="row.id">{{
+                      magnitude
+                    }}</span>
                     <abbr class="scale" [title]="row.scale!.title">{{ row.scale!.code }}</abbr>
                   } @else {
                     <span class="missing" title="No magnitude computed yet">—</span>
@@ -131,6 +133,7 @@
                     class="ledger__link"
                     [routerLink]="['/quakes', row.id]"
                     [state]="row.link"
+                    [info]="place"
                     [attr.data-id]="row.id"
                     ><ui-highlight [text]="row.where" [search]="search()"
                   /></a>

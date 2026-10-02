@@ -152,6 +152,7 @@ describe('Helicorder', () => {
 
       expect(navigate).toHaveBeenCalledWith(['/quakes', 'small'], {
         state: { quake: expect.objectContaining({ id: 'small' }) },
+        info: expect.any(HTMLElement),
       });
     });
 
@@ -223,6 +224,7 @@ describe('Helicorder', () => {
       press(reader, 'Enter');
       expect(navigate).toHaveBeenCalledWith(['/quakes', 'latest'], {
         state: { quake: expect.objectContaining({ id: 'latest' }) },
+        info: expect.any(HTMLElement),
       });
     });
 

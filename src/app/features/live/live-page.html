@@ -75,7 +75,7 @@
           <dt>Largest</dt>
           <dd [animate.enter]="arriving()">
             @if (largest(); as largest) {
-              <span class="readout__value">
+              <span class="readout__value" [attr.data-magnitude-of]="largest.quake.id">
                 M{{ largest.value
                 }}<abbr
                   class="readout__unit"
@@ -84,9 +84,13 @@
                 >
               </span>
               <span class="readout__hint">
-                <a [routerLink]="['/quakes', largest.quake.id]" [state]="largest.link">{{
-                  largest.place
-                }}</a>
+                <a
+                  #largestLink
+                  [routerLink]="['/quakes', largest.quake.id]"
+                  [state]="largest.link"
+                  [info]="largestLink"
+                  >{{ largest.place }}</a
+                >
                 · {{ largest.quake.time | date: 'HH:mm' : 'UTC' }} UTC
               </span>
             } @else {

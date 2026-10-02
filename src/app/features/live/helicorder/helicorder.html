@@ -90,9 +90,12 @@
 
       @for (marker of markers(); track marker.id) {
         <a
+          #markerLink
           class="marker mono"
           [routerLink]="['/quakes', marker.id]"
           [state]="marker.link"
+          [info]="markerLink"
+          [attr.data-magnitude-of]="marker.id"
           [style.--at]="marker.left"
           [style.top.%]="marker.top"
           [attr.aria-label]="marker.label"
@@ -116,7 +119,7 @@
         >
           <p class="card__head">
             @if (reading.magnitude; as magnitude) {
-              <span class="card__magnitude mono"
+              <span class="card__magnitude mono" [attr.data-magnitude-of]="reading.id"
                 >M{{ magnitude
                 }}<abbr [title]="reading.scale!.title">{{ reading.scale!.code }}</abbr></span
               >
@@ -126,9 +129,11 @@
             <span class="card__time mono">{{ reading.time | date: 'HH:mm:ss' : 'UTC' }} UTC</span>
           </p>
           <a
+            #cardPlace
             class="card__place"
             [routerLink]="['/quakes', reading.id]"
             [state]="reading.link"
+            [info]="cardPlace"
             tabindex="-1"
             >{{ reading.place }}</a
           >

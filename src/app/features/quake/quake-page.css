@@ -22,7 +22,10 @@
   gap: var(--space-4) var(--space-12);
 }
 
+/* Its box is its digits, so the magnitude flying in from a list lands on them (`motion.css`). */
 .numeral {
+  width: fit-content;
+  view-transition-name: magnitude;
   font-size: var(--text-display);
   font-weight: 300;
   font-stretch: 80%;

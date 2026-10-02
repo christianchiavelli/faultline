@@ -20,7 +20,10 @@ const loops = (page: Page) =>
       }),
   );
 
-/** Whether each page change since the page loaded cross-faded, or was skipped. */
+/**
+ * Whether each page change since the page loaded cross-faded, carried the
+ * magnitude read into the new page's title as it did, or was skipped.
+ */
 async function watchPageChanges(page: Page): Promise<() => Promise<string[]>> {
   await page.addInitScript(() => {
     const start = document.startViewTransition.bind(document);
@@ -30,7 +33,16 @@ async function watchPageChanges(page: Page): Promise<() => Promise<string[]>> {
       const transition = start(update);
       outcomes.push(
         transition.ready.then(
-          () => 'cross-faded',
+          () =>
+            document
+              .getAnimations()
+              .some(
+                (animation) =>
+                  (animation.effect as KeyframeEffect | null)?.pseudoElement ===
+                  '::view-transition-group(magnitude)',
+              )
+              ? 'cross-faded, the magnitude flying'
+              : 'cross-faded',
           () => 'skipped',
         ),
       );
@@ -66,14 +78,15 @@ test.describe('motion', () => {
     await expect(menu).toBeHidden();
     expect(await transitionOf(menu)).toEqual(['0.14s']);
 
-    // Navigation: a new page cross-fades in, and a change of filter swaps in place.
+    // Navigation: a new page cross-fades in, an event's carrying in the magnitude read off its
+    // label, and a change of filter swaps in place.
     await page.getByRole('link', { name: 'M6.2 Mww, South of the Fiji Islands' }).click();
     await expect(page).toHaveURL(/\/quakes\/us7000big$/);
     await page.getByRole('link', { name: 'Live', exact: true }).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       '24 hours of a restless planet',
     );
-    expect(await changes()).toEqual(['cross-faded', 'cross-faded']);
+    expect(await changes()).toEqual(['cross-faded, the magnitude flying', 'cross-faded']);
   });
 
   test('keeps every change and drops the movement under reduced motion', async ({ browser }) => {
