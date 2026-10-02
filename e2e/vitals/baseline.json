@@ -1,23 +1,23 @@
 {
   "measured": "2026-10-02",
   "runs": [
-    "https://github.com/christianchiavelli/faultline/actions/runs/37042287686",
-    "https://github.com/christianchiavelli/faultline/actions/runs/37043588793"
+    "https://github.com/christianchiavelli/faultline/actions/runs/37071099109",
+    "https://github.com/christianchiavelli/faultline/actions/runs/37071771417"
   ],
   "pages": {
     "live": {
       "name": "The live page",
       "path": "/",
-      "LCP": 836,
-      "CLS": 0.0373,
-      "INP": 204
+      "LCP": 860,
+      "CLS": 0,
+      "INP": 172
     },
     "quake": {
       "name": "An event's page",
       "path": "/quakes/us6000tz62",
-      "LCP": 810,
-      "CLS": 0.0012,
-      "INP": 168
+      "LCP": 834,
+      "CLS": 0,
+      "INP": 96
     }
   }
 }

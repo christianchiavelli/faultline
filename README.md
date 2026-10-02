@@ -159,10 +159,10 @@ Every push also measures the Core Web Vitals, on the phone and connection of Lig
 
 | Page            | LCP    | CLS   | INP    |
 | --------------- | ------ | ----- | ------ |
-| The live page   | 0.84 s | 0.037 | 204 ms |
-| An event's page | 0.81 s | 0.001 | 168 ms |
+| The live page   | 0.86 s | 0.000 | 172 ms |
+| An event's page | 0.83 s | 0.000 | 96 ms  |
 
-Measured on 2 October 2026, the median of two runs in CI ([1](https://github.com/christianchiavelli/faultline/actions/runs/37042287686), [2](https://github.com/christianchiavelli/faultline/actions/runs/37043588793)).
+Measured on 2 October 2026, the median of two runs in CI ([1](https://github.com/christianchiavelli/faultline/actions/runs/37071099109), [2](https://github.com/christianchiavelli/faultline/actions/runs/37071771417)).
 <!-- /web-vitals -->
 
 Google rates a page good up to 2.5 s, 0.1 and 200 ms, at the 75th percentile of real visits.
