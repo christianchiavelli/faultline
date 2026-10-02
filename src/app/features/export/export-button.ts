@@ -7,11 +7,14 @@ import { DEFAULT_PRESET, type ExportPreset } from './export-request';
 /**
  * The way into an export: a tool button in the event log, or, given an
  * `event`, a link under that event's map. The dialog behind it is a separate
- * chunk, fetched when the browser is idle and rendered on the first click.
+ * chunk, rendered closed while the browser is idle, so that a tap only has to
+ * show it: building it, its form and its query takes a phone longer than a
+ * tap can wait for its answer.
  *
- * It renders when `open` turns true rather than on an interaction trigger:
- * a click that lands before the log has hydrated is replayed to the handler,
- * never to a trigger's listener, and would otherwise open nothing.
+ * It also renders when `open` turns true rather than on an interaction
+ * trigger: a click that lands before the log has hydrated, or before the
+ * browser was idle, is replayed to the handler, never to a trigger's
+ * listener, and would otherwise open nothing.
  */
 @Component({
   selector: 'fl-export-button',
@@ -33,7 +36,7 @@ import { DEFAULT_PRESET, type ExportPreset } from './export-request';
       }
     </button>
 
-    @defer (when open(); prefetch on idle) {
+    @defer (on idle; when open()) {
       <fl-export-dialog [(open)]="open" [event]="event()" [preset]="preset()" />
     }
   `,
