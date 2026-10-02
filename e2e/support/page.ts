@@ -128,6 +128,11 @@ export async function traceOrigin(page: Page, id: string): Promise<{ x: number; 
     const body = await (await fetch('/api/quakes/recent?window=day')).json();
     return (body.quakes as { id: string; time: number }[]).find((quake) => quake.id === id)!.time;
   }, id);
+  return tracePoint(page, time);
+}
+
+/** Where a moment of the last 24 hours sits on the helicorder, as `traceOrigin()` places an event. */
+export async function tracePoint(page: Page, time: number): Promise<{ x: number; y: number }> {
   const current = Number(await page.locator('fl-helicorder .hours__current').textContent());
   let last = Math.floor(Date.now() / HOUR) * HOUR;
   if (new Date(last).getUTCHours() !== current) last -= HOUR;

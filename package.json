@@ -34,7 +34,10 @@
     "fonts": "node scripts/build-fonts.ts",
     "screenshots": "node scripts/capture-screenshots.ts",
     "dev:pt": "ng serve --configuration pt",
-    "i18n": "ng extract-i18n && node scripts/check-translations.ts"
+    "i18n": "ng extract-i18n && node scripts/check-translations.ts",
+    "vitals": "ng build && playwright test --config playwright.vitals.config.ts",
+    "vitals:accept": "node scripts/accept-vitals.ts",
+    "vitals:day": "node scripts/record-day.ts"
   },
   "dependencies": {
     "@angular/common": "^22.2.0",
@@ -76,6 +79,7 @@
     "prettier": "^3.9.9",
     "typescript": "~6.0.3",
     "typescript-eslint": "8.69.0",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.2",
+    "web-vitals": "^6.2.2"
   }
 }

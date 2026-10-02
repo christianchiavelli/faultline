@@ -100,7 +100,8 @@
               "src/**/*.html",
               "src/**/*.css",
               "e2e/**/*.ts",
-              "playwright.config.ts"
+              "playwright.config.ts",
+              "playwright.vitals.config.ts"
             ]
           }
         },

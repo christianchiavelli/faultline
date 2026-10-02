@@ -7,4 +7,7 @@ pnpm-lock.yaml
 src/styles/fonts.css
 test-results
 playwright-report
+vitals-report
+# Recorded off the USGS, one event a line
+e2e/vitals/day.json
 blob-report

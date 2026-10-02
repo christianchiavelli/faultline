@@ -18,8 +18,13 @@
  * only counted, never listed: enough to take a month past what one export
  * holds.
  *
+ * For the Web Vitals, `STUB_DAY` names a day recorded off the real feed
+ * instead (`scripts/record-day.ts`): a couple of hundred events, the size
+ * a page's speed depends on, served the same way and just as still.
+ *
  * Run by Playwright with plain `node`, which strips the types.
  */
+import { readFileSync } from 'node:fs';
 import { createServer, type ServerResponse } from 'node:http';
 
 interface StubEvent {
@@ -175,7 +180,9 @@ const EVENTS: readonly StubEvent[] = [
 ];
 
 /** Origin products, as the FDSN service publishes them: every property a string. */
-const ORIGINS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+type Origins = Readonly<Record<string, Readonly<Record<string, string>>>>;
+
+const ORIGINS: Origins = {
   us7000big: {
     'horizontal-error': '7.4',
     'vertical-error': '3.1',
@@ -191,6 +198,18 @@ const ORIGINS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
     'depth-type': 'operator assigned',
   },
 };
+
+interface Day {
+  readonly events: readonly StubEvent[];
+  readonly origins: Origins;
+  /** A record that fails validation, as the real feed has now and then. */
+  readonly broken: boolean;
+}
+
+const RECORDED = process.env['STUB_DAY'];
+const SERVED: Day = RECORDED
+  ? { ...(JSON.parse(readFileSync(RECORDED, 'utf8')) as Day), broken: false }
+  : { events: EVENTS, origins: ORIGINS, broken: true };
 
 const timeOf = (event: StubEvent, now: number) => Math.round(now - event.hoursAgo * HOUR);
 
@@ -290,7 +309,8 @@ function distanceKm(event: StubEvent, to: { latitude: number; longitude: number 
 }
 
 function listed(search: Search, now: number) {
-  return EVENTS.map((event) => ({ event, time: timeOf(event, now) }))
+  return SERVED.events
+    .map((event) => ({ event, time: timeOf(event, now) }))
     .filter(({ event, time }) => matches(event, time, search))
     .sort((a, b) => a.time - b.time);
 }
@@ -351,8 +371,10 @@ createServer((req, res) => {
 
   if (url.pathname === '/earthquakes/feed/v1.0/summary/all_day.geojson') {
     const features = [
-      ...EVENTS.map((event) => feature(event, now)),
-      { type: 'Feature', id: 'broken', properties: { mag: 2 }, geometry: null },
+      ...SERVED.events.map((event) => feature(event, now)),
+      ...(SERVED.broken
+        ? [{ type: 'Feature', id: 'broken', properties: { mag: 2 }, geometry: null }]
+        : []),
     ];
     return send(res, 200, {
       type: 'FeatureCollection',
@@ -381,10 +403,10 @@ createServer((req, res) => {
     const id = url.searchParams.get('eventid');
     if (id === 'zzgone') return send(res, 409, 'Error 409: Conflict');
 
-    const event = EVENTS.find((candidate) => candidate.id === id);
+    const event = SERVED.events.find((candidate) => candidate.id === id);
     if (!event) return send(res, 404, 'Error 404: Not Found');
 
-    const origin = ORIGINS[event.id];
+    const origin = SERVED.origins[event.id];
     const detail = feature(event, now);
     return send(res, 200, {
       ...detail,

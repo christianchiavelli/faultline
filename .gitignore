@@ -51,4 +51,5 @@ Thumbs.db
 # Playwright
 /test-results
 /playwright-report
+/vitals-report
 /blob-report
