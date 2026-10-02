@@ -113,18 +113,34 @@ async function throttle(page: Page): Promise<void> {
 }
 
 /**
- * Two frames, then the first moment the main thread has nothing to do: what
- * the last input set off has painted, and has been measured. A reader waits
- * as long for a page to answer before touching it again.
+ * Waits for the page to go quiet: a second without a long frame, then the
+ * first moment the main thread has nothing to do. What the last input set off
+ * has painted, been measured, and been cleared up after, by the collector
+ * too, which can trail a large render by a second or more. A reader takes
+ * longer to look before touching the page again, and an interaction measured
+ * on the tail of the one before would blame it for that one's work.
  */
 export async function settle(page: Page): Promise<void> {
   await page.evaluate(
     () =>
-      new Promise<void>((resolve) =>
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => requestIdleCallback(() => resolve(), { timeout: 2_000 })),
-        ),
-      ),
+      new Promise<void>((resolve) => {
+        let quiet: ReturnType<typeof setTimeout> | undefined;
+        const done = () => {
+          clearTimeout(quiet);
+          clearTimeout(limit);
+          observer.disconnect();
+          requestIdleCallback(() => resolve(), { timeout: 2_000 });
+        };
+        const wait = () => {
+          clearTimeout(quiet);
+          quiet = setTimeout(done, 1_000);
+        };
+        const observer = new PerformanceObserver(wait);
+        observer.observe({ type: 'long-animation-frame' });
+        wait();
+        // A page that is never quiet is measured anyway, after as long as a reader would wait.
+        const limit = setTimeout(done, 5_000);
+      }),
   );
 }
 
