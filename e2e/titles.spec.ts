@@ -12,6 +12,11 @@ const TITLES = {
   '/quakes/zz404': 'Event not found | Faultline',
   '/quakes/zzgone': 'Event deleted | Faultline',
   '/nowhere': 'Page not found | Faultline',
+  '/pt/': 'Faultline',
+  '/pt/quakes/us7000big': 'M6,2 South of the Fiji Islands | Faultline',
+  '/pt/quakes/zz404': 'Evento não encontrado | Faultline',
+  '/pt/quakes/zzgone': 'Evento apagado | Faultline',
+  '/pt/nowhere': 'Página não encontrada | Faultline',
 };
 
 test.use({ javaScriptEnabled: false });

@@ -18,6 +18,22 @@ export function recordApiCalls(page: Page): readonly string[] {
   return calls;
 }
 
+/**
+ * Every error the page reports from now on, thrown or logged. A document the
+ * server answered with an error status logs that it failed to load: that is
+ * the page saying what it was told, not a fault of its own.
+ */
+export function recordErrors(page: Page): readonly string[] {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => {
+    if (message.type() === 'error' && !message.text().startsWith('Failed to load resource')) {
+      errors.push(message.text());
+    }
+  });
+  return errors;
+}
+
 /** The UTC clock only ticks in the browser, so a new time means the app has hydrated. */
 export async function waitForHydration(page: Page): Promise<void> {
   const clock = page.locator('.clock');

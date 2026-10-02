@@ -19,13 +19,24 @@ const PAGES = [
   '/quakes/us7000big',
   '/quakes/us7000tonga',
   '/quakes/zz404',
+  // Portuguese words run longer, and its pages are a build of their own.
+  '/pt/',
+  '/pt/?mag=any&rows=all',
+  '/pt/quakes/us7000big',
+  '/pt/quakes/zz404',
 ];
 const THEMES = ['paper', 'film'] as const;
 
 /** The export dialog in its two fullest states: offering suggestions, and a file near an event. */
 const DIALOGS = [
-  { path: '/?mag=any', button: 'Export…', period: '30 days' },
-  { path: '/quakes/us7000big', button: 'Export the events near this one…', period: null },
+  { path: '/?mag=any', button: 'Export…', heading: 'Export events', period: '30 days' },
+  {
+    path: '/quakes/us7000big',
+    button: 'Export the events near this one…',
+    heading: 'Export events',
+    period: null,
+  },
+  { path: '/pt/?mag=any', button: 'Exportar…', heading: 'Exportar eventos', period: '30 dias' },
 ];
 
 /** Every violation, readable on failure: which rule, and where. */
@@ -154,12 +165,12 @@ for (const theme of THEMES) {
       expect(await audit(page)).toEqual([]);
     });
 
-    for (const { path, button, period } of DIALOGS) {
+    for (const { path, button, heading, period } of DIALOGS) {
       test(`the export dialog on ${path} meets WCAG 2.2 AA`, async ({ page }) => {
         await page.goto(path);
         await waitForHydration(page);
         await page.getByRole('button', { name: button }).click();
-        const dialog = page.getByRole('dialog', { name: 'Export events' });
+        const dialog = page.getByRole('dialog', { name: heading });
         if (period) await dialog.locator('label').filter({ hasText: period }).click();
         // The fullest footer: a count, or the suggestions that replace one.
         await expect(dialog.locator('.suggestion, a[download]').first()).toBeVisible();
