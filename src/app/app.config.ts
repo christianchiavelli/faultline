@@ -3,6 +3,7 @@ import { provideBrowserGlobalErrorListeners, type ApplicationConfig } from '@ang
 import {
   provideClientHydration,
   withEventReplay,
+  withI18nSupport,
   withIncrementalHydration,
 } from '@angular/platform-browser';
 import {
@@ -36,6 +37,7 @@ export const appConfig: ApplicationConfig = {
     ),
     { provide: TitleStrategy, useClass: PageTitleStrategy },
     provideHttpClient(withFetch(), withInterceptors([transferApiErrors])),
-    provideClientHydration(withEventReplay(), withIncrementalHydration()),
+    // Without i18n support, hydration skips every component that holds a translated message.
+    provideClientHydration(withEventReplay(), withIncrementalHydration(), withI18nSupport()),
   ],
 };

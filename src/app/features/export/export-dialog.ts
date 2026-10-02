@@ -1,5 +1,14 @@
-import { DecimalPipe, I18nPluralPipe, formatDate } from '@angular/common';
-import { Component, computed, inject, input, linkedSignal, model, untracked } from '@angular/core';
+import { DecimalPipe, formatDate } from '@angular/common';
+import {
+  Component,
+  LOCALE_ID,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  model,
+  untracked,
+} from '@angular/core';
 import {
   FormField,
   applyWhen,
@@ -14,13 +23,13 @@ import { Clock } from '@core/clock';
 import { EXPORT_COLUMNS, EXPORT_LIMIT, exportDateRangeSchema } from '@shared/api/export';
 import type { QuakeSummary } from '@shared/domain/quake';
 import { provideTanStackQuery } from '@tanstack/angular-query-experimental';
+import { DATES } from '@ui/dates';
 import { Dialog } from '@ui/dialog';
 import { Icon } from '@ui/icon';
 import {
   DEFAULT_PRESET,
   DEPTH_CHOICES,
   KIND_CHOICES,
-  MAGNITUDE_CHOICES,
   RADIUS_CHOICES,
   REVIEW_CHOICES,
   describeFile,
@@ -28,6 +37,7 @@ import {
   describePeriod,
   initialForm,
   isoDay,
+  magnitudeChoices,
   periodChoices,
   suggestionsFor,
   toAnchor,
@@ -35,6 +45,13 @@ import {
   type ExportPreset,
   type Suggestion,
 } from './export-request';
+
+/** The custom period's rules, the BFF's own, worded for the reader. */
+const DATE_RANGE = exportDateRangeSchema({
+  missing: $localize`:error under a date field of the export that holds no date:Enter a date.`,
+  beforeRecord: $localize`:error under a date field of the export, before the catalogue starts:The catalogue starts in 1900.`,
+  inverted: $localize`:error under the end date of a period that ends before it starts:End on or after the start.`,
+});
 
 type Footer =
   | { readonly kind: 'invalid' | 'counting' | 'error' }
@@ -52,7 +69,7 @@ type Footer =
  */
 @Component({
   selector: 'fl-export-dialog',
-  imports: [Dialog, Icon, FormField, DecimalPipe, I18nPluralPipe],
+  imports: [Dialog, Icon, FormField, DecimalPipe],
   providers: [provideTanStackQuery(QUERY_CLIENT)],
   templateUrl: './export-dialog.html',
   styleUrl: './export-dialog.css',
@@ -65,12 +82,13 @@ export class ExportDialog {
   readonly preset = input<ExportPreset>(DEFAULT_PRESET);
 
   readonly #now = inject(Clock).now;
+  readonly #locale = inject(LOCALE_ID);
   /** The counts are for this minute: the clock ticks every second, the query only when this moves. */
   readonly #minute = computed(() => Math.ceil(this.#now() / 60_000) * 60_000);
 
   protected readonly anchor = computed(() => {
     const event = this.event();
-    return event ? toAnchor(event) : null;
+    return event ? toAnchor(event, this.#locale) : null;
   });
 
   /** Starts again from the defaults when the page it was opened from changes, and not before. */
@@ -84,10 +102,13 @@ export class ExportDialog {
       ({ valueOf }) => valueOf(path.period) === 'custom',
       (custom) => {
         // The same rules the BFF applies, from the same schema.
-        validateStandardSchema(custom.custom, exportDateRangeSchema);
+        validateStandardSchema(custom.custom, DATE_RANGE);
         validate(custom.custom.to, ({ value }) =>
           value() > isoDay(this.#now())
-            ? { kind: 'future', message: 'Pick a day up to today.' }
+            ? {
+                kind: 'future',
+                message: $localize`:error under the end date of the export, a day still to come:Pick a day up to today.`,
+              }
             : null,
         );
       },
@@ -95,14 +116,13 @@ export class ExportDialog {
   });
 
   protected readonly periods = computed(() => periodChoices(this.anchor()));
-  protected readonly magnitudes = MAGNITUDE_CHOICES;
+  protected readonly magnitudes = magnitudeChoices(this.#locale);
   protected readonly depths = DEPTH_CHOICES;
   protected readonly radii = RADIUS_CHOICES;
   protected readonly reviews = REVIEW_CHOICES;
   protected readonly kinds = KIND_CHOICES;
   protected readonly columns = EXPORT_COLUMNS.length;
   protected readonly limit = EXPORT_LIMIT;
-  protected readonly events = { '=1': 'event', other: 'events' };
 
   protected readonly query = computed(() =>
     this.form().valid() ? toQuery(this.model(), this.anchor(), this.#minute()) : null,
@@ -123,24 +143,26 @@ export class ExportDialog {
   protected readonly lede = computed(() => {
     const anchor = this.anchor();
     if (!anchor) {
-      return 'A file for a spreadsheet or a map, straight from the USGS catalogue. Times are UTC.';
+      return $localize`:lede of the export dialog, opened from the log:A file for a spreadsheet or a map, straight from the USGS catalogue. Times are UTC.`;
     }
-    const when = formatDate(anchor.time, "d MMM yyyy 'at' HH:mm", 'en-US', 'UTC');
-    return `Around ${anchor.description}, on ${when} UTC.`;
+    const when = formatDate(anchor.time, DATES.dateAtTime, this.#locale, 'UTC');
+    return $localize`:lede of the export dialog opened from an event, as in Around the M7.8 66 km NNW of Ende, Indonesia, on 14 Aug 2026 at 21.58 UTC:Around ${anchor.description}:event:, on ${when}:when: UTC.`;
   });
 
   /** What the log filtered by and the catalogue cannot, said before the reader counts on it. */
-  protected readonly leftOut = computed(() => describeLeftOut(this.preset().leftOut));
+  protected readonly leftOut = computed(() => describeLeftOut(this.preset().leftOut, this.#locale));
 
   protected readonly periodText = computed(() => {
     const query = this.query();
-    return query ? describePeriod(this.model(), query) : '';
+    return query ? describePeriod(this.model(), query, this.#locale) : '';
   });
 
   protected readonly fileText = computed(() => {
     const query = this.query();
     const footer = this.footer();
-    return query && 'count' in footer ? describeFile(query, footer.count, this.model().format) : '';
+    return query && 'count' in footer
+      ? describeFile(query, footer.count, this.model().format, this.#locale)
+      : '';
   });
 
   protected readonly downloadUrl = computed(() => {
@@ -156,7 +178,7 @@ export class ExportDialog {
     const footer = this.footer();
     const query = this.query();
     return footer.kind === 'over' && footer.settled && query
-      ? suggestionsFor(this.model(), query, footer.count, this.anchor())
+      ? suggestionsFor(this.model(), query, footer.count, this.anchor(), this.#locale)
       : [];
   });
 

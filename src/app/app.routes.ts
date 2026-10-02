@@ -15,7 +15,7 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    title: 'Page not found',
+    title: $localize`:tab title of a page that does not exist:Page not found`,
     loadComponent: () => import('./features/not-found/not-found-page').then((m) => m.NotFoundPage),
   },
 ];

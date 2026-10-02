@@ -1,6 +1,11 @@
+import { registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
 import { aQuake } from '@shared/testing/quake-fixture';
 import { describeEvent, eventAt, place } from './reading';
 import { HOUR_MS, type TraceEvent } from './trace';
+
+// The build adds the data of the locale it is made in; a test in another one adds its own.
+registerLocaleData(localePt);
 
 const FIRST = Date.UTC(2026, 8, 28, 7);
 const NOW = Date.UTC(2026, 8, 29, 6, 30);
@@ -114,6 +119,7 @@ describe('describeEvent', () => {
         review: 'automatic',
         location: { latitude: 62.4, longitude: -150.8, depthKm: 80.7 },
       }),
+      'en-GB',
     );
 
     expect(description).toMatchObject({
@@ -137,6 +143,7 @@ describe('describeEvent', () => {
         kind: 'quarry blast',
         location: { latitude: 19.2, longitude: -155.5, depthKm: -1.2 },
       }),
+      'en-GB',
     );
 
     expect(description).toMatchObject({
@@ -150,8 +157,21 @@ describe('describeEvent', () => {
   });
 
   it('writes a magnitude below zero with a real minus sign', () => {
-    expect(describeEvent(aQuake({ magnitude: { value: -0.4, type: 'md' } })).magnitude).toBe(
-      '−0.4',
+    expect(
+      describeEvent(aQuake({ magnitude: { value: -0.4, type: 'md' } }), 'en-GB').magnitude,
+    ).toBe('−0.4');
+  });
+
+  it("sets its numbers in the page's language", () => {
+    const description = describeEvent(
+      aQuake({
+        magnitude: { value: 5.1, type: 'mww' },
+        location: { latitude: 62.4, longitude: -150.8, depthKm: 10 },
+      }),
+      'pt-BR',
     );
+
+    expect(description).toMatchObject({ magnitude: '5,1', depth: { km: '10,0', above: false } });
+    expect(description.text).toMatch(/^M5,1 Mww, /);
   });
 });

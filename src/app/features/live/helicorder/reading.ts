@@ -5,9 +5,10 @@
  * after its origin. Most small events draw no visible burst at all, and this
  * is how a reader finds them.
  */
-import { magnitudeScale } from '@shared/domain/magnitude';
-import { EARTHQUAKE_KIND, type QuakeSummary } from '@shared/domain/quake';
-import { capitalise } from '@ui/text';
+import { depthPhrase, kindName, placeName } from '@core/words/domain';
+import { describeScale } from '@core/words/magnitude';
+import { isEarthquake, type QuakeSummary } from '@shared/domain/quake';
+import { formatDecimal } from '@ui/numbers';
 import { HOUR_MS, burstDuration, type TraceEvent } from './trace';
 
 /** Where an event sits on the drum: its origin, and every line its burst runs along. */
@@ -110,37 +111,43 @@ export interface EventDescription {
   readonly text: string;
 }
 
-export function describeEvent(quake: QuakeSummary): EventDescription {
-  const scale = quake.magnitude ? magnitudeScale(quake.magnitude.type) : null;
-  const magnitude = quake.magnitude ? minus(quake.magnitude.value.toFixed(1)) : null;
-  const place = quake.place ? capitalise(quake.place) : 'Location not described';
+/** `locale` sets its numbers: "M5.1, 10.0 km deep" in English, "M5,1, 10,0 km de profundidade" in Portuguese. */
+export function describeEvent(quake: QuakeSummary, locale: string): EventDescription {
+  const scale = quake.magnitude ? describeScale(quake.magnitude.type) : null;
+  const magnitude = quake.magnitude ? formatDecimal(quake.magnitude.value, locale, '1.1-1') : null;
+  const place = placeName(quake.place);
   const depthKm = quake.location.depthKm;
-  const depth = depthKm === null ? null : { km: Math.abs(depthKm).toFixed(1), above: depthKm < 0 };
-  const kind = quake.kind === EARTHQUAKE_KIND ? null : quake.kind;
+  const depth =
+    depthKm === null
+      ? null
+      : { km: formatDecimal(Math.abs(depthKm), locale, '1.1-1'), above: depthKm < 0 };
+  const kind = isEarthquake(quake) ? null : kindName(quake.kind);
   const reviewed = quake.review === 'reviewed';
 
   const text = [
-    magnitude && scale ? `M${magnitude} ${scale.code}` : 'No magnitude yet',
+    magnitude && scale
+      ? `M${magnitude} ${scale.code}`
+      : $localize`:read out for an event the USGS has not sized yet:No magnitude yet`,
     place,
     `${new Date(quake.time).toISOString().slice(11, 19)} UTC`,
-    depth ? `${depth.km} km ${depth.above ? 'above sea level' : 'deep'}` : 'depth unknown',
+    depthKm === null
+      ? $localize`:read out for an event of unknown depth:depth unknown`
+      : depthPhrase(depthKm, locale),
     kind,
-    reviewed ? 'reviewed' : 'automatic',
+    reviewed
+      ? $localize`:review status of one event, read out after its other facts|checked by a seismologist:reviewed`
+      : $localize`:review status of one event, read out after its other facts|not yet checked by a seismologist:automatic`,
   ]
     .filter(Boolean)
     .join(', ');
 
   return {
     magnitude,
-    scale: scale ? { code: scale.code, title: `${scale.name}. ${scale.summary}` } : null,
+    scale: scale ? { code: scale.code, title: scale.title } : null,
     place,
     depth,
     reviewed,
     kind,
     text,
   };
-}
-
-function minus(text: string): string {
-  return text.replace('-', '−');
 }

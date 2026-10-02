@@ -10,119 +10,37 @@
 export type MagnitudeFamily =
   'moment' | 'body-wave' | 'surface-wave' | 'local' | 'duration' | 'energy' | 'other';
 
+/** A scale as the catalogue names it. What it is called, and what it measures, the app says in words. */
 export interface MagnitudeScale {
+  /** The catalogue's code, lowercased: the key its words are kept under. */
+  readonly key: string;
   /** Display code, cased the way seismologists write it. */
   readonly code: string;
-  readonly name: string;
   readonly family: MagnitudeFamily;
-  readonly summary: string;
 }
 
-const SCALES: Readonly<Record<string, MagnitudeScale>> = {
-  mww: {
-    code: 'Mww',
-    name: 'Moment W-phase',
-    family: 'moment',
-    summary:
-      'From a moment tensor inversion of the W-phase. The authoritative USGS magnitude when it exists.',
-  },
-  mwc: {
-    code: 'Mwc',
-    name: 'Centroid moment',
-    family: 'moment',
-    summary: 'From a centroid moment tensor inversion of long-period surface waves.',
-  },
-  mwb: {
-    code: 'Mwb',
-    name: 'Body-wave moment',
-    family: 'moment',
-    summary: 'From a moment tensor inversion of long-period P and SH body waves.',
-  },
-  mwr: {
-    code: 'Mwr',
-    name: 'Regional moment',
-    family: 'moment',
-    summary: 'From the seismic moment of a regional moment tensor inversion, for about M4 to 6.5.',
-  },
-  mw: {
-    code: 'Mw',
-    name: 'Moment',
-    family: 'moment',
-    summary: 'From the seismic moment: the physical size of the rupture, not how hard it shook.',
-  },
-  mwp: {
-    code: 'Mwp',
-    name: 'Integrated P-wave',
-    family: 'moment',
-    summary:
-      'A moment estimate from the integral of the P-wave displacement, used for fast alerts.',
-  },
-  mi: {
-    code: 'Mi',
-    name: 'Integrated P-wave',
-    family: 'moment',
-    summary:
-      'A moment estimate from the integral of the P-wave displacement, used for fast alerts.',
-  },
-  ms: {
-    code: 'Ms',
-    name: 'Surface wave',
-    family: 'surface-wave',
-    summary: 'From the amplitude of Rayleigh surface waves at a period near 20 seconds.',
-  },
-  ms_20: {
-    code: 'Ms20',
-    name: 'Surface wave',
-    family: 'surface-wave',
-    summary: 'From the amplitude of Rayleigh surface waves at a period near 20 seconds.',
-  },
-  mb: {
-    code: 'mb',
-    name: 'Short-period body wave',
-    family: 'body-wave',
-    summary: 'From the amplitude of the first P waves at about 1 second, for about M4 to 6.5.',
-  },
-  mb_lg: {
-    code: 'mb_Lg',
-    name: 'Lg wave',
-    family: 'surface-wave',
-    summary: 'For regional events, from the amplitude of Lg surface waves.',
-  },
-  ml: {
-    code: 'ML',
-    name: 'Local',
-    family: 'local',
-    summary: 'The original 1935 Richter and Gutenberg relationship for local earthquakes.',
-  },
-  md: {
-    code: 'Md',
-    name: 'Duration',
-    family: 'duration',
-    summary: 'From how long the shaking lasts. Used for small events, about M4 and below.',
-  },
-  me: {
-    code: 'Me',
-    name: 'Energy',
-    family: 'energy',
-    summary: 'From the radiated seismic energy, integrated from digital waveforms.',
-  },
-  mh: {
-    code: 'Mh',
-    name: 'Non-standard',
-    family: 'other',
-    summary: 'A non-standard method, used when the standard ones will not work.',
-  },
+const SCALES: Readonly<Record<string, Omit<MagnitudeScale, 'key'>>> = {
+  mww: { code: 'Mww', family: 'moment' },
+  mwc: { code: 'Mwc', family: 'moment' },
+  mwb: { code: 'Mwb', family: 'moment' },
+  mwr: { code: 'Mwr', family: 'moment' },
+  mw: { code: 'Mw', family: 'moment' },
+  mwp: { code: 'Mwp', family: 'moment' },
+  mi: { code: 'Mi', family: 'moment' },
+  ms: { code: 'Ms', family: 'surface-wave' },
+  ms_20: { code: 'Ms20', family: 'surface-wave' },
+  mb: { code: 'mb', family: 'body-wave' },
+  mb_lg: { code: 'mb_Lg', family: 'surface-wave' },
+  ml: { code: 'ML', family: 'local' },
+  md: { code: 'Md', family: 'duration' },
+  me: { code: 'Me', family: 'energy' },
+  mh: { code: 'Mh', family: 'other' },
 };
 
+/** A code the catalogue does not define stays as the network wrote it, measuring what that network says. */
 export function magnitudeScale(type: string): MagnitudeScale {
-  return (
-    SCALES[type.toLowerCase()] ?? {
-      code: type,
-      name: 'Network-specific',
-      family: 'other',
-      summary: 'A magnitude type specific to the network that reported the event.',
-    }
-  );
+  const key = type.toLowerCase();
+  return { key, ...(SCALES[key] ?? { code: type, family: 'other' }) };
 }
 
 /**

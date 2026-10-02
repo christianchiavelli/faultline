@@ -1,9 +1,19 @@
 import { DatePipe } from '@angular/common';
-import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  LOCALE_ID,
+  computed,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { placeName, reviewTag } from '@core/words/domain';
 import { magnitudeScale } from '@shared/domain/magnitude';
-import { isNotable, type QuakeSummary } from '@shared/domain/quake';
-import { capitalise } from '@ui/text';
+import { NOTABLE_MAGNITUDE, isNotable, type QuakeSummary } from '@shared/domain/quake';
+import { formatDecimal } from '@ui/numbers';
 import { quakeLinkState, type QuakeLinkState } from '../../quake/quake-link';
 import { describeEvent, eventAt, place } from './reading';
 import {
@@ -61,6 +71,7 @@ export class Helicorder {
 
   readonly #router = inject(Router);
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
+  readonly #locale = inject(LOCALE_ID);
   private readonly paper = viewChild.required<ElementRef<HTMLElement>>('paper');
 
   /**
@@ -87,6 +98,8 @@ export class Helicorder {
   readonly viewBox = `0 0 ${ROW_WIDTH} ${HOURS * ROW_HEIGHT}`;
   readonly gridLines = Array.from({ length: 11 }, (_, i) => (i + 1) * FIVE_MINUTES);
   readonly quarterHour = FIVE_MINUTES * 3;
+  /** The magnitude the pen turns red at, as the key names it. */
+  readonly notable = formatDecimal(NOTABLE_MAGNITUDE, this.#locale, '1.1-1');
   readonly height = HOURS * ROW_HEIGHT;
   readonly line = 100 / HOURS;
   readonly hintId = `helicorder-keys-${nextId++}`;
@@ -112,17 +125,16 @@ export class Helicorder {
       .filter((quake) => quake.time >= first)
       .map((quake) => {
         const magnitude = quake.magnitude!;
-        const scale = magnitudeScale(magnitude.type);
+        const value = formatDecimal(magnitude.value, this.#locale, '1.1-1');
         // Anchored where the burst ends, which can be on the next row.
         const end = quake.time + burstDuration(magnitude.value) - first;
         const row = Math.min(rows.length - 1, Math.floor(end / HOUR_MS));
-        const place = quake.place ? capitalise(quake.place) : 'location not described';
         return {
           id: quake.id,
           left: Math.min(100, ((end - row * HOUR_MS) / HOUR_MS) * 100),
           top: ((row + 0.5) / rows.length) * 100,
-          text: `M${magnitude.value.toFixed(1)}`,
-          label: `M${magnitude.value.toFixed(1)} ${scale.code}, ${place}`,
+          text: `M${value}`,
+          label: `M${value} ${magnitudeScale(magnitude.type).code}, ${placeName(quake.place)}`,
           link: quakeLinkState(quake),
         };
       });
@@ -158,7 +170,8 @@ export class Helicorder {
     const quake = placed && this.quakes()?.find((candidate) => candidate.id === placed.id);
     if (!selected || !placed || !quake) return null;
     return {
-      ...describeEvent(quake),
+      ...describeEvent(quake, this.#locale),
+      review: reviewTag(quake.review),
       id: quake.id,
       time: quake.time,
       link: quakeLinkState(quake),
@@ -182,7 +195,7 @@ export class Helicorder {
   readonly positionText = computed(() => {
     const id = this.placed()[this.position()]?.id;
     const quake = id && this.quakes()?.find((candidate) => candidate.id === id);
-    return quake ? describeEvent(quake).text : null;
+    return quake ? describeEvent(quake, this.#locale).text : null;
   });
 
   protected hover(event: PointerEvent): void {

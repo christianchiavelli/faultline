@@ -1,3 +1,5 @@
+import { registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
 import type { Quake } from '@shared/domain/quake';
 import { aQuake } from '@shared/testing/quake-fixture';
 import {
@@ -23,6 +25,9 @@ const day: Quake[] = [
   aQuake({ id: 'j1', place: '30 km E of Hualien City, Taiwan', location: at(24, null) }),
   aQuake({ id: 'f1', place: 'south of the Fiji Islands' }),
 ];
+
+// The build adds the data of the locale it is made in; a test in another one adds its own.
+registerLocaleData(localePt);
 
 const entries = toEntries(day);
 const facet = (facets: readonly Facet[], key: string) => facets.find((f) => f.key === key)!;
@@ -87,7 +92,7 @@ describe('matches, searching', () => {
   });
 
   it('counts the options of every facet within the search', () => {
-    const facets = facetsOf(entries, { ...DEFAULT_LOG_QUERY, search: 'alaska' });
+    const facets = facetsOf(entries, { ...DEFAULT_LOG_QUERY, search: 'alaska' }, 'en-GB');
 
     expect(facet(facets, 'region').options.map((o) => [o.label, o.count])).toEqual([
       ['Anywhere', 3],
@@ -98,7 +103,7 @@ describe('matches, searching', () => {
 
 describe('facetsOf', () => {
   it('counts each option with the other filters kept', () => {
-    const facets = facetsOf(entries, { ...DEFAULT_LOG_QUERY, region: 'alaska' });
+    const facets = facetsOf(entries, { ...DEFAULT_LOG_QUERY, region: 'alaska' }, 'en-GB');
 
     expect(counts(facet(facets, 'depth'))).toEqual({
       Any: 3,
@@ -112,7 +117,7 @@ describe('facetsOf', () => {
   });
 
   it('links each option to its view, marking the one in force', () => {
-    const facets = facetsOf(entries, { ...DEFAULT_LOG_QUERY, region: 'alaska' });
+    const facets = facetsOf(entries, { ...DEFAULT_LOG_QUERY, region: 'alaska' }, 'en-GB');
     const region = facet(facets, 'region');
 
     expect(region.options.find((o) => o.label === 'Alaska')).toMatchObject({
@@ -127,7 +132,10 @@ describe('facetsOf', () => {
   });
 
   it('shows the busiest regions, keeps the chosen one in view, and has the rest a link away', () => {
-    const region = facet(facetsOf(entries, { ...DEFAULT_LOG_QUERY, region: 'tonga' }), 'region');
+    const region = facet(
+      facetsOf(entries, { ...DEFAULT_LOG_QUERY, region: 'tonga' }, 'en-GB'),
+      'region',
+    );
 
     // Ties in alphabetical order, so the list holds still between deliveries.
     expect(region.options.map((o) => o.label)).toEqual([
@@ -143,7 +151,7 @@ describe('facetsOf', () => {
 
   it('keeps a region the address names after its events are gone', () => {
     const region = facet(
-      facetsOf(entries, { ...DEFAULT_LOG_QUERY, region: 'puerto-rico' }),
+      facetsOf(entries, { ...DEFAULT_LOG_QUERY, region: 'puerto-rico' }, 'en-GB'),
       'region',
     );
 
@@ -153,19 +161,24 @@ describe('facetsOf', () => {
 
 describe('describeFloor', () => {
   it('names the magnitude floor the list has', () => {
-    expect(describeFloor(facetsOf(entries, DEFAULT_LOG_QUERY))).toBe('M2.5 and up');
-    expect(describeFloor(facetsOf(entries, { ...DEFAULT_LOG_QUERY, magnitude: '4.5' }))).toBe(
-      'M4.5 and up',
-    );
-    expect(describeFloor(facetsOf(entries, { ...DEFAULT_LOG_QUERY, magnitude: 'any' }))).toBe(
+    expect(describeFloor(DEFAULT_LOG_QUERY, 'en-GB')).toBe('M2.5 and up');
+    expect(describeFloor({ ...DEFAULT_LOG_QUERY, magnitude: '4.5' }, 'en-GB')).toBe('M4.5 and up');
+    expect(describeFloor({ ...DEFAULT_LOG_QUERY, magnitude: 'any' }, 'en-GB')).toBe(
       'any magnitude',
     );
+  });
+
+  it("writes the floor's number in the page's language", () => {
+    expect(describeFloor(DEFAULT_LOG_QUERY, 'pt-BR')).toBe('M2,5 and up');
+    expect(
+      facet(facetsOf(entries, DEFAULT_LOG_QUERY, 'pt-BR'), 'magnitude').options.map((o) => o.label),
+    ).toEqual(['Any', '2,5 and up', '4,5 and up']);
   });
 });
 
 describe('filtersOn', () => {
   it('has nothing to take off in the default view', () => {
-    expect(filtersOn(facetsOf(entries, DEFAULT_LOG_QUERY), DEFAULT_LOG_QUERY)).toEqual([]);
+    expect(filtersOn(facetsOf(entries, DEFAULT_LOG_QUERY, 'en-GB'), DEFAULT_LOG_QUERY)).toEqual([]);
   });
 
   it('lists each filter in force with the view without it, the floor aside', () => {
@@ -178,7 +191,7 @@ describe('filtersOn', () => {
       order: 'largest',
     };
 
-    expect(filtersOn(facetsOf(entries, query), query)).toEqual([
+    expect(filtersOn(facetsOf(entries, query, 'en-GB'), query)).toEqual([
       {
         key: 'region',
         label: 'Alaska',

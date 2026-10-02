@@ -1,9 +1,10 @@
-import { DatePipe, I18nPluralPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import {
   Component,
   DestroyRef,
   ElementRef,
   Injector,
+  LOCALE_ID,
   afterNextRender,
   computed,
   effect,
@@ -15,12 +16,15 @@ import {
   viewChildren,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { magnitudeScale } from '@shared/domain/magnitude';
+import { depthPhrase, kindName, placeName, reviewTag } from '@core/words/domain';
+import { describeScale } from '@core/words/magnitude';
 import { splitPlace } from '@shared/domain/place';
-import { EARTHQUAKE_KIND, isNotable, type QuakeSummary } from '@shared/domain/quake';
+import { isEarthquake, isNotable, type QuakeSummary } from '@shared/domain/quake';
 import { AgoPipe } from '@ui/ago.pipe';
+import { DATES } from '@ui/dates';
 import { Highlight } from '@ui/highlight';
 import { Icon } from '@ui/icon';
+import { formatDecimal } from '@ui/numbers';
 import { capitalise } from '@ui/text';
 import { dotRadius } from '../../common/world-chart/world-chart';
 import { quakeLinkState, type QuakeLinkState } from '../../quake/quake-link';
@@ -30,20 +34,52 @@ import { LogFilters } from './log-filters';
 import { LogSearch } from './log-search';
 import { LogSummary } from './log-summary';
 import {
+  DEFAULT_LOG_QUERY,
   LOG_ORDERS,
   clearFilters,
   isFiltered,
   logParams,
+  minimumMagnitude,
   type LogOrder,
   type LogQuery,
 } from './log-query';
 
-/** How the fold and the caption name the order: "the latest 10", "largest first". */
-const ORDER_WORDS: Record<LogOrder, { readonly few: string; readonly first: string }> = {
-  newest: { few: 'latest', first: 'newest first' },
-  largest: { few: 'largest', first: 'largest first' },
-  deepest: { few: 'deepest', first: 'deepest first' },
+/**
+ * The table's caption, one sentence at a time and each one whole for each
+ * order: a language puts "the largest 10" in an order of its own.
+ */
+const CAPTION = {
+  lists: {
+    newest: $localize`:caption of the log's table, what it lists in which order:Seismic events in the last 24 hours, newest first.`,
+    largest: $localize`:caption of the log's table, what it lists in which order:Seismic events in the last 24 hours, largest first.`,
+    deepest: $localize`:caption of the log's table, what it lists in which order:Seismic events in the last 24 hours, deepest first.`,
+  },
+  shows: {
+    newest: (shown: number, total: number) =>
+      $localize`:caption of the log's table, how many of its events it shows:It shows the latest ${shown}:shown: of ${total}:total:.`,
+    largest: (shown: number, total: number) =>
+      $localize`:caption of the log's table, how many of its events it shows:It shows the largest ${shown}:shown: of ${total}:total:.`,
+    deepest: (shown: number, total: number) =>
+      $localize`:caption of the log's table, how many of its events it shows:It shows the deepest ${shown}:shown: of ${total}:total:.`,
+  },
+  sorts: $localize`:caption of the log's table, which of its headings sort it:The UTC, Mag and Depth headings sort the list.`,
+} as const satisfies {
+  lists: Record<LogOrder, string>;
+  shows: Record<LogOrder, (shown: number, total: number) => string>;
+  sorts: string;
 };
+
+/** The hemispheres' letters, which a language may write its own way: Portuguese writes West O, for oeste. */
+const HEMISPHERES = {
+  latitude: {
+    positive: $localize`:abbreviation of North, after a latitude:N`,
+    negative: $localize`:abbreviation of South, after a latitude:S`,
+  },
+  longitude: {
+    positive: $localize`:abbreviation of East, after a longitude:E`,
+    negative: $localize`:abbreviation of West, after a longitude:W`,
+  },
+} as const;
 
 /**
  * About a laptop screen of the log. The rest is one link away, in the address
@@ -59,7 +95,6 @@ const FRESH_MS = 4_000;
   imports: [
     RouterLink,
     DatePipe,
-    I18nPluralPipe,
     AgoPipe,
     Highlight,
     Icon,
@@ -82,6 +117,7 @@ export class EventLog {
 
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #injector = inject(Injector);
+  readonly #locale = inject(LOCALE_ID);
   readonly #destroyRef = inject(DestroyRef);
   private readonly places = viewChildren<ElementRef<HTMLAnchorElement>>('place');
   private readonly fold = viewChild<ElementRef<HTMLAnchorElement>>('fold');
@@ -106,7 +142,7 @@ export class EventLog {
 
   readonly #entries = computed(() => toEntries(this.#listed()));
 
-  readonly facets = computed(() => facetsOf(this.#entries(), this.query()));
+  readonly facets = computed(() => facetsOf(this.#entries(), this.query(), this.#locale));
   protected readonly filtered = computed(() => isFiltered(this.query()));
   protected readonly search = computed(() => this.query().search);
   protected readonly total = computed(() => this.#listed().length);
@@ -129,7 +165,6 @@ export class EventLog {
   });
 
   protected readonly order = computed(() => this.query().order);
-  protected readonly orderWords = computed(() => ORDER_WORDS[this.order()]);
 
   /** Each sortable column's link: the same view, in that column's order. */
   protected readonly sorts = computed(() => {
@@ -157,7 +192,10 @@ export class EventLog {
     this.#filters();
     return untracked(() => {
       const count = this.visible().length;
-      return `${count} ${count === 1 ? 'event' : 'events'}`;
+      // One is singular, and any other count plural, zero included, in English and in Portuguese alike.
+      return count === 1
+        ? $localize`:the log's count read out after a filter changes, exactly one:${count}:count: event`
+        : $localize`:the log's count read out after a filter changes, any but one:${count}:count: events`;
     });
   });
 
@@ -165,6 +203,15 @@ export class EventLog {
     this.unfolded() ? this.visible() : this.visible().slice(0, LATEST),
   );
   readonly folds = computed(() => this.visible().length > LATEST);
+
+  protected readonly caption = computed(() => {
+    const order = this.order();
+    const total = this.visible().length;
+    const folded = this.folds() && !this.unfolded();
+    return [CAPTION.lists[order], folded && CAPTION.shows[order](LATEST, total), CAPTION.sorts]
+      .filter(Boolean)
+      .join(' ');
+  });
 
   /**
    * Grouped by UTC day, the way a station logbook turns the page at midnight.
@@ -174,14 +221,14 @@ export class EventLog {
   readonly days = computed(() => {
     const fresh = this.#fresh();
     if (this.order() !== 'newest') {
-      const rows = this.shown().map((quake) => toRow(quake, fresh.has(quake.id)));
+      const rows = this.shown().map((quake) => toRow(quake, fresh.has(quake.id), this.#locale));
       return rows.length ? [{ day: null, rows }] : [];
     }
     const days = new Map<string, { day: number | null; rows: Row[] }>();
     for (const quake of this.shown()) {
       const key = new Date(quake.time).toISOString().slice(0, 10);
       const day = days.get(key) ?? { day: quake.time, rows: [] };
-      day.rows.push(toRow(quake, fresh.has(quake.id)));
+      day.rows.push(toRow(quake, fresh.has(quake.id), this.#locale));
       days.set(key, day);
     }
     return [...days.values()];
@@ -192,7 +239,13 @@ export class EventLog {
   );
 
   readonly latest = LATEST;
-  readonly events = { '=1': 'event', other: 'events' };
+  /** The floor of a log nobody has filtered, as its empty state names it. */
+  protected readonly defaultFloor = formatDecimal(
+    minimumMagnitude(DEFAULT_LOG_QUERY.magnitude) ?? 0,
+    this.#locale,
+    '1.1-1',
+  );
+  protected readonly dates = DATES;
   protected readonly freshFor = `${FRESH_MS}ms`;
 
   constructor() {
@@ -307,40 +360,37 @@ interface Row {
   /** "35.0 km deep", or "1.2 km above sea level", where no heading says what the number is. */
   readonly depthPhrase: string | null;
   readonly reviewed: boolean;
+  /** "Reviewed" or "Automatic", as its tag reads. */
+  readonly review: string;
   readonly fresh: boolean;
   /** What the row's link hands its event's page, so the page opens on it. */
   readonly link: QuakeLinkState;
 }
 
-function toRow(quake: QuakeSummary, fresh: boolean): Row {
-  const scale = quake.magnitude ? magnitudeScale(quake.magnitude.type) : null;
+/** `locale` sets the row's numbers: "5.1" and "35.0" in English, "5,1" and "35,0" in Portuguese. */
+function toRow(quake: QuakeSummary, fresh: boolean, locale: string): Row {
+  const scale = quake.magnitude ? describeScale(quake.magnitude.type) : null;
   const { latitude, longitude, depthKm: depth } = quake.location;
   const { locality, region } = splitPlace(quake.place);
-  const where = locality ?? quake.place;
   return {
     id: quake.id,
     time: quake.time,
     iso: new Date(quake.time).toISOString(),
-    magnitude: quake.magnitude ? quake.magnitude.value.toFixed(1) : null,
-    scale: scale ? { code: scale.code, title: `${scale.name}. ${scale.summary}` } : null,
+    magnitude: quake.magnitude ? formatDecimal(quake.magnitude.value, locale, '1.1-1') : null,
+    scale: scale ? { code: scale.code, title: scale.title } : null,
     dot: dotSize(quake.magnitude?.value ?? null),
     notable: isNotable(quake),
-    where: where ? capitalise(where) : 'Location not described',
+    where: placeName(locality ?? quake.place),
     region: region ? capitalise(region) : null,
     inlineRegion: locality && region ? capitalise(region) : null,
-    latitude: degrees(latitude, 'N', 'S'),
-    longitude: degrees(longitude, 'E', 'W'),
-    kind: quake.kind === EARTHQUAKE_KIND ? null : quake.kind,
-    depth: depth === null ? null : depth.toFixed(1).replace('-', '−'),
-    depthTitle:
-      depth !== null && depth < 0 ? `${Math.abs(depth).toFixed(1)} km above sea level` : null,
-    depthPhrase:
-      depth === null
-        ? null
-        : depth < 0
-          ? `${Math.abs(depth).toFixed(1)} km above sea level`
-          : `${depth.toFixed(1)} km deep`,
+    latitude: degrees(latitude, HEMISPHERES.latitude, locale),
+    longitude: degrees(longitude, HEMISPHERES.longitude, locale),
+    kind: isEarthquake(quake) ? null : kindName(quake.kind),
+    depth: depth === null ? null : formatDecimal(depth, locale, '1.1-1'),
+    depthTitle: depth !== null && depth < 0 ? depthPhrase(depth, locale) : null,
+    depthPhrase: depth === null ? null : depthPhrase(depth, locale),
     reviewed: quake.review === 'reviewed',
+    review: reviewTag(quake.review),
     fresh,
     link: quakeLinkState(quake),
   };
@@ -352,6 +402,11 @@ function dotSize(magnitude: number | null): number {
 }
 
 /** "52.32° N": to a hundredth of a degree, about a kilometre, finer than most locations are known. */
-function degrees(value: number, positive: string, negative: string): string {
-  return `${Math.abs(value).toFixed(2)}° ${value < 0 ? negative : positive}`;
+function degrees(
+  value: number,
+  hemispheres: { readonly positive: string; readonly negative: string },
+  locale: string,
+): string {
+  const letter = value < 0 ? hemispheres.negative : hemispheres.positive;
+  return `${formatDecimal(Math.abs(value), locale, '1.2-2')}° ${letter}`;
 }

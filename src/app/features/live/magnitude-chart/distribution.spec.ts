@@ -90,7 +90,7 @@ describe('distribution', () => {
       quake('tx1', 3),
     ]);
 
-    expect(chart.dense?.regions).toEqual(['California', 'Alaska', 'Hawaii']);
+    expect(chart.dense?.regions).toEqual(['california', 'alaska', 'hawaii']);
     expect(chart.dense?.x).toBe(chart.bins.find((bin) => bin.from === 1)?.x);
   });
 

@@ -1,3 +1,5 @@
+import { registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
 import { aQuake } from '@shared/testing/quake-fixture';
 import {
   DEFAULT_PRESET,
@@ -13,6 +15,9 @@ import {
   type MagnitudeChoice,
 } from './export-request';
 
+// The build adds the data of the locale it is made in; a test in another one adds its own.
+registerLocaleData(localePt);
+
 const NOW = Date.UTC(2026, 8, 29, 19, 30, 15);
 const DAY = 86_400_000;
 
@@ -26,6 +31,7 @@ const ende = toAnchor(
     place: '66 km NNW of Ende, Indonesia',
     location: { latitude: -8.2, longitude: 121.5, depthKm: 10 },
   }),
+  'en-GB',
 );
 
 describe('initialForm', () => {
@@ -89,7 +95,7 @@ describe('suggestionsFor', () => {
       custom: { from: '2000-01-01', to: '2026-09-29' },
     };
 
-    const suggestions = suggestionsFor(form, toQuery(form, null, NOW), 187_394, null);
+    const suggestions = suggestionsFor(form, toQuery(form, null, NOW), 187_394, null, 'en-GB');
 
     expect(suggestions.map((suggestion) => suggestion.label)).toEqual([
       'Only M6 and up',
@@ -101,7 +107,7 @@ describe('suggestionsFor', () => {
   it('only offers a period that is shorter than the one chosen', () => {
     const week = { ...initialForm(null, at('all'), NOW), period: 'week' as const };
 
-    expect(suggestionsFor(week, toQuery(week, null, NOW), 150_000, null)).toEqual([
+    expect(suggestionsFor(week, toQuery(week, null, NOW), 150_000, null, 'en-GB')).toEqual([
       { label: 'Only M2.5 and up', change: { magnitude: '2.5' } },
       { label: 'Only the last 24 hours', change: { period: 'day' } },
     ]);
@@ -112,18 +118,30 @@ describe('describing the file', () => {
   it('puts size, place and magnitude in one line', () => {
     const query = toQuery(initialForm(ende, at('all'), NOW), ende, NOW);
 
-    expect(describeFile(query, 236, 'csv')).toBe(
+    expect(describeFile(query, 236, 'csv', 'en-GB')).toBe(
       'About 61 kB, within 100 km of the epicentre, every magnitude',
     );
-    expect(describePeriod(initialForm(ende, at('all'), NOW), query)).toBe(
+    expect(describePeriod(initialForm(ende, at('all'), NOW), query, 'en-GB')).toBe(
       '14 Aug, 21:58 to now, UTC',
     );
   });
 
   it('switches to megabytes where a file gets large', () => {
-    expect(estimateSize(35, 'csv')).toBe('9 kB');
-    expect(estimateSize(23_862, 'csv')).toBe('6.2 MB');
-    expect(estimateSize(100_000, 'geojson')).toBe('55 MB');
+    expect(estimateSize(35, 'csv', 'en-GB')).toBe('9 kB');
+    expect(estimateSize(23_862, 'csv', 'en-GB')).toBe('6.2 MB');
+    expect(estimateSize(100_000, 'geojson', 'en-GB')).toBe('55 MB');
+  });
+
+  it("writes its numbers and dates in the page's language", () => {
+    const query = toQuery(initialForm(ende, at('all'), NOW), ende, NOW);
+
+    expect(estimateSize(23_862, 'csv', 'pt-BR')).toBe('6,2 MB');
+    expect(describePeriod(initialForm(ende, at('all'), NOW), query, 'pt-BR')).toMatch(
+      /^14 ago\.?, 21:58 /,
+    );
+    expect(
+      toAnchor(aQuake({ magnitude: { value: 7.8, type: 'mww' } }), 'pt-BR').description,
+    ).toMatch(/^the M7,8 /);
   });
 });
 
@@ -150,16 +168,19 @@ describe('carrying the log over', () => {
       review: 'automatic',
       earthquakesOnly: true,
     });
-    expect(describeFile(query, 12, 'csv')).toBe(
+    expect(describeFile(query, 12, 'csv', 'en-GB')).toBe(
       'About 3 kB, worldwide, M4.5 and up, intermediate, automatic',
     );
   });
 
   it('names what it leaves in the log, and says nothing when it takes every filter', () => {
-    expect(describeLeftOut([])).toBeNull();
-    expect(describeLeftOut(['the region', 'the place search'])).toBe(
+    expect(describeLeftOut([], 'en-GB')).toBeNull();
+    expect(describeLeftOut(['region', 'search'], 'en-GB')).toBe(
       'Left in the log: the region and the place search. The USGS catalogue cannot select ' +
         'events that way, so the file holds more than the log shows.',
+    );
+    expect(describeLeftOut(['region', 'search', 'other-kinds'], 'en-GB')).toMatch(
+      /^Left in the log: the region, the place search and other events alone\. /,
     );
   });
 });

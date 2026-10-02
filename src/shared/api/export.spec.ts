@@ -79,17 +79,30 @@ describe('exportQuerySchema', () => {
 });
 
 describe('exportDateRangeSchema', () => {
+  const range = exportDateRangeSchema({
+    missing: 'Enter a date.',
+    beforeRecord: 'The catalogue starts in 1900.',
+    inverted: 'End on or after the start.',
+  });
+
   it('accepts a range of whole days, one day long included', () => {
-    expect(exportDateRangeSchema.safeParse({ from: '2026-09-29', to: '2026-09-29' }).success).toBe(
-      true,
-    );
+    expect(range.safeParse({ from: '2026-09-29', to: '2026-09-29' }).success).toBe(true);
   });
 
   it('puts an inverted range on the end date, where the reader will fix it', () => {
-    const result = exportDateRangeSchema.safeParse({ from: '2026-09-29', to: '2026-09-01' });
+    const result = range.safeParse({ from: '2026-09-29', to: '2026-09-01' });
 
     expect(result.error?.issues).toEqual([
       expect.objectContaining({ path: ['to'], message: 'End on or after the start.' }),
+    ]);
+  });
+
+  it('says what the app gives it to say', () => {
+    const result = range.safeParse({ from: '1899-12-31', to: '' });
+
+    expect(result.error?.issues.map(({ path, message }) => ({ path, message }))).toEqual([
+      { path: ['from'], message: 'The catalogue starts in 1900.' },
+      { path: ['to'], message: 'Enter a date.' },
     ]);
   });
 });

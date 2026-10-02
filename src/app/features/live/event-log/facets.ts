@@ -1,7 +1,9 @@
 import type { Params } from '@angular/router';
+import { depthName } from '@core/words/domain';
 import { DEPTH_CLASSES, depthClassOf, type DepthClass } from '@shared/domain/depth';
 import { regionSlug, splitPlace } from '@shared/domain/place';
 import { EARTHQUAKE_KIND, type QuakeSummary } from '@shared/domain/quake';
+import { formatDecimal } from '@ui/numbers';
 import { capitalise, fold, searchWords } from '@ui/text';
 import {
   MAGNITUDE_FLOORS,
@@ -14,7 +16,7 @@ import {
 /** An event, with what the log filters it by worked out once. */
 export interface LogEntry {
   readonly quake: QuakeSummary;
-  /** "California", as the log shows it; `null` for an event with no place name. */
+  /** "California", as the log shows it, in the catalogue's words; `null` for an event with no place name. */
   readonly region: string | null;
   readonly regionSlug: string | null;
   readonly depth: DepthClass | null;
@@ -87,17 +89,28 @@ export interface Facet {
 const TOP_REGIONS = 4;
 
 const DEPTH_HINTS: Record<DepthClass, string> = {
-  shallow: 'to 70 km',
-  intermediate: 'to 300 km',
-  deep: 'below 300 km',
+  shallow: $localize`:the depths of the shallow class, under its filter option:to 70 km`,
+  intermediate: $localize`:the depths of the intermediate class, under its filter option:to 300 km`,
+  deep: $localize`:the depths of the deep class, under its filter option:below 300 km`,
 };
+
+/** The option that leaves a filter off, whichever filter it is. */
+const ANY = $localize`:filter option of the log that leaves its filter off:Any`;
+
+/** "2.5 and up": a magnitude floor as the facet offers it. */
+function floorOption(min: number | null, locale: string): string {
+  if (min === null) return ANY;
+  const magnitude = formatDecimal(min, locale, '1.1-1');
+  return $localize`:a magnitude floor, as a filter option of the log, as in 2.5 and up:${magnitude}:magnitude: and up`;
+}
 
 /**
  * Every filter with its options and their counts. A count is what the list
  * would hold with that option chosen and the other filters kept, so an option
- * that leads nowhere says so before it is followed.
+ * that leads nowhere says so before it is followed. `locale` sets the
+ * numbers in the options' words.
  */
-export function facetsOf(entries: readonly LogEntry[], query: LogQuery): Facet[] {
+export function facetsOf(entries: readonly LogEntry[], query: LogQuery, locale: string): Facet[] {
   const option = (
     key: FacetKey,
     value: string | null,
@@ -137,44 +150,69 @@ export function facetsOf(entries: readonly LogEntry[], query: LogQuery): Facet[]
   return [
     {
       key: 'magnitude',
-      label: 'Magnitude',
-      options: MAGNITUDE_FLOORS.map((floor) => option('magnitude', floor.value, floor.label)),
+      label: $localize`:heading of a filter of the log|which sizes it lists:Magnitude`,
+      options: MAGNITUDE_FLOORS.map((floor) =>
+        option('magnitude', floor.value, floorOption(floor.min, locale)),
+      ),
       all: null,
     },
     {
       key: 'region',
-      label: 'Region',
-      options: [option('region', null, 'Anywhere'), ...shown],
+      label: $localize`:heading of a filter of the log|where the events are:Region`,
+      options: [
+        option(
+          'region',
+          null,
+          $localize`:filter option of the log that leaves the region filter off:Anywhere`,
+        ),
+        ...shown,
+      ],
       all: everyRegion.length > TOP_REGIONS ? everyRegion : null,
     },
     {
       key: 'depth',
-      label: 'Depth',
+      label: $localize`:heading of a filter of the log|how deep the events are:Depth`,
       options: [
-        option('depth', null, 'Any'),
-        ...DEPTH_CLASSES.map((depth) =>
-          option('depth', depth.value, depth.label, DEPTH_HINTS[depth.value]),
+        option('depth', null, ANY),
+        ...DEPTH_CLASSES.map(({ value }) =>
+          option('depth', value, depthName(value), DEPTH_HINTS[value]),
         ),
       ],
       all: null,
     },
     {
       key: 'review',
-      label: 'Review',
+      label: $localize`:heading of a filter of the log|whether a seismologist has checked the events:Review`,
       options: [
-        option('review', null, 'Any'),
-        option('review', 'reviewed', 'Reviewed'),
-        option('review', 'automatic', 'Automatic'),
+        option('review', null, ANY),
+        option(
+          'review',
+          'reviewed',
+          $localize`:filter option of the log|the events a seismologist has checked:Reviewed`,
+        ),
+        option(
+          'review',
+          'automatic',
+          $localize`:filter option of the log|the events no seismologist has checked yet:Automatic`,
+        ),
       ],
       all: null,
     },
     {
       key: 'kind',
-      label: 'Kind',
+      label: $localize`:heading of a filter of the log|what kind of event they are:Kind`,
       options: [
-        option('kind', null, 'Any'),
-        option('kind', 'earthquake', 'Earthquakes'),
-        option('kind', 'other', 'Other events'),
+        option('kind', null, ANY),
+        option(
+          'kind',
+          'earthquake',
+          $localize`:filter option of the log|the earthquakes alone:Earthquakes`,
+        ),
+        option(
+          'kind',
+          'other',
+          $localize`:filter option of the log|explosions, quarry blasts and every other kind but earthquakes:Other events`,
+        ),
       ],
       all: null,
     },
@@ -182,11 +220,13 @@ export function facetsOf(entries: readonly LogEntry[], query: LogQuery): Facet[]
 }
 
 /** "M2.5 and up", or "any magnitude": the floor the list has, said beside its count. */
-export function describeFloor(facets: readonly Facet[]): string {
-  const floor = facets
-    .find((facet) => facet.key === 'magnitude')
-    ?.options.find((option) => option.current);
-  return !floor || floor.value === 'any' ? 'any magnitude' : `M${floor.label}`;
+export function describeFloor(query: LogQuery, locale: string): string {
+  const min = minimumMagnitude(query.magnitude);
+  if (min === null) {
+    return $localize`:the log's magnitude floor beside its count, when it has none:any magnitude`;
+  }
+  const magnitude = formatDecimal(min, locale, '1.1-1');
+  return $localize`:the log's magnitude floor beside its count, as in M2.5 and up:M${magnitude}:magnitude: and up`;
 }
 
 /** A filter narrowing the list, and the address of the view without it. */

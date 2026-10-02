@@ -81,7 +81,7 @@ describe('QuakePage', () => {
       'Solution',
       'Energy',
     ]);
-    expect(element.querySelector('h1')?.textContent).toBe(
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe(
       'Looking the event up in the USGS catalogue…',
     );
 
@@ -127,7 +127,7 @@ describe('QuakePage', () => {
     );
 
     // 04:16:27 to 05:00:00, rounded down.
-    expect(fact(element, 'Last revised')).toBe('29 Sep, 05:00 UTC, 43 minutes after the event');
+    expect(fact(element, 'Last revised')).toBe('29 Sept, 05:00 UTC, 43 minutes after the event');
   });
 
   it('opens on what its link knew, and waits only for what the record adds', async () => {

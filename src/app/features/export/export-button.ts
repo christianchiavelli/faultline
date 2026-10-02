@@ -24,7 +24,13 @@ import { DEFAULT_PRESET, type ExportPreset } from './export-request';
       (click)="open.set(true)"
     >
       <ui-icon name="download" />
-      {{ event() ? 'Export the events near this one…' : 'Export…' }}
+      @if (event()) {
+        <ng-container i18n="button under an event's map that opens the export"
+          >Export the events near this one…</ng-container
+        >
+      } @else {
+        <ng-container i18n="button over the log that opens the export">Export…</ng-container>
+      }
     </button>
 
     @defer (when open(); prefetch on idle) {

@@ -1,11 +1,22 @@
 <button type="button" class="tool-button" aria-haspopup="dialog" (click)="open.set(true)">
-  <ui-icon name="sliders" />Filters
+  <ui-icon name="sliders" /><ng-container
+    i18n="button that opens the log's filters on a narrow screen"
+    >Filters</ng-container
+  >&ngsp;
   @if (active(); as count) {
-    <span class="badge">{{ count }}<span class="visually-hidden">&ngsp;on</span></span>
+    <span class="badge"
+      >{{ count
+      }}<span class="visually-hidden"
+        >&ngsp;<ng-container
+          i18n="read out after the number of the log's filters on"
+          >{count, plural, other {on}}</ng-container
+        ></span
+      ></span
+    >
   }
 </button>
 <label class="tool-button order">
-  <span class="visually-hidden">Order</span>
+  <span class="visually-hidden" i18n="label of the menu that orders the log">Order</span>
   <select (change)="sortBy($event)">
     @for (choice of orders; track choice.value) {
       <option [value]="choice.value" [selected]="choice.value === order()">

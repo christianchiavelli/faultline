@@ -16,20 +16,24 @@ interface Choice {
   }[];
 }
 
+const NAMES: Readonly<Record<ThemePreference, string>> = {
+  paper: $localize`:name of the light theme, a record on paper:Paper`,
+  film: $localize`:name of the dark theme, a record on photographic film:Film`,
+  system: $localize`:name of the theme that follows the device's own setting:System`,
+};
+
 const CHOICES: readonly Choice[] = [
-  { value: 'paper', name: 'Paper', halves: [{ scheme: 'paper', x: 0, width: 36 }] },
-  { value: 'film', name: 'Film', halves: [{ scheme: 'film', x: 0, width: 36 }] },
+  { value: 'paper', name: NAMES.paper, halves: [{ scheme: 'paper', x: 0, width: 36 }] },
+  { value: 'film', name: NAMES.film, halves: [{ scheme: 'film', x: 0, width: 36 }] },
   {
     value: 'system',
-    name: 'System',
+    name: NAMES.system,
     halves: [
       { scheme: 'paper', x: 0, width: 18 },
       { scheme: 'film', x: 18, width: 18 },
     ],
   },
 ];
-
-const NAMES: Record<ThemePreference, string> = { paper: 'Paper', film: 'Film', system: 'System' };
 
 let nextId = 0;
 
@@ -42,7 +46,7 @@ let nextId = 0;
   selector: 'fl-theme-menu',
   imports: [Icon, Popover],
   template: `
-    <ui-popover #menu heading="Theme" [label]="'Theme: ' + current()">
+    <ui-popover #menu heading="Theme" i18n-heading="heading of the theme menu" [label]="label()">
       <span uiPopoverTrigger class="swatch" aria-hidden="true"></span>
       <ul class="choices" role="list">
         @for (choice of choices; track choice.value) {
@@ -77,9 +81,7 @@ let nextId = 0;
                 <span class="choice__name">{{ choice.name }}</span>
                 @if (choice.value === 'system') {
                   <!-- Its description, not part of its name: the choice is called System. -->
-                  <span class="choice__hint" aria-hidden="true" [id]="hintId">
-                    Follows your device{{ device() ? ': ' + device() + ' now' : '' }}
-                  </span>
+                  <span class="choice__hint" aria-hidden="true" [id]="hintId">{{ hint() }}</span>
                 }
               </span>
               <ui-icon class="choice__tick" name="check" />
@@ -94,10 +96,19 @@ let nextId = 0;
 export class ThemeMenu {
   protected readonly theme = inject(Theme);
   protected readonly choices = CHOICES;
-  protected readonly current = computed(() => NAMES[this.theme.preference()]);
+  protected readonly label = computed(
+    () =>
+      $localize`:accessible name of the theme menu's button, with the theme in use:Theme: ${NAMES[this.theme.preference()]}:theme:`,
+  );
   protected readonly hintId = `theme-menu-${nextId++}-system`;
   /** Which theme the device asks for: known only in the browser. */
   protected readonly device = signal<string | null>(null);
+  protected readonly hint = computed(() => {
+    const device = this.device();
+    return device
+      ? $localize`:what the System theme does, and the theme it gives now:Follows your device: ${device}:theme: now`
+      : $localize`:what the System theme does, before the device is known:Follows your device`;
+  });
 
   constructor() {
     const destroyRef = inject(DestroyRef);

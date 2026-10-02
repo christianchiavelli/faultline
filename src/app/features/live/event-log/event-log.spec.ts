@@ -161,7 +161,7 @@ describe('EventLog, folded', () => {
     expect(text('.more a')).toBe('Show all 14');
     expect(element.querySelector('.more a')?.getAttribute('href')).toBe('/?mag=any&rows=all');
     expect(text('caption')).toBe(
-      'Seismic events in the last 24 hours, newest first: the latest 10 of 14. ' +
+      'Seismic events in the last 24 hours, newest first. It shows the latest 10 of 14. ' +
         'The UTC, Mag and Depth headings sort the list.',
     );
   });

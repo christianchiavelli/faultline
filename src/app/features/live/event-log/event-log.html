@@ -1,8 +1,10 @@
 <!-- In source order, the filters come before what they filter; the grid places them beside it where there is room. -->
 <section class="log" aria-labelledby="log-title">
   <header class="log__header">
-    <h2 class="section-title" id="log-title">Every event</h2>
-    <p class="section-lede">The day's catalogue, one line per event.</p>
+    <h2 class="section-title" id="log-title" i18n="heading of the day's log">Every event</h2>
+    <p class="section-lede" i18n="what the log of the day's events is">
+      The day's catalogue, one line per event.
+    </p>
   </header>
 
   <fl-log-search class="log__search" [query]="query()" />
@@ -31,18 +33,37 @@
 
   <!-- One item of the section's grid: the fold sits right under the table, and an empty region adds no gap. -->
   <div class="log__list">
-    <p class="visually-hidden" role="status" aria-label="Events shown">{{ announcement() }}</p>
+    <p
+      class="visually-hidden"
+      role="status"
+      aria-label="Events shown"
+      i18n-aria-label="accessible name of the live region that reads out the log's count"
+    >
+      {{ announcement() }}
+    </p>
 
     <!-- There before anything is held: a live region added along with its text may go unheard. -->
-    <div role="status" aria-label="New events">
+    <div
+      role="status"
+      aria-label="New events"
+      i18n-aria-label="accessible name of the live region that says new events are waiting"
+    >
       @if (waiting(); as count) {
         <p class="fresh">
           <span class="fresh__count"
-            ><span class="fresh__dot" aria-hidden="true"></span>{{ count }} new
-            {{ count | i18nPlural: events }}</span
+            ><span class="fresh__dot" aria-hidden="true"></span
+            ><ng-container i18n="how many new events wait above the log">{count, plural,
+              =1 {1 new event}
+              other {{{ count }} new events}
+            }</ng-container></span
           >
-          <button type="button" class="text-button" (click)="showNew()">
-            Show {{ count === 1 ? 'it' : 'them' }}
+          <button
+            type="button"
+            class="text-button"
+            (click)="showNew()"
+            i18n="button that brings the waiting events into the log"
+          >
+            {count, plural, =1 {Show it} other {Show them}}
           </button>
         </p>
       }
@@ -52,14 +73,9 @@
       <!-- Roles spelled out: on a phone the rows are laid out as grids, and a table restyled that far loses its semantics in some browsers. -->
       <table class="ledger" role="table">
         <caption class="visually-hidden">
-          Seismic events in the last 24 hours,
           {{
-            orderWords().first
-          }}{{
-            folds() && !unfolded()
-              ? ': the ' + orderWords().few + ' ' + latest + ' of ' + visible().length
-              : ''
-          }}. The UTC, Mag and Depth headings sort the list.
+            caption()
+          }}
         </caption>
         <thead role="rowgroup">
           <tr role="row">
@@ -80,12 +96,36 @@
               [attr.aria-sort]="order() === 'largest' ? 'descending' : null"
             >
               <a class="sort" [routerLink]="[]" [queryParams]="sorts().largest"
-                ><ui-icon [name]="order() === 'largest' ? 'arrow-down' : 'sort'" />Mag</a
+                ><ui-icon [name]="order() === 'largest' ? 'arrow-down' : 'sort'" /><ng-container
+                  i18n="column of the log|short for magnitude"
+                  >Mag</ng-container
+                ></a
               >
             </th>
-            <th scope="col" role="columnheader" class="col-where">Where</th>
-            <th scope="col" role="columnheader" class="col-region">Region</th>
-            <th scope="col" role="columnheader" class="col-position numeric">Lat, lon</th>
+            <th
+              scope="col"
+              role="columnheader"
+              class="col-where"
+              i18n="column of the log|where the event was"
+            >
+              Where
+            </th>
+            <th
+              scope="col"
+              role="columnheader"
+              class="col-region"
+              i18n="column of the log|the region of the event's place"
+            >
+              Region
+            </th>
+            <th
+              scope="col"
+              role="columnheader"
+              class="col-position numeric"
+              i18n="column of the log|short for latitude and longitude"
+            >
+              Lat, lon
+            </th>
             <th
               scope="col"
               role="columnheader"
@@ -93,10 +133,20 @@
               [attr.aria-sort]="order() === 'deepest' ? 'descending' : null"
             >
               <a class="sort" [routerLink]="[]" [queryParams]="sorts().deepest"
-                ><ui-icon [name]="order() === 'deepest' ? 'arrow-down' : 'sort'" />Depth km</a
+                ><ui-icon [name]="order() === 'deepest' ? 'arrow-down' : 'sort'" /><ng-container
+                  i18n="column of the log|the event's depth, in kilometres"
+                  >Depth km</ng-container
+                ></a
               >
             </th>
-            <th scope="col" role="columnheader" class="col-status">Status</th>
+            <th
+              scope="col"
+              role="columnheader"
+              class="col-status"
+              i18n="column of the log|whether a seismologist has checked the event"
+            >
+              Status
+            </th>
           </tr>
         </thead>
         @for (day of days(); track day.day) {
@@ -104,7 +154,7 @@
             @if (day.day !== null) {
               <tr class="day" role="row">
                 <th scope="rowgroup" colspan="7" role="rowheader">
-                  {{ day.day | date: 'EEEE d MMMM' : 'UTC' }}
+                  {{ day.day | date: dates.day : 'UTC' }}
                 </th>
               </tr>
             }
@@ -124,7 +174,12 @@
                     }}</span>
                     <abbr class="scale" [title]="row.scale!.title">{{ row.scale!.code }}</abbr>
                   } @else {
-                    <span class="missing" title="No magnitude computed yet">—</span>
+                    <span
+                      class="missing"
+                      title="No magnitude computed yet"
+                      i18n-title="what a dash in place of a magnitude means"
+                      >—</span
+                    >
                   }
                 </td>
                 <td role="cell" class="place">
@@ -167,9 +222,7 @@
                   }
                 </td>
                 <td role="cell" class="status">
-                  <span class="review" [class.review--done]="row.reviewed">{{
-                    row.reviewed ? 'Reviewed' : 'Automatic'
-                  }}</span>
+                  <span class="review" [class.review--done]="row.reviewed">{{ row.review }}</span>
                 </td>
               </tr>
             }
@@ -180,12 +233,13 @@
       @if (folds()) {
         <p class="more">
           @if (unfolded()) {
-            <span
+            <span i18n="how many events the unfolded log shows: all of them"
               >All <span class="mono">{{ visible().length }}</span></span
             >
           } @else {
-            <span
-              >The {{ orderWords().few }} <span class="mono">{{ latest }}</span> of
+            <span i18n="how many events the folded log shows, and of how many"
+              >The {order(), select, newest {latest} largest {largest} deepest {deepest}}
+              <span class="mono">{{ latest }}</span> of
               <span class="mono">{{ visible().length }}</span></span
             >
           }
@@ -196,31 +250,54 @@
             [routerLink]="[]"
             [queryParams]="foldParams()"
             (click)="toggle($event)"
-            >{{
-              unfolded()
-                ? 'Show only the ' + orderWords().few + ' ' + latest
-                : 'Show all ' + visible().length
-            }}</a
           >
+            @if (unfolded()) {
+              <ng-container
+                i18n="link that folds the log back to its first events"
+                >{order(), select,
+                  newest {Show only the latest {{ latest }}}
+                  largest {Show only the largest {{ latest }}}
+                  deepest {Show only the deepest {{ latest }}}
+                }</ng-container
+              >
+            } @else {
+              <ng-container i18n="link that unfolds the log to all its events"
+                >Show all {{ visible().length }}</ng-container
+              >
+            }
+          </a>
         </p>
       }
     } @else if (filtered()) {
       <p class="empty">
-        No event in the last 24 hours matches these filters.
-        <a [routerLink]="[]" [queryParams]="clearParams()">Clear filters</a>
+        <ng-container i18n="the log, emptied by its filters"
+          >No event in the last 24 hours matches these filters.</ng-container
+        >
+        <a
+          [routerLink]="[]"
+          [queryParams]="clearParams()"
+          i18n="link that takes every filter of the log off"
+          >Clear filters</a
+        >
       </p>
     } @else {
-      <p class="empty">Nothing at M2.5 and up in the last 24 hours.</p>
+      <p class="empty" i18n="the log, empty with no filter on, as in nothing at M2.5 and up">
+        Nothing at M{{ defaultFloor }} and up in the last 24 hours.
+      </p>
     }
 
     @if (days().length) {
       <p class="note">
-        Magnitudes come on different scales, named next to each value; hover one for what it
-        measures. Automatic events were located by software and can still move, change size or be
-        deleted.
+        <ng-container i18n="note under the log: its magnitude scales, and its automatic events"
+          >Magnitudes come on different scales, named next to each value; hover one for what it
+          measures. Automatic events were located by software and can still move, change size or be
+          deleted.</ng-container
+        >
         @if (hasNegativeDepth()) {
-          Negative depths are above sea level: shallow events under mountains and volcanoes are
-          located relative to the sea, not the ground.
+          <ng-container i18n="note under the log: what a negative depth means"
+            >Negative depths are above sea level: shallow events under mountains and volcanoes are
+            located relative to the sea, not the ground.</ng-container
+          >
         }
       </p>
     }

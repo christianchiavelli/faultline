@@ -1,25 +1,38 @@
-<ui-dialog [(open)]="open" heading="Export events" eyebrow="USGS catalogue" [lede]="lede()">
+<ui-dialog
+  [(open)]="open"
+  heading="Export events"
+  i18n-heading="heading of the export dialog"
+  eyebrow="USGS catalogue"
+  i18n-eyebrow="eyebrow of the export dialog: where its events come from"
+  [lede]="lede()"
+>
   <form class="fields" novalidate (submit)="$event.preventDefault()">
     @if (leftOut(); as note) {
       <p class="callout left-out">{{ note }}</p>
     }
     @if (anchor()) {
       <fieldset class="field">
-        <legend class="label">Where</legend>
+        <legend class="label" i18n="a field of the export: where the events are">Where</legend>
         <div class="controls">
           <div class="segmented">
             <label class="segmented__item">
               <input class="visually-hidden" type="radio" value="world" [formField]="form.area" />
-              The whole world
+              <ng-container i18n="an area of the export: every event, wherever it was"
+                >The whole world</ng-container
+              >
             </label>
             <label class="segmented__item">
               <input class="visually-hidden" type="radio" value="near" [formField]="form.area" />
-              Near this event
+              <ng-container i18n="an area of the export: around the event it was opened from"
+                >Near this event</ng-container
+              >
             </label>
           </div>
           @if (model().area === 'near') {
             <fieldset class="nested">
-              <legend class="visually-hidden">Distance from the epicentre</legend>
+              <legend class="visually-hidden" i18n="a field of the export: how far from the event">
+                Distance from the epicentre
+              </legend>
               <div class="segmented">
                 @for (choice of radii; track choice.value) {
                   <label class="segmented__item">
@@ -34,14 +47,16 @@
                 }
               </div>
             </fieldset>
-            <p class="hint">Distance from the epicentre.</p>
+            <p class="hint" i18n="hint under the distances of the export">
+              Distance from the epicentre.
+            </p>
           }
         </div>
       </fieldset>
     }
 
     <fieldset class="field">
-      <legend class="label">Period</legend>
+      <legend class="label" i18n="a field of the export: when the events were">Period</legend>
       <div class="controls">
         <div class="segmented">
           @for (choice of periods(); track choice.value) {
@@ -59,7 +74,7 @@
         @if (model().period === 'custom') {
           <div class="dates">
             <label class="date">
-              <span>From</span>
+              <span i18n="the first day of the export's period, over its field">From</span>
               <input
                 type="date"
                 [formField]="form.custom.from"
@@ -67,7 +82,7 @@
               />
             </label>
             <label class="date">
-              <span>To</span>
+              <span i18n="the last day of the export's period, over its field">To</span>
               <input
                 type="date"
                 [formField]="form.custom.to"
@@ -88,7 +103,9 @@
     </fieldset>
 
     <fieldset class="field">
-      <legend class="label">Smallest magnitude</legend>
+      <legend class="label" i18n="a field of the export: its magnitude floor">
+        Smallest magnitude
+      </legend>
       <div class="controls">
         <div class="segmented">
           @for (choice of magnitudes; track choice.value) {
@@ -103,14 +120,14 @@
             </label>
           }
         </div>
-        <p class="hint">
+        <p class="hint" i18n="hint under the magnitudes of the export">
           Magnitudes come on different scales; the file names the scale of each one.
         </p>
       </div>
     </fieldset>
 
     <fieldset class="field">
-      <legend class="label">Depth</legend>
+      <legend class="label" i18n="a field of the export: how deep the events are">Depth</legend>
       <div class="controls">
         <div class="segmented">
           @for (choice of depths; track choice.value) {
@@ -125,22 +142,31 @@
             </label>
           }
         </div>
-        <p class="hint">Shallow is down to 70 km, intermediate to 300, deep below that.</p>
+        <p class="hint" i18n="hint under the depths of the export: what each class spans">
+          Shallow is down to 70 km, intermediate to 300, deep below that.
+        </p>
       </div>
     </fieldset>
 
     @if (!anchor()) {
       <div class="field">
-        <p class="label">Where</p>
+        <p class="label" i18n="a field of the export: where the events are">Where</p>
         <div class="controls">
-          <p>The whole world</p>
-          <p class="hint">Open an event to export the events around it.</p>
+          <p i18n="an area of the export: every event, wherever it was">The whole world</p>
+          <p class="hint" i18n="hint: how to export the events around one">
+            Open an event to export the events around it.
+          </p>
         </div>
       </div>
     }
 
     <fieldset class="field">
-      <legend class="label">Review</legend>
+      <legend
+        class="label"
+        i18n="a field of the export: whether a seismologist has checked the events"
+      >
+        Review
+      </legend>
       <div class="controls">
         <div class="segmented">
           @for (choice of reviews; track choice.value) {
@@ -155,14 +181,14 @@
             </label>
           }
         </div>
-        <p class="hint">
+        <p class="hint" i18n="hint under the review choices of the export">
           Automatic events were placed by software and can still move, change size or be deleted.
         </p>
       </div>
     </fieldset>
 
     <fieldset class="field">
-      <legend class="label">Kind of event</legend>
+      <legend class="label" i18n="a field of the export: what kind of events">Kind of event</legend>
       <div class="controls">
         <div class="segmented">
           @for (choice of kinds; track choice.value) {
@@ -177,27 +203,29 @@
             </label>
           }
         </div>
-        <p class="hint">
+        <p class="hint" i18n="hint under the kind choices of the export">
           All seismic events include explosions and quarry blasts; the file says which is which.
         </p>
       </div>
     </fieldset>
 
     <fieldset class="field">
-      <legend class="label">File</legend>
+      <legend class="label" i18n="a field of the export: the file's format">File</legend>
       <div class="controls">
         <div class="files">
           <label class="file">
             <input class="visually-hidden" type="radio" value="csv" [formField]="form.format" />
-            <b>Spreadsheet</b>
-            <span class="hint"
+            <b i18n="a format of the export, for a spreadsheet">Spreadsheet</b>
+            <span class="hint" i18n="what the CSV file of the export holds"
               >CSV, {{ columns }} columns, with the location and magnitude errors</span
             >
           </label>
           <label class="file">
             <input class="visually-hidden" type="radio" value="geojson" [formField]="form.format" />
-            <b>Map data</b>
-            <span class="hint">GeoJSON, one point per event, the same fields</span>
+            <b i18n="a format of the export, for a map">Map data</b>
+            <span class="hint" i18n="what the GeoJSON file of the export holds"
+              >GeoJSON, one point per event, the same fields</span
+            >
           </label>
         </div>
       </div>
@@ -212,22 +240,52 @@
   >
     @switch (footer().kind) {
       @case ('invalid') {
-        <p class="hint">Fix the dates above to count the events.</p>
+        <p class="hint" i18n="the export's count waits on dates it cannot read">
+          Fix the dates above to count the events.
+        </p>
         <div class="actions">
-          <button type="button" class="text-button" (click)="close()">Cancel</button>
+          <button
+            type="button"
+            class="text-button"
+            (click)="close()"
+            i18n="button that closes the export"
+          >
+            Cancel
+          </button>
         </div>
       }
       @case ('counting') {
-        <p class="counting">Counting the events…</p>
+        <p class="counting" i18n="the export's count, on its way">Counting the events…</p>
         <div class="actions">
-          <button type="button" class="text-button" (click)="close()">Cancel</button>
+          <button
+            type="button"
+            class="text-button"
+            (click)="close()"
+            i18n="button that closes the export"
+          >
+            Cancel
+          </button>
         </div>
       }
       @case ('error') {
-        <p class="hint">The USGS did not answer the count.</p>
+        <p class="hint" i18n="the export's count failed">The USGS did not answer the count.</p>
         <div class="actions">
-          <button type="button" class="text-button" (click)="close()">Cancel</button>
-          <button type="button" class="button" (click)="count.refetch()">Try again</button>
+          <button
+            type="button"
+            class="text-button"
+            (click)="close()"
+            i18n="button that closes the export"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="button"
+            (click)="count.refetch()"
+            i18n="button that asks the USGS again after a failure"
+          >
+            Try again
+          </button>
         </div>
       }
       @default {
@@ -236,9 +294,13 @@
           @if (result.kind === 'over') {
             <div class="over">
               <p class="value">
-                {{ result.count | number }}<small>{{ result.count | i18nPlural: events }}</small>
+                {{ result.count | number
+                }}<small i18n="the unit after the export's count">{result.count, plural,
+                  =1 {event}
+                  other {events}
+                }</small>
               </p>
-              <p class="hint">
+              <p class="hint" i18n="the export holds too many events for one file">
                 More than one file holds. An export stops at {{ limit | number }} events, about 26
                 MB as CSV. Narrow it to fit:
               </p>
@@ -248,17 +310,28 @@
                     @let count = suggestion.count;
                     <button type="button" class="suggestion" (click)="apply(suggestion)">
                       {{ suggestion.label }}
-                      <span>{{ count | number }} {{ count | i18nPlural: events }}</span>
+                      <span
+                        i18n="how many events a suggestion would leave in the export"
+                        >{count, plural, =1 {1 event} other {{{ count | number }} events}}</span
+                      >
                     </button>
                   }
                 </div>
               }
               <div class="actions">
-                <button type="button" class="text-button" (click)="close()">Cancel</button>
+                <button
+                  type="button"
+                  class="text-button"
+                  (click)="close()"
+                  i18n="button that closes the export"
+                >
+                  Cancel
+                </button>
                 <a
                   class="hint"
                   href="https://earthquake.usgs.gov/earthquakes/search/"
                   rel="external"
+                  i18n="link to the USGS's own search, for an export too large"
                 >
                   Or search the whole catalogue on earthquake.usgs.gov<ui-icon
                     class="trailing-icon"
@@ -270,24 +343,45 @@
           } @else {
             <div class="count" [class.count--settling]="!result.settled">
               <p class="value">
-                {{ result.count | number }}<small>{{ result.count | i18nPlural: events }}</small>
+                {{ result.count | number
+                }}<small i18n="the unit after the export's count">{result.count, plural,
+                  =1 {event}
+                  other {events}
+                }</small>
               </p>
               <p class="hint">
                 @if (!result.settled) {
-                  Counting…
+                  <ng-container i18n="the export's count, changing as the reader narrows it"
+                    >Counting…</ng-container
+                  >
                 } @else if (result.kind === 'empty') {
-                  Nothing matches. Try a longer period or a smaller magnitude.
+                  <ng-container i18n="the export matches no event"
+                    >Nothing matches. Try a longer period or a smaller magnitude.</ng-container
+                  >
                 } @else {
                   {{ fileText() }}
                 }
               </p>
             </div>
             <div class="actions">
-              <button type="button" class="text-button" (click)="close()">Cancel</button>
+              <button
+                type="button"
+                class="text-button"
+                (click)="close()"
+                i18n="button that closes the export"
+              >
+                Cancel
+              </button>
               @if (result.kind === 'ready' && result.settled && downloadUrl(); as url) {
                 <a class="button" [href]="url" download (click)="close()">
                   <ui-icon name="download" />
-                  Download {{ result.count | number }} {{ result.count | i18nPlural: events }}
+                  <ng-container
+                    i18n="link that downloads the export, with how many events it holds"
+                    >{result.count, plural,
+                      =1 {Download 1 event}
+                      other {Download {{ result.count | number }} events}
+                    }</ng-container
+                  >
                 </a>
               }
             </div>

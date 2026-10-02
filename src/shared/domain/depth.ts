@@ -4,9 +4,9 @@
  * about 700, happen only where a plate dives into the mantle.
  */
 export const DEPTH_CLASSES = [
-  { value: 'shallow', label: 'Shallow', fromKm: null, toKm: 70 },
-  { value: 'intermediate', label: 'Intermediate', fromKm: 70, toKm: 300 },
-  { value: 'deep', label: 'Deep', fromKm: 300, toKm: null },
+  { value: 'shallow', fromKm: null, toKm: 70 },
+  { value: 'intermediate', fromKm: 70, toKm: 300 },
+  { value: 'deep', fromKm: 300, toKm: null },
 ] as const;
 
 export type DepthClass = (typeof DEPTH_CLASSES)[number]['value'];

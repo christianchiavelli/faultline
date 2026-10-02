@@ -1,5 +1,4 @@
-import { I18nPluralPipe } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import { Component, LOCALE_ID, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Icon } from '@ui/icon';
 import { describeFloor, filtersOn, type Facet } from './facets';
@@ -12,27 +11,39 @@ import { clearFilters, isFiltered, logParams, type LogQuery } from './log-query'
  */
 @Component({
   selector: 'fl-log-summary',
-  imports: [RouterLink, I18nPluralPipe, Icon],
+  imports: [RouterLink, Icon],
   template: `
     <p class="tally">
-      <span class="mono tally__shown">{{ shown() }}</span> of
-      <span class="mono">{{ total() }}</span> {{ total() | i18nPlural: events }}
-      <span class="tally__floor">· {{ floor() }}</span>
+      <ng-container i18n="how many events the log shows, of how many the day holds"
+        ><span class="mono tally__shown">{{ shown() }}</span> of
+        <span class="mono">{{ total() }}</span>
+        {total(), plural, =1 {event} other {events}}</ng-container
+      >
+      <span class="tally__floor"> · {{ floor() }}</span>
     </p>
     @if (filters().length) {
-      <ul class="chips" aria-label="Filters on">
+      <ul class="chips" aria-label="Filters on" i18n-aria-label="list of the log's filters on">
         @for (filter of filters(); track filter.key) {
           <li>
-            <a class="chip" [routerLink]="[]" [queryParams]="filter.params"
-              ><span class="visually-hidden">Remove&ngsp;</span>{{ filter.label
-              }}<ui-icon name="close"
+            <a
+              class="chip"
+              [routerLink]="[]"
+              [queryParams]="filter.params"
+              i18n="chip that takes a filter of the log off, with the filter's name"
+              ><span class="visually-hidden">Remove </span>{{ filter.label }}<ui-icon name="close"
             /></a>
           </li>
         }
       </ul>
     }
     @if (clearParams(); as params) {
-      <a class="clear" [routerLink]="[]" [queryParams]="params">Clear filters</a>
+      <a
+        class="clear"
+        [routerLink]="[]"
+        [queryParams]="params"
+        i18n="link that takes every filter of the log off"
+        >Clear filters</a
+      >
     }
   `,
   styleUrl: './log-summary.css',
@@ -45,10 +56,11 @@ export class LogSummary {
   /** How many the day holds. */
   readonly total = input.required<number>();
 
-  protected readonly floor = computed(() => describeFloor(this.facets()));
+  readonly #locale = inject(LOCALE_ID);
+
+  protected readonly floor = computed(() => describeFloor(this.query(), this.#locale));
   protected readonly filters = computed(() => filtersOn(this.facets(), this.query()));
   protected readonly clearParams = computed(() =>
     isFiltered(this.query()) ? logParams(clearFilters(this.query())) : null,
   );
-  protected readonly events = { '=1': 'event', other: 'events' };
 }

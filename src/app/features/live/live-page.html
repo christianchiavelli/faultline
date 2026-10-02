@@ -2,8 +2,8 @@
 <article class="page-bands">
   <div class="page-band opening">
     <header class="intro">
-      <h1 class="title">24 hours of a restless planet</h1>
-      <p class="lede">
+      <h1 class="title" i18n="heading of the live page">24 hours of a restless planet</h1>
+      <p class="lede" i18n="what the live page shows, under its heading">
         Every event the USGS catalogued in the last day, drawn the way a drum seismograph draws it:
         one line per hour, one burst per event.
       </p>
@@ -12,21 +12,23 @@
         <p class="status mono" [animate.enter]="arriving()">
           <span class="status__dot" [class.status__dot--stale]="late()" aria-hidden="true"></span>
           @if (late()) {
-            <span>Feed delayed</span>
+            <span i18n="status of the feed, more than five minutes old">Feed delayed</span>
           } @else {
-            <span>Live</span>
+            <span i18n="status of the feed, up to date">Live</span>
           }
           <span class="status__sep" aria-hidden="true">·</span>
-          <span>
-            USGS feed
+          <span i18n="when the USGS generated the copy of the feed shown, and how long ago"
+            >USGS feed
             <time [attr.datetime]="feed.generatedAt | date: 'yyyy-MM-ddTHH:mm:ssZ' : 'UTC'"
               >{{ feed.generatedAt | date: 'HH:mm' : 'UTC' }} UTC</time
-            >, {{ feed.generatedAt | ago: now() }}
-          </span>
+            >, {{ feed.generatedAt | ago: now() }}</span
+          >
         </p>
       } @else if (!failed()) {
         <p class="status mono">
-          <span class="visually-hidden">Unrolling the last 24 hours…</span>
+          <span class="visually-hidden" i18n="what a screen reader hears while the day loads"
+            >Unrolling the last 24 hours…</span
+          >
           <ui-skeleton width="17rem" />
         </p>
       }
@@ -35,8 +37,10 @@
     @if (feed(); as feed) {
       @if (feed.stale) {
         <p class="callout">
-          <strong>The USGS feed is not answering.</strong>
-          <span>
+          <strong i18n="callout: the USGS feed stopped answering, and an old copy is shown"
+            >The USGS feed is not answering.</strong
+          >
+          <span i18n="callout: how old the copy shown is, and that it will update by itself">
             This is the last copy we received, generated
             {{ feed.generatedAt | date: 'HH:mm' : 'UTC' }} UTC. It will update on its own when the
             feed is back.
@@ -45,9 +49,20 @@
       }
     } @else if (failed()) {
       <div class="callout failure" role="alert">
-        <strong>The USGS feed did not answer.</strong>
-        <span>It usually recovers within a minute or two.</span>
-        <button type="button" class="text-button" (click)="recent.reload()">Try again</button>
+        <strong i18n="alert: the feed failed and there is no copy to show"
+          >The USGS feed did not answer.</strong
+        >
+        <span i18n="alert: the feed usually comes back soon"
+          >It usually recovers within a minute or two.</span
+        >
+        <button
+          type="button"
+          class="text-button"
+          (click)="recent.reload()"
+          i18n="button that asks the USGS again after a failure"
+        >
+          Try again
+        </button>
       </div>
     }
 
@@ -59,11 +74,17 @@
     @if (feed(); as feed) {
       <dl class="readouts">
         <div class="readout">
-          <dt>Events</dt>
+          <dt>{{ readouts.events }}</dt>
           <dd [animate.enter]="arriving()">
             <span class="readout__value">{{ summary().total }}</span>
             <span class="readout__hint">
-              {{ summary().earthquakes }} earthquakes
+              <ng-container
+                i18n="how many of the day's events were earthquakes"
+                >{summary().earthquakes, plural,
+                  =1 {1 earthquake}
+                  other {{{ summary().earthquakes }} earthquakes}
+                }</ng-container
+              >
               @for (other of otherKinds(); track other) {
                 · {{ other }}
               }
@@ -72,16 +93,14 @@
         </div>
 
         <div class="readout">
-          <dt>Largest</dt>
+          <dt>{{ readouts.largest }}</dt>
           <dd [animate.enter]="arriving()">
             @if (largest(); as largest) {
               <span class="readout__value" [attr.data-magnitude-of]="largest.quake.id">
                 M{{ largest.value
-                }}<abbr
-                  class="readout__unit"
-                  [title]="largest.scale.name + '. ' + largest.scale.summary"
-                  >{{ largest.scale.code }}</abbr
-                >
+                }}<abbr class="readout__unit" [title]="largest.scale.title">{{
+                  largest.scale.code
+                }}</abbr>
               </span>
               <span class="readout__hint">
                 <a
@@ -100,11 +119,14 @@
         </div>
 
         <div class="readout">
-          <dt>Energy</dt>
+          <dt>{{ readouts.energy }}</dt>
           <dd [animate.enter]="arriving()">
             @if (summary().largestEnergyShare; as share) {
               <span class="readout__value">{{ share | percent: '1.0-0' }}</span>
-              <span class="readout__hint">
+              <span
+                class="readout__hint"
+                i18n="follows a percentage: how much of the day's energy the largest event released"
+              >
                 of all the earthquake energy of the day came from that one event. Each magnitude
                 step is about 32× the energy.
               </span>
@@ -115,11 +137,14 @@
         </div>
 
         <div class="readout">
-          <dt>Reviewed</dt>
+          <dt>{{ readouts.reviewed }}</dt>
           <dd [animate.enter]="arriving()">
             @if (summary().reviewedShare !== null) {
               <span class="readout__value">{{ summary().reviewedShare | percent: '1.0-0' }}</span>
-              <span class="readout__hint">
+              <span
+                class="readout__hint"
+                i18n="follows a percentage: how many of the day's events a seismologist reviewed"
+              >
                 checked by a seismologist. The rest are automatic and may still move, change size or
                 disappear.
               </span>
@@ -131,15 +156,17 @@
       </dl>
 
       @if (feed.skipped > 0) {
-        <p class="note">
-          {{ feed.skipped }} record{{ feed.skipped === 1 ? '' : 's' }} from the USGS failed
-          validation and {{ feed.skipped === 1 ? 'is' : 'are' }} not shown.
+        <p class="note" i18n="how many records of the feed failed validation and are left out">
+          {feed.skipped, plural,
+            =1 {1 record from the USGS failed validation and is not shown.}
+            other {{{ feed.skipped }} records from the USGS failed validation and are not shown.}
+          }
         </p>
       }
     } @else if (!failed()) {
       <!-- The readouts' labels and rules, with a line to come under each: the values are the day's. -->
       <dl class="readouts" aria-hidden="true">
-        @for (label of readouts; track label) {
+        @for (label of readoutLabels; track label) {
           <div class="readout">
             <dt>{{ label }}</dt>
             <dd>
@@ -162,8 +189,8 @@
       [animate.enter]="arriving()"
     >
       <header class="section-header">
-        <h2 class="section-title" id="where-title">Where</h2>
-        <p class="section-lede">
+        <h2 class="section-title" id="where-title" i18n="heading of the day's map">Where</h2>
+        <p class="section-lede" i18n="how to read the map of the day's events">
           Equal Earth projection, so every region keeps its true area. The dots trace the plate
           boundaries almost everywhere.
         </p>
@@ -178,8 +205,14 @@
 
     <section class="page-band sizes" aria-labelledby="sizes-title" [animate.enter]="arriving()">
       <header class="section-header">
-        <h2 class="section-title" id="sizes-title">How big</h2>
-        <p class="section-lede">
+        <h2
+          class="section-title"
+          id="sizes-title"
+          i18n="heading of the chart of the day's magnitudes"
+        >
+          How big
+        </h2>
+        <p class="section-lede" i18n="how to read the chart of the day's magnitudes">
           Small earthquakes far outnumber large ones, about ten to one for each step of magnitude:
           the Gutenberg–Richter law.
         </p>
@@ -189,9 +222,17 @@
       } @placeholder {
         <!-- The chart's paper and axes as it lays them out, with its key still to come. -->
         <div class="sizes-placeholder" aria-hidden="true">
-          <span class="sizes-placeholder__unit mono">Events a day</span>
+          <span
+            class="sizes-placeholder__unit mono"
+            i18n="axis title|unit of the magnitude chart's vertical axis"
+            >Events a day</span
+          >
           <div class="sizes-placeholder__paper"></div>
-          <span class="sizes-placeholder__axis mono">Mag</span>
+          <span
+            class="sizes-placeholder__axis mono"
+            i18n="axis title|short for magnitude, under the magnitude chart's horizontal axis"
+            >Mag</span
+          >
           <div class="sizes-placeholder__legend">
             <ui-skeleton width="min(36rem, 100%)" />
             <ui-skeleton width="min(24rem, 72%)" />
@@ -210,8 +251,10 @@
         <!-- The log's heading as it reads, over the ruled lines of its first page. -->
         <div class="log-placeholder" aria-hidden="true">
           <div class="log-placeholder__head">
-            <p class="section-title">Every event</p>
-            <p class="section-lede">The day's catalogue, one line per event.</p>
+            <p class="section-title" i18n="heading of the day's log">Every event</p>
+            <p class="section-lede" i18n="what the log of the day's events is">
+              The day's catalogue, one line per event.
+            </p>
           </div>
           <div class="log-placeholder__rows">
             @for (width of logRows; track $index) {

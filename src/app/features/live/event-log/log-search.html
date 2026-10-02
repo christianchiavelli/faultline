@@ -5,12 +5,15 @@
     }
     <label class="field">
       <ui-icon name="search" />
-      <span class="visually-hidden">Search places</span>
+      <span class="visually-hidden" i18n="label of the field that searches the log by place"
+        >Search places</span
+      >
       <input
         #field
         type="search"
         name="q"
         placeholder="Search places"
+        i18n-placeholder="label of the field that searches the log by place"
         autocomplete="off"
         spellcheck="false"
         enterkeyhint="search"
@@ -21,7 +24,11 @@
     </label>
     @if (draft()) {
       <button type="button" class="clear" (click)="clear()">
-        <ui-icon name="close" label="Clear the search" />
+        <ui-icon
+          name="close"
+          label="Clear the search"
+          i18n-label="button that empties the field that searches the log"
+        />
       </button>
     } @else {
       <kbd class="key" aria-hidden="true">/</kbd>

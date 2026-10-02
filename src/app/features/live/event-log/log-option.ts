@@ -1,5 +1,4 @@
-import { I18nPluralPipe } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { FacetOption } from './facets';
 
@@ -10,7 +9,7 @@ import type { FacetOption } from './facets';
  */
 @Component({
   selector: 'fl-log-option',
-  imports: [RouterLink, I18nPluralPipe],
+  imports: [RouterLink],
   template: `
     @let choice = option();
     @if (choice.count || choice.current) {
@@ -29,8 +28,7 @@ import type { FacetOption } from './facets';
         </span>
         &ngsp;<span class="leader" aria-hidden="true"></span>
         <span class="count mono"
-          >{{ choice.count
-          }}<span class="visually-hidden">&ngsp;{{ choice.count | i18nPlural: events }}</span></span
+          >{{ choice.count }}<span class="visually-hidden">&ngsp;{{ unit() }}</span></span
         >
       </a>
     } @else {
@@ -42,7 +40,9 @@ import type { FacetOption } from './facets';
           }
         </span>
         &ngsp;<span class="leader" aria-hidden="true"></span>
-        <span class="count mono">0<span class="visually-hidden">&ngsp;events</span></span>
+        <span class="count mono"
+          >{{ choice.count }}<span class="visually-hidden">&ngsp;{{ unit() }}</span></span
+        >
       </span>
     }
   `,
@@ -53,5 +53,15 @@ export class LogOption {
   /** After a click on the link, for a container that should close behind it. */
   readonly chosen = output();
 
-  protected readonly events = { '=1': 'event', other: 'events' };
+  /**
+   * The count's unit, read out after it. Worded here, not by an ICU in the
+   * template: options repeat with the same server state, which hydration
+   * shares between them, and an ICU takes its case out of that state, leaving
+   * none for the next option.
+   */
+  protected readonly unit = computed(() =>
+    this.option().count === 1
+      ? $localize`:read out after the count of a filter option, exactly one:event`
+      : $localize`:read out after the count of a filter option, any but one:events`,
+  );
 }

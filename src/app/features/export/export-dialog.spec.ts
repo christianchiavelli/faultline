@@ -163,7 +163,8 @@ describe('ExportDialog', () => {
     const next = onlyCount(http);
     expect(paramsOf(next)['minmag']).toBe('4.5');
     expect(element.querySelector('.count')?.classList).toContain('count--settling');
-    expect(text(element.querySelector('.count'))).toBe('1,994events Counting…');
+    expect(text(element.querySelector('.count .value'))).toBe('1,994events');
+    expect(text(element.querySelector('.count .hint'))).toBe('Counting…');
     expect(download(element)).toBeNull();
 
     await answer(next, 41);
@@ -311,7 +312,7 @@ describe('ExportDialog', () => {
       const { element, http } = render({ event: ende });
 
       expect(text(element.querySelector('.lede'))).toBe(
-        'Around the M7.8 66 km NNW of Ende, Indonesia, on 29 Sep 2026 at 04:16 UTC.',
+        'Around the M7.8 66 km NNW of Ende, Indonesia, on 29 Sept 2026 at 04:16 UTC.',
       );
       expect(paramsOf(onlyCount(http))).toEqual({
         from: '2026-09-29T04:16:27Z',

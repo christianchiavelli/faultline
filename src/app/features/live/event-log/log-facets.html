@@ -1,4 +1,8 @@
-<nav class="facets" aria-label="Filter the events">
+<nav
+  class="facets"
+  aria-label="Filter the events"
+  i18n-aria-label="accessible name of the index of the log's filters"
+>
   @for (facet of facets(); track facet.key) {
     <div
       class="facet"
@@ -13,7 +17,12 @@
         }
       </ul>
       @if (facet.all; as all) {
-        <button type="button" class="all" [attr.popovertarget]="id + '-all'">
+        <button
+          type="button"
+          class="all"
+          [attr.popovertarget]="id + '-all'"
+          i18n="button that opens every region of the day, with how many there are"
+        >
           All {{ all.length }} regions<ui-icon name="chevron-down" />
         </button>
         <div
@@ -24,7 +33,13 @@
           [id]="id + '-all'"
           [attr.aria-labelledby]="id + '-all-label'"
         >
-          <p class="eyebrow" [id]="id + '-all-label'">Every region in the last 24 hours</p>
+          <p
+            class="eyebrow"
+            [id]="id + '-all-label'"
+            i18n="heading of the panel that lists every region of the day"
+          >
+            Every region in the last 24 hours
+          </p>
           <ul class="options options--columns">
             @for (option of all; track option.value) {
               <!-- A choice changes the view in place, so the popover closes behind it. -->

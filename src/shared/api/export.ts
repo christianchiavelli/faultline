@@ -179,21 +179,37 @@ export const exportQuerySchema = z.pipe(
 
 export const exportFormatSchema = z._default(z.enum(EXPORT_FORMATS), 'csv');
 
+/** What the dialog's date fields say when a day will not do, in the reader's language. */
+export interface DateRangeMessages {
+  /** A field that holds no date. */
+  readonly missing: string;
+  /** A day before the catalogue starts. */
+  readonly beforeRecord: string;
+  /** An end before the start. */
+  readonly inverted: string;
+}
+
 /**
  * The dialog's custom period, as its two date fields hold it. Same floor as
- * the query, day by day instead of instant by instant.
+ * the query, day by day instead of instant by instant. A reader sees these
+ * messages, so the app words them: this module knows no language but the
+ * API's.
  */
-export const exportDateRangeSchema = z
-  .object({
-    from: z.iso.date('Enter a date.').check(inRecord),
-    to: z.iso.date('Enter a date.'),
-  })
-  .check(
-    z.refine((range) => !isDay(range.from) || !isDay(range.to) || range.from <= range.to, {
-      path: ['to'],
-      error: 'End on or after the start.',
-    }),
-  );
+export function exportDateRangeSchema(messages: DateRangeMessages) {
+  return z
+    .object({
+      from: z.iso
+        .date(messages.missing)
+        .check(z.refine((day) => day >= EXPORT_EARLIEST_DATE, messages.beforeRecord)),
+      to: z.iso.date(messages.missing),
+    })
+    .check(
+      z.refine((range) => !isDay(range.from) || !isDay(range.to) || range.from <= range.to, {
+        path: ['to'],
+        error: messages.inverted,
+      }),
+    );
+}
 
 function isDay(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);

@@ -35,11 +35,6 @@ describe('magnitude', () => {
   });
 
   it('keeps an unknown code readable instead of guessing what it measures', () => {
-    expect(magnitudeScale('mlv')).toEqual({
-      code: 'mlv',
-      name: 'Network-specific',
-      family: 'other',
-      summary: expect.any(String),
-    });
+    expect(magnitudeScale('mlv')).toEqual({ key: 'mlv', code: 'mlv', family: 'other' });
   });
 });

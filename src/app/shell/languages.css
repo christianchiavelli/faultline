@@ -1,0 +1,24 @@
+:host {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-stretch: 87.5%;
+  white-space: nowrap;
+  color: var(--content-tertiary);
+}
+
+.current {
+  font-weight: 650;
+  color: var(--content-primary);
+}
+
+/* Its letters, in a box a finger can find: WCAG 2.5.8 asks 24 px of a target beside another. */
+a {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 24px;
+  min-block-size: 24px;
+  color: var(--content-secondary);
+}

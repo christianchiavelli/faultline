@@ -50,12 +50,15 @@ async function render(respond: (http: HttpTestingController) => void) {
   return { element: fixture.nativeElement as HTMLElement, response };
 }
 
-const readout = (element: HTMLElement, label: string) =>
-  [...element.querySelectorAll('.readout')]
+/** A readout's value and hint, read apart: each is a box of its own on the page. */
+const readout = (element: HTMLElement, label: string) => {
+  const dd = [...element.querySelectorAll('.readout')]
     .find((item) => item.querySelector('dt')?.textContent?.trim() === label)
-    ?.querySelector('dd')
-    ?.textContent?.replace(/\s+/g, ' ')
-    .trim();
+    ?.querySelector('dd');
+  return dd && [...dd.children].map((part) => words(part)).join(' ');
+};
+
+const words = (element: Element) => element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
 
 const recent = (http: HttpTestingController) =>
   http.expectOne(

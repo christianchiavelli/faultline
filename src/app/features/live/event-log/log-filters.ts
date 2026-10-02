@@ -12,9 +12,9 @@ import {
 import { LogSheet } from './log-sheet';
 
 const ORDER_LABELS: Record<LogOrder, string> = {
-  newest: 'Newest first',
-  largest: 'Largest first',
-  deepest: 'Deepest first',
+  newest: $localize`:an order of the log, in its menu:Newest first`,
+  largest: $localize`:an order of the log, in its menu:Largest first`,
+  deepest: $localize`:an order of the log, in its menu:Deepest first`,
 };
 
 /**

@@ -1,7 +1,9 @@
 <figure class="chart">
   <!-- Drawn for the eye; the table and the caption below say the same in words. -->
   <div class="plot" aria-hidden="true">
-    <span class="plot__unit mono">Events a day</span>
+    <span class="plot__unit mono" i18n="axis title|unit of the magnitude chart's vertical axis"
+      >Events a day</span
+    >
 
     <div class="plot__counts mono">
       @for (count of chart().counts; track count.value) {
@@ -72,29 +74,50 @@
       <span class="complete__label mono" [style.--x]="chart().complete">M{{ complete }}</span>
 
       @if (chart().dense; as dense) {
-        <p class="note note--centred" [style.--x]="dense.x" [style.--y]="dense.y">
+        <p
+          class="note note--centred"
+          [style.--x]="dense.x"
+          [style.--y]="dense.y"
+          i18n="note on the magnitude chart: the regions most of its small events come from"
+        >
           <b>Where seismometers are dense</b> {{ regions() }}, mostly
         </p>
       }
-      <p class="note note--law" [style.--x]="chart().law.x1">
+      <p
+        class="note note--law"
+        [style.--x]="chart().law.x1"
+        i18n="note on the magnitude chart: the line of the Gutenberg–Richter law"
+      >
         <b>An average day on Earth</b> about ten times as many for each step down
       </p>
-      <p class="note note--gap" [style.--x]="chart().complete">
+      <p
+        class="note note--gap"
+        [style.--x]="chart().complete"
+        i18n="note on the magnitude chart: the sizes the catalogue mostly misses"
+      >
         <b><span class="swatch swatch--gap"></span>Mostly missing</b>
-        {{ chart().gap.located }} located, where an average day has about
-        {{ roughly(chart().gap.expected) | number }}
+        {chart().gap.located, plural, other {{{ chart().gap.located }} located}}, where an average
+        day has about {{ roughly(chart().gap.expected) | number }}
       </p>
-      <p class="note note--pen" [style.--x]="chart().complete">
+      <p
+        class="note note--pen"
+        [style.--x]="chart().complete"
+        i18n="note on the magnitude chart: the magnitude from which the catalogue is complete"
+      >
         <b>The whole planet</b> from M{{ complete }} the USGS aims to locate every earthquake on
         Earth
       </p>
     </div>
 
-    <span class="plot__axis mono">Mag</span>
+    <span
+      class="plot__axis mono"
+      i18n="axis title|short for magnitude, under the magnitude chart's horizontal axis"
+      >Mag</span
+    >
     <div class="plot__magnitudes mono">
-      @for (magnitude of chart().magnitudes; track magnitude.value) {
-        <span [class.plot__odd]="magnitude.value % 2 !== 0" [style.--at]="magnitude.x">{{
-          signed(magnitude.value)
+      @for (mark of chart().magnitudes; track mark.value) {
+        <span [class.plot__odd]="mark.value % 2 !== 0" [style.--at]="mark.x">{{
+          magnitude(mark.value)
         }}</span>
       }
     </div>
@@ -103,14 +126,23 @@
   <!-- Hidden by its wrapper: a table grows to fit its cells, whatever width it is given. -->
   <div class="visually-hidden">
     <table>
-      <caption>
+      <caption i18n="caption of the table under the magnitude chart">
         Earthquakes in the last 24 hours by magnitude, against an average day worldwide
       </caption>
       <thead>
         <tr>
-          <th scope="col">Magnitude</th>
-          <th scope="col">Last 24 hours</th>
-          <th scope="col">Average day</th>
+          <th scope="col" i18n="column of the magnitude chart's table|its bins of magnitude">
+            Magnitude
+          </th>
+          <th scope="col" i18n="column of the magnitude chart's table|the day's count in each bin">
+            Last 24 hours
+          </th>
+          <th
+            scope="col"
+            i18n="column of the magnitude chart's table|an average day's count in each bin"
+          >
+            Average day
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -136,33 +168,36 @@
       @if (chart().dense) {
         <li class="legend__item legend__item--note">
           <span class="swatch swatch--ink"></span>
-          <span><b>Where seismometers are dense.</b> {{ regions() }}, mostly</span>
+          <span i18n="key of the magnitude chart: the regions most of its small events come from"
+            ><b>Where seismometers are dense.</b> {{ regions() }}, mostly</span
+          >
         </li>
       }
       <li class="legend__item legend__item--gap">
         <span class="swatch swatch--gap"></span>
-        <span
-          ><b>Mostly missing.</b> {{ chart().gap.located }} located, where an average day has about
-          {{ roughly(chart().gap.expected) | number }}</span
+        <span i18n="key of the magnitude chart: the sizes the catalogue mostly misses"
+          ><b>Mostly missing.</b>
+          {chart().gap.located, plural, other {{{ chart().gap.located }} located}}, where an average
+          day has about {{ roughly(chart().gap.expected) | number }}</span
         >
       </li>
       <li class="legend__item legend__item--note">
         <span class="swatch swatch--pen"></span>
-        <span
+        <span i18n="key of the magnitude chart: the magnitude from which the catalogue is complete"
           ><b>The whole planet.</b> From M{{ complete }} the USGS aims to locate every earthquake on
           Earth</span
         >
       </li>
       <li class="legend__item">
         <span class="swatch swatch--bars"></span>
-        <span
+        <span i18n="key of the magnitude chart: what its bars are, and which are red"
           >Earthquakes in the last 24 hours, in half-magnitude steps. Red: M{{ complete }} and
           above.</span
         >
       </li>
       <li class="legend__item">
         <span class="swatch swatch--law"></span>
-        <span
+        <span i18n="key of the magnitude chart: the line of the Gutenberg–Richter law, and its rate"
           ><b class="legend__title">An average day on Earth.</b> The Gutenberg–Richter law at the
           rate the USGS has recorded since 1990, about {{ fivesADay | number: '1.1-1' }} M5s a
           day.</span
@@ -170,7 +205,9 @@
       </li>
       <li class="legend__item">
         <span class="swatch swatch--none"></span>
-        <span>Log scale: each line up is ten times as many.</span>
+        <span i18n="key of the magnitude chart: its vertical scale is logarithmic"
+          >Log scale: each line up is ten times as many.</span
+        >
       </li>
     </ul>
   </figcaption>

@@ -1,7 +1,9 @@
 import { ViewportScroller } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
+import { Meta } from '@angular/platform-browser';
 import { NavigationEnd, Router, RouterOutlet, Scroll } from '@angular/router';
 import { filter } from 'rxjs';
+import { linkAlternateLanguages } from './core/languages';
 import { SiteFooter } from './shell/site-footer';
 import { TopBar } from './shell/top-bar';
 
@@ -9,7 +11,7 @@ import { TopBar } from './shell/top-bar';
   selector: 'fl-root',
   imports: [RouterOutlet, TopBar, SiteFooter],
   template: `
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main" i18n="link to jump past the top bar">Skip to content</a>
     <fl-top-bar />
     <main id="main" tabindex="-1">
       <router-outlet />
@@ -46,6 +48,12 @@ import { TopBar } from './shell/top-bar';
 export class App {
   constructor() {
     restoreScrollByPath();
+    linkAlternateLanguages();
+    // What a search result says of the site, in the language of the page it leads to.
+    inject(Meta).updateTag({
+      name: 'description',
+      content: $localize`:meta description of the site, shown under it in search results:Every earthquake the USGS recorded in the last 24 hours, drawn as a drum seismograph: one line per hour, one burst per event.`,
+    });
   }
 }
 

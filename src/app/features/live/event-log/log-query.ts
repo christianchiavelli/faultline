@@ -33,9 +33,9 @@ export interface LogQuery {
  * few Californian and Alaskan networks, and the trace above already shows it.
  */
 export const MAGNITUDE_FLOORS = [
-  { value: 'any', label: 'Any', min: null },
-  { value: '2.5', label: '2.5 and up', min: 2.5 },
-  { value: '4.5', label: '4.5 and up', min: 4.5 },
+  { value: 'any', min: null },
+  { value: '2.5', min: 2.5 },
+  { value: '4.5', min: 4.5 },
 ] as const;
 
 export type MagnitudeFloor = (typeof MAGNITUDE_FLOORS)[number]['value'];
@@ -149,9 +149,9 @@ export function toExportPreset(query: LogQuery): ExportPreset {
     review: query.review ?? 'any',
     kind: query.kind === 'earthquake' ? 'earthquake' : 'any',
     leftOut: [
-      ...(query.region ? ['the region'] : []),
-      ...(query.search ? ['the place search'] : []),
-      ...(query.kind === 'other' ? ['other events alone'] : []),
+      ...(query.region ? (['region'] as const) : []),
+      ...(query.search ? (['search'] as const) : []),
+      ...(query.kind === 'other' ? (['other-kinds'] as const) : []),
     ],
   };
 }

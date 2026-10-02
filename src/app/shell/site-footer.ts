@@ -1,10 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, LOCALE_ID, inject } from '@angular/core';
 
 @Component({
   selector: 'fl-site-footer',
   template: `
     <footer class="page footer">
-      <p>
+      <p i18n="credits for the data and the map, with links to their sources">
         Earthquake data from the
         <a href="https://earthquake.usgs.gov/earthquakes/feed/" rel="external"
           >U.S. Geological Survey</a
@@ -12,7 +12,12 @@ import { Component } from '@angular/core';
         <a href="https://opendatacommons.org/licenses/by/1-0/" rel="external">ODC-By 1.0</a>.
         Coastlines: <a href="https://www.naturalearthdata.com" rel="external">Natural Earth</a>.
       </p>
-      <p>
+      @if (translated) {
+        <p i18n="a note on a page in another language than English">
+          Place names are the USGS catalogue's own, in English.
+        </p>
+      }
+      <p i18n="disclaimer: the site does not warn of earthquakes or tsunamis">
         Nothing here is an alert. For warnings, follow your national seismic or tsunami authority.
       </p>
     </footer>
@@ -41,4 +46,7 @@ import { Component } from '@angular/core';
     }
   `,
 })
-export class SiteFooter {}
+export class SiteFooter {
+  /** A page in another language says why its place names are still English: the catalogue writes them so. */
+  protected readonly translated = !inject(LOCALE_ID).startsWith('en');
+}

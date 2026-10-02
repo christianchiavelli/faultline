@@ -1,4 +1,3 @@
-import { I18nPluralPipe } from '@angular/common';
 import { Component, computed, input, model } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Dialog } from '@ui/dialog';
@@ -14,16 +13,32 @@ import { clearFilters, isFiltered, logParams, type LogQuery } from './log-query'
  */
 @Component({
   selector: 'fl-log-sheet',
-  imports: [RouterLink, I18nPluralPipe, Dialog, LogFacets],
+  imports: [RouterLink, Dialog, LogFacets],
   template: `
-    <ui-dialog [(open)]="open" heading="Filters" [sheet]="true">
+    <ui-dialog
+      [(open)]="open"
+      heading="Filters"
+      i18n-heading="heading of the sheet of the log's filters"
+      [sheet]="true"
+    >
       <fl-log-facets [facets]="facets()" />
       <div uiDialogFooter class="foot">
         @if (filtered()) {
-          <a class="text-button" [routerLink]="[]" [queryParams]="clearParams()">Clear filters</a>
+          <a
+            class="text-button"
+            [routerLink]="[]"
+            [queryParams]="clearParams()"
+            i18n="link that takes every filter of the log off"
+            >Clear filters</a
+          >
         }
-        <button type="button" class="button" (click)="open.set(false)">
-          Show {{ shown() }} {{ shown() | i18nPlural: events }}
+        <button
+          type="button"
+          class="button"
+          (click)="open.set(false)"
+          i18n="button that closes the sheet of filters, with how many events they leave"
+        >
+          {shown(), plural, =1 {Show 1 event} other {Show {{ shown() }} events}}
         </button>
       </div>
     </ui-dialog>
@@ -52,5 +67,4 @@ export class LogSheet {
 
   protected readonly filtered = computed(() => isFiltered(this.query()));
   protected readonly clearParams = computed(() => logParams(clearFilters(this.query())));
-  protected readonly events = { '=1': 'event', other: 'events' };
 }

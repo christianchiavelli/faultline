@@ -7,7 +7,7 @@
  * the top of the count scale.
  */
 import { expectedPerDay } from '@shared/domain/magnitude';
-import { COMPLETE_WORLDWIDE_FROM, regionOf } from '@shared/domain/network';
+import { COMPLETE_WORLDWIDE_FROM, regionOf, type NetworkRegion } from '@shared/domain/network';
 import { isEarthquake, type QuakeSummary } from '@shared/domain/quake';
 
 /** Half a magnitude: fine enough to show where the catalogue gives out, coarse enough for one day. */
@@ -66,7 +66,7 @@ export interface Distribution {
   readonly dense: {
     readonly x: number;
     readonly y: number;
-    readonly regions: readonly string[];
+    readonly regions: readonly NetworkRegion[];
   } | null;
 }
 
@@ -170,7 +170,7 @@ function denseHump(
     .reduce<Bin | null>((top, bin) => (!top || bin.count > top.count ? bin : top), null);
   if (!tallest) return null;
 
-  const byRegion = new Map<string, number>();
+  const byRegion = new Map<NetworkRegion, number>();
   for (const { id, value } of measured) {
     const region = value < GAP.from ? regionOf(id) : null;
     if (region) byRegion.set(region, (byRegion.get(region) ?? 0) + 1);

@@ -1,8 +1,12 @@
 <!-- In bands: the event on the page's own colour, then where it was and how it was recorded on a raised one. -->
 <article class="page-bands">
   <div class="page-band opening">
-    <nav class="crumbs" aria-label="Breadcrumb">
-      <a routerLink="/">Live</a>
+    <nav
+      class="crumbs"
+      aria-label="Breadcrumb"
+      i18n-aria-label="accessible name of the trail of links above a page"
+    >
+      <a routerLink="/" i18n="first link of the trail above an event's page: the live page">Live</a>
       <span aria-hidden="true">/</span>
       <span class="mono" aria-current="page">{{ id() }}</span>
     </nav>
@@ -15,31 +19,37 @@
               class="numeral mono"
               [class.numeral--notable]="(view.quake.magnitude?.value ?? 0) >= 4.5"
             >
-              <span class="visually-hidden">Magnitude </span>{{ magnitude }}
+              <span class="visually-hidden" i18n="read out before an event's magnitude"
+                >Magnitude </span
+              >{{ magnitude }}
             </p>
             <p class="scale">
               <span class="scale__code mono">{{ view.scale!.code }}</span>
-              <span class="scale__name">{{ view.scale!.name }} magnitude</span>
+              <span class="scale__name">{{ view.scale!.name }}</span>
             </p>
           } @else {
             <p class="numeral numeral--missing mono">—</p>
-            <p class="scale"><span class="scale__name">No magnitude computed yet</span></p>
+            <p class="scale">
+              <span class="scale__name" i18n="what a dash in place of a magnitude means"
+                >No magnitude computed yet</span
+              >
+            </p>
           }
         </div>
 
         <div class="hero__text">
           <p class="eyebrow">
-            {{ view.quake.kind }}
-            @if (view.quake.review === 'reviewed') {
-              <span class="tag tag--solid">Reviewed</span>
-            } @else {
-              <span class="tag tag--dashed">Automatic</span>
-            }
+            {{ view.kind }}
+            <span
+              class="tag"
+              [class]="view.quake.review === 'reviewed' ? 'tag--solid' : 'tag--dashed'"
+              >{{ view.review }}</span
+            >
           </p>
           <h1 class="title">{{ view.place }}</h1>
           <p class="when mono">
             <time [attr.datetime]="view.quake.time | date: 'yyyy-MM-ddTHH:mm:ssZ' : 'UTC'">
-              {{ view.quake.time | date: 'EEE d MMM yyyy, HH:mm:ss' : 'UTC' }} UTC
+              {{ view.quake.time | date: dates.moment : 'UTC' }} UTC
             </time>
             <span class="when__ago">{{ view.quake.time | ago: now() }}</span>
           </p>
@@ -51,24 +61,30 @@
 
       <dl class="readouts">
         <div class="readout">
-          <dt>Depth</dt>
+          <dt>{{ readouts.depth }}</dt>
           <dd [animate.enter]="arriving()">
             @if (view.depthKm !== null) {
               <span class="readout__value"
                 >{{ view.depthKm | number: '1.1-1' }}<span class="readout__unit">km</span></span
               >
               @if (view.depthAboveSea) {
-                <span class="readout__hint">
+                <span class="readout__hint" i18n="hint under a depth above sea level">
                   Above sea level: shallow events under high ground are located relative to the sea.
                 </span>
               } @else if (record(); as record) {
                 <span class="readout__hint" [animate.enter]="recordArriving()">
                   @if (record.depthFixed) {
-                    Fixed by the analyst, not measured: the data could not constrain it.
+                    <ng-container i18n="hint under a depth the analyst set rather than measured"
+                      >Fixed by the analyst, not measured: the data could not constrain
+                      it.</ng-container
+                    >
                   } @else if (record.depthErrorKm !== null) {
                     ± {{ record.depthErrorKm | number: '1.1-1' }} km
                   } @else {
-                    Uncertainty not published
+                    <ng-container
+                      i18n="hint under a value whose uncertainty the USGS did not publish"
+                      >Uncertainty not published</ng-container
+                    >
                   }
                 </span>
               } @else if (pending()) {
@@ -81,18 +97,24 @@
         </div>
 
         <div class="readout">
-          <dt>Epicentre</dt>
+          <dt>{{ readouts.epicentre }}</dt>
           <dd [animate.enter]="arriving()">
-            <span class="readout__value readout__value--small">
-              {{ view.quake.location.latitude | number: '1.3-3' }},
-              {{ view.quake.location.longitude | number: '1.3-3' }}
+            <span
+              class="readout__value readout__value--small"
+              i18n="an epicentre's latitude and longitude, in decimal degrees"
+            >
+              {{ view.epicentre.latitude }}, {{ view.epicentre.longitude }}
             </span>
             @if (record(); as record) {
               <span class="readout__hint" [animate.enter]="recordArriving()">
                 @if (record.origin?.horizontalErrorKm; as error) {
-                  ± {{ error | number: '1.1-1' }} km horizontal uncertainty
+                  <ng-container i18n="hint under an epicentre: how far off it may be"
+                    >± {{ error | number: '1.1-1' }} km horizontal uncertainty</ng-container
+                  >
                 } @else {
-                  Uncertainty not published
+                  <ng-container i18n="hint under a value whose uncertainty the USGS did not publish"
+                    >Uncertainty not published</ng-container
+                  >
                 }
               </span>
             } @else if (pending()) {
@@ -102,32 +124,48 @@
         </div>
 
         <div class="readout">
-          <dt>Solution</dt>
+          <dt>{{ readouts.solution }}</dt>
           @if (record(); as record) {
             <dd [animate.enter]="recordArriving()">
               <span class="readout__value">
                 @if (record.origin?.stationsUsed; as stations) {
-                  {{ stations }}<span class="readout__unit">stations</span>
+                  {{ stations
+                  }}<span
+                    class="readout__unit"
+                    i18n="the unit after how many stations located an event"
+                    >{stations, plural, =1 {station} other {stations}}</span
+                  >
                 } @else {
                   —
                 }
               </span>
               <span class="readout__hint">
                 @if (record.origin?.azimuthalGapDeg; as gap) {
-                  {{ gap | number: '1.0-0' }}° azimuthal gap.
+                  <ng-container i18n="the widest angle between the stations, as seen from the event"
+                    >{{ gap | number: '1.0-0' }}° azimuthal gap.</ng-container
+                  >
                   @if (record.wideGap) {
-                    Wide: the stations see it from one side, so the position is less certain.
+                    <ng-container i18n="hint after a wide azimuthal gap"
+                      >Wide: the stations see it from one side, so the position is less
+                      certain.</ng-container
+                    >
                   } @else {
-                    Stations surround it well.
+                    <ng-container i18n="hint after a narrow azimuthal gap"
+                      >Stations surround it well.</ng-container
+                    >
                   }
                 } @else {
-                  Station geometry not published.
+                  <ng-container i18n="hint when the USGS did not publish where the stations were"
+                    >Station geometry not published.</ng-container
+                  >
                 }
               </span>
             </dd>
           } @else if (pending()) {
             <dd>
-              <span class="visually-hidden">Coming from the USGS catalogue…</span>
+              <span class="visually-hidden" i18n="read out while the record is on its way"
+                >Coming from the USGS catalogue…</span
+              >
               <span class="readout__value" aria-hidden="true"><ui-skeleton width="6.5rem" /></span>
               <span class="readout__hint" aria-hidden="true">
                 <ui-skeleton width="84%" />
@@ -140,36 +178,57 @@
         </div>
 
         <div class="readout">
-          <dt>Energy</dt>
+          <dt>{{ readouts.energy }}</dt>
           <dd [animate.enter]="arriving()">
             @if (view.energy; as energy) {
               <span class="readout__value"
                 >{{ energy.mantissa }}×10<sup>{{ energy.exponent }}</sup
                 ><span class="readout__unit">J</span></span
               >
-              <span class="readout__hint">
-                Radiated as seismic waves, about {{ energy.tnt.value | number }}
-                {{ energy.tnt.unit }}
-                of TNT. One magnitude step up is 32× more.
-              </span>
+              @if (energy.tnt.unit === 'tonnes') {
+                <span class="readout__hint" i18n="the energy an event radiated, in tonnes of TNT">
+                  Radiated as seismic waves, about
+                  {energy.tnt.value, plural,
+                    =1 {1 tonne}
+                    other {{{ energy.tnt.value | number }} tonnes}
+                  }
+                  of TNT. One magnitude step up is 32× more.
+                </span>
+              } @else {
+                <span
+                  class="readout__hint"
+                  i18n="the energy an event radiated, in kilograms of TNT"
+                >
+                  Radiated as seismic waves, about {{ energy.tnt.value | number }} kg of TNT. One
+                  magnitude step up is 32× more.
+                </span>
+              }
             } @else {
               <span class="readout__value">—</span>
             }
           </dd>
         </div>
       </dl>
-    } @else if (problem(); as problem) {
+    } @else if (failure(); as failure) {
       <div class="gone">
-        <p class="eyebrow">Error {{ problem.status }}</p>
-        <h1 class="title">{{ problem.title }}</h1>
-        @if (problem.detail) {
-          <p class="lede">{{ problem.detail }}</p>
+        <p class="eyebrow" i18n="the error an event's page answers, as in Error 404">
+          Error {{ problem()?.status }}
+        </p>
+        <h1 class="title">{{ failure.title }}</h1>
+        @if (failure.detail) {
+          <p class="lede">{{ failure.detail }}</p>
         }
-        <p><a routerLink="/">Back to the live record</a></p>
+        <p>
+          <a routerLink="/" i18n="link from an error page to the live page"
+            >Back to the live record</a
+          >
+        </p>
       </div>
     } @else {
       <!-- The page's heading while it waits, for whoever finds their way by headings. -->
-      <h1 class="visually-hidden">Looking the event up in the USGS catalogue…</h1>
+      <h1 class="visually-hidden" i18n="heading of an event's page while it loads, read out">
+        Looking the event up in the USGS catalogue…
+      </h1>
       <!-- The event's shape before its words: the hero's lines, then the readouts' labels and rules. -->
       <div class="hero" aria-hidden="true">
         <div class="hero__magnitude">
@@ -192,7 +251,7 @@
         </div>
       </div>
       <dl class="readouts" aria-hidden="true">
-        @for (readout of readouts; track readout.label) {
+        @for (readout of waitingReadouts; track readout.label) {
           <div class="readout">
             <dt>{{ readout.label }}</dt>
             <dd>
@@ -216,7 +275,7 @@
       <div class="context">
         <section class="where" aria-labelledby="where-title">
           <header class="section-head">
-            <h2 class="section-title" id="where-title">Where</h2>
+            <h2 class="section-title" id="where-title" i18n="heading of the event's map">Where</h2>
             <fl-export-button [event]="view.quake" />
           </header>
           <fl-world-chart
@@ -229,13 +288,20 @@
 
         <section class="record" aria-labelledby="record-title">
           <header class="section-head">
-            <h2 class="section-title" id="record-title">The record</h2>
+            <h2
+              class="section-title"
+              id="record-title"
+              i18n="heading of the facts of the event's record in the catalogue"
+            >
+              The record
+            </h2>
             @if (record(); as record) {
               <a
                 class="out"
                 [href]="record.quake.url"
                 rel="external"
                 [animate.enter]="recordArriving()"
+                i18n="link to the event's own page on the USGS site"
                 >USGS event page<ui-icon class="trailing-icon" name="external-link"
               /></a>
             }
@@ -243,7 +309,7 @@
           @if (record(); as record) {
             <dl class="facts" [animate.enter]="recordArriving()">
               <div>
-                <dt>Located by</dt>
+                <dt>{{ facts.network }}</dt>
                 <dd>
                   <span class="mono">{{ record.network.code }}</span>
                   @if (record.network.name; as name) {
@@ -252,54 +318,73 @@
                 </dd>
               </div>
               <div>
-                <dt>Last revised</dt>
-                <dd>
+                <dt>{{ facts.revised }}</dt>
+                <dd i18n="when the USGS last revised the event, and how long after it happened">
                   <span class="mono"
-                    >{{ record.quake.updated | date: 'd MMM, HH:mm' : 'UTC' }} UTC</span
+                    >{{ record.quake.updated | date: dates.dayAndTime : 'UTC' }} UTC</span
                   >, {{ record.revisedAfter }} after the event
                 </dd>
               </div>
               <div>
-                <dt>Felt reports</dt>
+                <dt>{{ facts.felt }}</dt>
                 <dd>
                   @if (record.quake.felt; as felt) {
-                    <span class="mono">{{ felt | number }}</span> people answered "Did You Feel It?"
+                    <ng-container i18n="how many people answered the USGS's Did You Feel It? survey"
+                      ><span class="mono">{{ felt | number }}</span>
+                      {felt, plural, =1 {person answered} other {people answered}} "Did You Feel
+                      It?"</ng-container
+                    >
                   } @else {
-                    None filed
+                    <ng-container i18n="no one answered the USGS's Did You Feel It? survey"
+                      >None filed</ng-container
+                    >
                   }
                 </dd>
               </div>
               <div>
-                <dt>Impact alert</dt>
+                <dt>{{ facts.alert }}</dt>
                 <dd>
                   @if (record.alert; as alert) {
-                    <span class="alert alert--{{ alert.level }}">PAGER {{ alert.level }}</span
+                    <span class="alert alert--{{ alert.level }}">PAGER {{ alert.name }}</span
                     >.
                     {{ alert.meaning }}
                   } @else {
-                    None issued. PAGER only runs for events that may cause damage.
+                    <ng-container i18n="the event has no PAGER alert, and why"
+                      >None issued. PAGER only runs for events that may cause damage.</ng-container
+                    >
                   }
                 </dd>
               </div>
             </dl>
           } @else if (pending()) {
-            <p class="visually-hidden">Coming from the USGS catalogue…</p>
+            <p class="visually-hidden">
+              <ng-container i18n="read out while the record is on its way"
+                >Coming from the USGS catalogue…</ng-container
+              >
+            </p>
             <dl class="facts" aria-hidden="true">
-              @for (fact of facts; track fact) {
+              @for (fact of waitingFacts; track fact) {
                 <div>
                   <dt>{{ fact }}</dt>
                   <dd><ui-skeleton width="70%" /></dd>
                 </div>
               }
             </dl>
-          } @else if (problem(); as problem) {
+          } @else if (failure(); as failure) {
             <div class="callout" role="alert">
-              <strong>{{ problem.title }}.</strong>
-              <span
+              <strong>{{ failure.title }}.</strong>
+              <span i18n="what an event's page is missing when its record failed to come"
                 >The rest of the record did not come: who located the event, how well, and what it
                 did.</span
               >
-              <button type="button" class="text-button" (click)="detail.reload()">Try again</button>
+              <button
+                type="button"
+                class="text-button"
+                (click)="detail.reload()"
+                i18n="button that asks the USGS again after a failure"
+              >
+                Try again
+              </button>
             </div>
           }
         </section>

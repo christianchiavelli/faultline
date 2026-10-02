@@ -7,9 +7,9 @@ describe('network', () => {
   });
 
   it('reads the region an event comes from off its id', () => {
-    expect(regionOf('nc75012345')).toBe('California');
-    expect(regionOf('ci40123456')).toBe('California');
-    expect(regionOf('av91234567')).toBe('Alaska');
+    expect(regionOf('nc75012345')).toBe('california');
+    expect(regionOf('ci40123456')).toBe('california');
+    expect(regionOf('av91234567')).toBe('alaska');
   });
 
   it('gives the global network and unknown ones no region', () => {

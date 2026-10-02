@@ -38,7 +38,10 @@
             "ssr": {
               "entry": "src/server.ts"
             },
-            "inlineStyleLanguage": "css"
+            "inlineStyleLanguage": "css",
+            "polyfills": ["@angular/localize/init"],
+            "localize": true,
+            "i18nMissingTranslation": "error"
           },
           "configurations": {
             "production": {
@@ -59,7 +62,11 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "localize": false
+            },
+            "pt": {
+              "localize": ["pt-BR"]
             }
           },
           "defaultConfiguration": "production"
@@ -72,6 +79,9 @@
             },
             "development": {
               "buildTarget": "faultline:build:development"
+            },
+            "pt": {
+              "buildTarget": "faultline:build:development,pt"
             }
           },
           "defaultConfiguration": "development"
@@ -92,6 +102,25 @@
               "e2e/**/*.ts",
               "playwright.config.ts"
             ]
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular/build:extract-i18n",
+          "options": {
+            "buildTarget": "faultline:build",
+            "outputPath": "src/locale"
+          }
+        }
+      },
+      "i18n": {
+        "sourceLocale": {
+          "code": "en-GB",
+          "subPath": ""
+        },
+        "locales": {
+          "pt-BR": {
+            "translation": "src/locale/messages.pt-BR.xlf",
+            "subPath": "pt"
           }
         }
       }

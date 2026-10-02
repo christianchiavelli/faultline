@@ -1,13 +1,24 @@
 import { DatePipe, PercentPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, RESPONSE_INIT, computed, effect, inject, input } from '@angular/core';
+import {
+  Component,
+  LOCALE_ID,
+  RESPONSE_INIT,
+  computed,
+  effect,
+  inject,
+  input,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { liveQuakesResource } from '@core/api/quakes';
 import { Clock } from '@core/clock';
-import { magnitudeScale } from '@shared/domain/magnitude';
+import { countKind } from '@core/words/domain';
+import { describeScale } from '@core/words/magnitude';
+import { isEarthquake } from '@shared/domain/quake';
 import { summarise } from '@shared/domain/summary';
 import { AgoPipe } from '@ui/ago.pipe';
 import { arrival } from '@ui/arrival';
+import { formatDecimal } from '@ui/numbers';
 import { Skeleton } from '@ui/skeleton';
 import { capitalise } from '@ui/text';
 import { WorldChart } from '../common/world-chart/world-chart';
@@ -24,8 +35,13 @@ import { MagnitudeChart } from './magnitude-chart/magnitude-chart';
  */
 const FEED_LATE_MS = 5 * 60_000;
 
-/** What the waiting readouts are labelled, as the day's will be. */
-const READOUTS = ['Events', 'Largest', 'Energy', 'Reviewed'] as const;
+/** The readouts' labels, the same over the day's values and over the lines waiting for them. */
+const READOUTS = {
+  events: $localize`:readout label|how many events the day held:Events`,
+  largest: $localize`:readout label|the day's largest event:Largest`,
+  energy: $localize`:readout label|the share of the day's energy its largest event released:Energy`,
+  reviewed: $localize`:readout label|the share of the day's events a seismologist reviewed:Reviewed`,
+} as const;
 
 /** The waiting log's lines, uneven like the places they stand for. */
 const LOG_ROWS = ['62%', '48%', '71%', '55%', '66%', '44%', '58%', '69%', '51%', '63%'] as const;
@@ -59,6 +75,7 @@ export class LivePage {
   readonly rows = input<string>();
 
   protected readonly now = inject(Clock).now;
+  readonly #locale = inject(LOCALE_ID);
   protected readonly recent = liveQuakesResource('day');
 
   protected readonly feed = computed(() => (this.recent.hasValue() ? this.recent.value() : null));
@@ -90,9 +107,11 @@ export class LivePage {
     if (!largest?.magnitude) return null;
     return {
       quake: largest,
-      place: largest.place ? capitalise(largest.place) : 'Location not described',
-      value: largest.magnitude.value.toFixed(1),
-      scale: magnitudeScale(largest.magnitude.type),
+      place: largest.place
+        ? capitalise(largest.place)
+        : $localize`:in place of an event's place name, when the USGS gives none:Location not described`,
+      value: formatDecimal(largest.magnitude.value, this.#locale, '1.1-1'),
+      scale: describeScale(largest.magnitude.type),
       link: quakeLinkState(largest),
     };
   });
@@ -101,12 +120,13 @@ export class LivePage {
   protected readonly otherKinds = computed(() => {
     const counts = new Map<string, number>();
     for (const quake of this.feed()?.quakes ?? []) {
-      if (quake.kind !== 'earthquake') counts.set(quake.kind, (counts.get(quake.kind) ?? 0) + 1);
+      if (!isEarthquake(quake)) counts.set(quake.kind, (counts.get(quake.kind) ?? 0) + 1);
     }
-    return [...counts].map(([kind, count]) => `${count} ${count === 1 ? kind : pluralise(kind)}`);
+    return [...counts].map(([kind, count]) => countKind(kind, count));
   });
 
   protected readonly readouts = READOUTS;
+  protected readonly readoutLabels = Object.values(READOUTS);
   protected readonly logRows = LOG_ROWS;
 
   constructor() {
@@ -117,8 +137,4 @@ export class LivePage {
       if (response && error instanceof HttpErrorResponse) response.status = error.status;
     });
   }
-}
-
-function pluralise(kind: string): string {
-  return kind.endsWith('s') ? kind : `${kind}s`;
 }

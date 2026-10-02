@@ -56,6 +56,7 @@
           role="slider"
           tabindex="0"
           aria-label="Events on the trace"
+          i18n-aria-label="accessible name of the slider that steps through the events on the trace"
           aria-valuemin="1"
           [attr.aria-valuemax]="placed().length"
           [attr.aria-valuenow]="position() + 1"
@@ -139,27 +140,47 @@
           >
           <p class="card__meta">
             @if (reading.depth; as depth) {
-              <span
-                ><span class="mono">{{ depth.km }} km</span>
-                {{ depth.above ? 'above sea level' : 'deep' }}</span
-              >
+              @if (depth.above) {
+                <span i18n="an event's height above sea level, on the trace's card"
+                  ><span class="mono">{{ depth.km }} km</span> above sea level</span
+                >
+              } @else {
+                <span i18n="an event's depth, on the trace's card"
+                  ><span class="mono">{{ depth.km }} km</span> deep</span
+                >
+              }
             } @else {
-              <span>Depth <span class="missing">—</span></span>
+              <span i18n="an event's depth, unknown, on the trace's card"
+                >Depth <span class="missing">—</span></span
+              >
             }
             @if (reading.kind; as kind) {
               <span class="tag card__kind">{{ kind }}</span>
             }
-            @if (reading.reviewed) {
-              <span class="tag tag--solid">Reviewed</span>
-            } @else {
-              <span class="tag tag--dashed">Automatic</span>
-            }
+            <span class="tag" [class]="reading.reviewed ? 'tag--solid' : 'tag--dashed'">{{
+              reading.review
+            }}</span>
           </p>
           @if (reading.source === 'keyboard') {
             <p class="card__keys">
-              <span><kbd>←</kbd><kbd>→</kbd>Other events</span>
-              <span><kbd>Enter</kbd>Open</span>
-              <span><kbd>Esc</kbd>Close</span>
+              <span
+                ><kbd>←</kbd><kbd>→</kbd
+                ><ng-container i18n="what the arrow keys do on the trace's card"
+                  >Other events</ng-container
+                ></span
+              >
+              <span
+                ><kbd>Enter</kbd
+                ><ng-container i18n="what the Enter key does on the trace's card"
+                  >Open</ng-container
+                ></span
+              >
+              <span
+                ><kbd>Esc</kbd
+                ><ng-container i18n="what the Escape key does on the trace's card"
+                  >Close</ng-container
+                ></span
+              >
             </p>
           }
         </div>
@@ -167,18 +188,24 @@
     </div>
   </div>
 
-  <p class="visually-hidden" [id]="hintId">
+  <p class="visually-hidden" [id]="hintId" i18n="how to use the slider over the trace, read out">
     The arrow keys go from event to event, and Enter opens the one read.
   </p>
 
   <figcaption class="legend">
-    <span class="legend__item">One line per hour, read left to right, top to bottom.</span>
-    <span class="legend__item">
+    <span class="legend__item" i18n="key of the trace: how to read its lines"
+      >One line per hour, read left to right, top to bottom.</span
+    >
+    <span class="legend__item" i18n="key of the trace: what a spike is and how tall it grows">
       Each spike is one event. Height grows about 3× per magnitude step, a compressed scale: ground
       motion really grows 10×.
     </span>
-    <span class="legend__item legend__item--pen">Red: M4.5 and above.</span>
-    <span class="legend__item">
+    <span
+      class="legend__item legend__item--pen"
+      i18n="key of the trace: the magnitude from which the pen draws in red"
+      >Red: M{{ notable }} and above.</span
+    >
+    <span class="legend__item" i18n="key of the trace: it is drawn, not recorded by a station">
       A synthetic record drawn from the USGS catalogue, not a waveform from any station.
     </span>
   </figcaption>

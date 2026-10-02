@@ -43,7 +43,13 @@ let nextId = 0;
             <p class="lede" [id]="ledeId">{{ lede }}</p>
           }
         </div>
-        <button type="button" class="close" aria-label="Close" (click)="open.set(false)">
+        <button
+          type="button"
+          class="close"
+          aria-label="Close"
+          i18n-aria-label="button that closes a dialog"
+          (click)="open.set(false)"
+        >
           <ui-icon name="close" />
         </button>
       </header>
