@@ -1,9 +1,13 @@
-import type { RequestHandler, Response } from 'express';
+import type { Request, RequestHandler, Response } from 'express';
 import { once } from 'node:events';
 import type { RateLimiter } from '../http/rate-limit';
 import { problem, type ApiResult } from '../http/result';
 import { prepareExport } from './export';
+import type { FeedStreams } from './feed-stream';
 import { handleApiRequest } from './router';
+
+/** What `compression` adds to a response: a way to send what it holds without waiting for more. */
+type Flushable = Response & { flush?: () => void };
 
 /** Express is only the transport here; routing and caching live in `router.ts`. */
 export function apiHandler(): RequestHandler {
@@ -43,7 +47,7 @@ export function exportHandler(prepare = prepareExport): RequestHandler {
         for await (const chunk of result.chunks) {
           if (!res.write(chunk)) await once(res, 'drain', { signal: controller.signal });
           // Past compression's buffer, so the download starts before the first page arrives.
-          if (first) (res as Response & { flush?: () => void }).flush?.();
+          if (first) (res as Flushable).flush?.();
           first = false;
         }
         res.end();
@@ -59,10 +63,43 @@ export function exportHandler(prepare = prepareExport): RequestHandler {
   };
 }
 
+/**
+ * `/api/quakes/recent/stream`, the feed as server-sent events (`feed-stream.ts`).
+ * Each message is flushed as it is written: `compression` compresses an event
+ * stream like any text, and would otherwise hold a message back until enough
+ * others came to fill its buffer.
+ */
+export function feedStreamHandler(streams: FeedStreams): RequestHandler {
+  return (req, res) => {
+    const url = new URL(req.originalUrl, 'http://localhost');
+    const stream = streams.open(url, clientOf(req), req.get('last-event-id') ?? null);
+    if (!('subscribe' in stream)) return send(res, stream, req.method === 'HEAD');
+
+    res.status(200).set({
+      'content-type': 'text/event-stream; charset=utf-8',
+      'cache-control': 'no-store',
+      // nginx buffers what it proxies unless told otherwise, which would hold every message back.
+      'x-accel-buffering': 'no',
+    });
+    if (req.method === 'HEAD') return void res.end();
+
+    const leave = stream.subscribe((chunk) => {
+      res.write(chunk);
+      (res as Flushable).flush?.();
+    });
+    res.on('close', leave);
+  };
+}
+
 function send(res: Response, result: ApiResult, head: boolean): void {
   res.status(result.status).set(result.headers);
   if (result.body === undefined || head) res.end();
   else res.send(JSON.stringify(result.body));
+}
+
+/** Who is asking, as far as limits go: the address, or what the proxy says it is under `trust proxy`. */
+function clientOf(req: Request): string {
+  return req.ip ?? req.socket.remoteAddress ?? 'unknown';
 }
 
 /**
@@ -72,7 +109,7 @@ function send(res: Response, result: ApiResult, head: boolean): void {
  */
 export function clientRateLimit(limiter: RateLimiter): RequestHandler {
   return (req, res, next) => {
-    const decision = limiter.take(req.ip ?? req.socket.remoteAddress ?? 'unknown');
+    const decision = limiter.take(clientOf(req));
     if (decision.allowed) return next();
 
     const limited = problem(

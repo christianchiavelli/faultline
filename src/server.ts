@@ -7,7 +7,13 @@ import {
 import compression from 'compression';
 import express from 'express';
 import { join } from 'node:path';
-import { apiHandler, clientRateLimit, exportHandler } from './server/api/express';
+import {
+  apiHandler,
+  clientRateLimit,
+  exportHandler,
+  feedStreamHandler,
+} from './server/api/express';
+import { createFeedStreams } from './server/api/feed-stream';
 import { serverConfig } from './server/config';
 import { createRateLimiter } from './server/http/rate-limit';
 
@@ -37,8 +43,11 @@ app.use((_req, res, next) => {
   next();
 });
 
+const streams = createFeedStreams({ perClient: serverConfig.streamsPerClient });
+
 /** The BFF. Pages rendered on this server reach it in-process, never over HTTP. */
 app.get('/api/quakes/export', clientRateLimit(clients), exportHandler());
+app.get('/api/quakes/recent/stream', clientRateLimit(clients), feedStreamHandler(streams));
 app.use('/api', clientRateLimit(clients), apiHandler());
 
 /**

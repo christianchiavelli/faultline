@@ -25,6 +25,12 @@ export const serverConfig = {
     refillPerSecond: numberOr(env['RATE_LIMIT_PER_SECOND'], 1),
   },
   /**
+   * Live feeds one client may follow at once. A tab follows one while it is in
+   * view, so a reader needs one or two; the rest is for an address a household
+   * or an office shares.
+   */
+  streamsPerClient: numberOr(env['STREAMS_PER_CLIENT'], 20),
+  /**
    * For the whole process: event lookups the cache could not answer. Every
    * visitor shares it, so however many addresses a script rotates through,
    * the USGS sees at most a burst of ten, then two lookups a second.

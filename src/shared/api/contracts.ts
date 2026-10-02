@@ -23,6 +23,28 @@ export interface RecentQuakesResponse {
   readonly quakes: readonly QuakeSummary[];
 }
 
+/**
+ * `GET /api/quakes/recent/stream?window=day` keeps a reader's copy of a feed
+ * current, as server-sent events. Each message's `id` is the version it brings
+ * the reader to (`feedVersion` in `feed-change.ts`):
+ *
+ * - `feed`, a whole `RecentQuakesResponse`, for a reader holding no copy, or
+ *   one the stream has moved past;
+ * - `change`, a `FeedChange`, every time the feed moves on after that.
+ *
+ * A reader that names the version it holds, as `since` or as the browser's
+ * own `Last-Event-ID` when it reconnects, is sent nothing it already has.
+ */
+export interface FeedChange {
+  readonly generatedAt: number;
+  readonly stale: boolean;
+  readonly skipped: number;
+  /** Events new to the feed, and those the USGS revised: a magnitude computed, a review done. */
+  readonly upserted: readonly QuakeSummary[];
+  /** Ids the feed no longer holds: aged out of its window, or deleted. */
+  readonly removed: readonly string[];
+}
+
 export interface QuakeDetailResponse {
   readonly quake: Quake;
   /** Quality of the preferred origin solution, when the network published one. */

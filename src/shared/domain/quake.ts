@@ -78,10 +78,14 @@ export function isNotable(quake: QuakeSummary): boolean {
   return isEarthquake(quake) && (quake.magnitude?.value ?? -Infinity) >= NOTABLE_MAGNITUDE;
 }
 
-/** Newest first, the order a live log reads in. */
+/**
+ * Newest first, the order a live log reads in. Events timed to the same
+ * millisecond go by id, so every copy of a feed lists them alike: the BFF's,
+ * and one the browser has brought up to date itself.
+ */
 export function byTimeDescending(
-  a: Pick<QuakeSummary, 'time'>,
-  b: Pick<QuakeSummary, 'time'>,
+  a: Pick<QuakeSummary, 'time' | 'id'>,
+  b: Pick<QuakeSummary, 'time' | 'id'>,
 ): number {
-  return b.time - a.time;
+  return b.time - a.time || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }

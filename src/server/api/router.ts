@@ -1,5 +1,6 @@
-import { FEED_WINDOWS } from '@shared/api/contracts';
+import { FEED_WINDOWS, type FeedWindow } from '@shared/api/contracts';
 import { EXPORT_LIMIT, exportQuerySchema, type ExportCount } from '@shared/api/export';
+import { feedVersion } from '@shared/api/feed-change';
 import { z } from 'zod';
 import { json, problem, withEtag, type ApiResult } from '../http/result';
 import { isGone, quakeDetail, recentQuakes } from '../usgs/catalogue';
@@ -49,20 +50,26 @@ export async function handleApiRequest(
   }
 }
 
+/** The feed a request names in `window`, the day's when it names none, or the 400 refusing it. */
+export function feedWindowOf(url: URL): FeedWindow | ApiResult {
+  const window = windowSchema.safeParse(url.searchParams.get('window') ?? undefined);
+  return window.success
+    ? window.data
+    : problem(400, 'Unknown feed window', `Use one of: ${FEED_WINDOWS.join(', ')}.`);
+}
+
 async function recent(
   catalogue: Catalogue,
   url: URL,
   ifNoneMatch: string | null,
 ): Promise<ApiResult> {
-  const window = windowSchema.safeParse(url.searchParams.get('window') ?? undefined);
-  if (!window.success) {
-    return problem(400, 'Unknown feed window', `Use one of: ${FEED_WINDOWS.join(', ')}.`);
-  }
+  const window = feedWindowOf(url);
+  if (typeof window !== 'string') return window;
 
-  const feed = await catalogue.recentQuakes(window.data);
+  const feed = await catalogue.recentQuakes(window);
   return withEtag(
     json(200, feed, { 'cache-control': 'public, max-age=30, stale-while-revalidate=60' }),
-    `feed-${feed.window}-${feed.generatedAt}-${feed.stale ? 's' : 'f'}`,
+    `feed-${feed.window}-${feedVersion(feed)}`,
     ifNoneMatch,
   );
 }

@@ -13,8 +13,13 @@ const server = (port: number, usgs: string) => ({
   port,
   reuseExistingServer: false,
   timeout: 60_000,
-  // The suite comes from one address, far faster than any reader.
-  env: { PORT: String(port), USGS_BASE_URL: usgs, RATE_LIMIT_BURST: '100000' },
+  // The suite comes from one address, far faster than any reader, and in more tabs.
+  env: {
+    PORT: String(port),
+    USGS_BASE_URL: usgs,
+    RATE_LIMIT_BURST: '100000',
+    STREAMS_PER_CLIENT: '100000',
+  },
 });
 
 export default defineConfig({

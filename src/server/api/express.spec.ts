@@ -1,7 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
 import { EventEmitter } from 'node:events';
 import { createRateLimiter } from '../http/rate-limit';
-import { clientRateLimit, exportHandler } from './express';
+import { problem } from '../http/result';
+import { clientRateLimit, exportHandler, feedStreamHandler } from './express';
+import type { FeedStreams, StreamWrite } from './feed-stream';
 
 function fakeResponse() {
   const response = {
@@ -149,5 +151,80 @@ describe('exportHandler', () => {
 
     expect(res.headers['content-disposition']).toContain('faultline.csv');
     expect(body[Symbol.asyncIterator]).not.toHaveBeenCalled();
+  });
+});
+
+describe('feedStreamHandler', () => {
+  /** A stream that hands the spec its writer, and notes when the reader leaves. */
+  function aStream() {
+    const stream = { write: undefined as StreamWrite | undefined, left: false };
+    const streams = {
+      open: vi.fn(() => ({
+        subscribe: (write: StreamWrite) => {
+          stream.write = write;
+          return () => (stream.left = true);
+        },
+      })),
+    };
+    return { stream, streams: streams as unknown as FeedStreams };
+  }
+
+  function serve(streams: FeedStreams, headers: Record<string, string> = {}, method = 'GET') {
+    const res = Object.assign(new StreamedResponse(), { flush: vi.fn() });
+    const request = {
+      method,
+      originalUrl: '/api/quakes/recent/stream?window=day',
+      ip: '203.0.113.7',
+      socket: {},
+      get: (name: string) => headers[name.toLowerCase()],
+    } as unknown as Request;
+    feedStreamHandler(streams)(request, res as unknown as Response, vi.fn());
+    return res;
+  }
+
+  it('opens an event stream, and sends each message on as it is written', () => {
+    const { stream, streams } = aStream();
+    const res = serve(streams, { 'last-event-id': '1727784000000-f' });
+
+    stream.write!('event: change\n\n');
+    stream.write!(':\n\n');
+
+    expect(streams.open).toHaveBeenCalledWith(expect.any(URL), '203.0.113.7', '1727784000000-f');
+    expect(res.headers).toMatchObject({
+      'content-type': 'text/event-stream; charset=utf-8',
+      'cache-control': 'no-store',
+    });
+    expect(res.written).toBe('event: change\n\n:\n\n');
+    expect(res.flush).toHaveBeenCalledTimes(2);
+  });
+
+  it('lets go of the stream when the reader leaves', () => {
+    const { stream, streams } = aStream();
+    const res = serve(streams);
+
+    res.emit('close');
+
+    expect(stream.left).toBe(true);
+  });
+
+  it('answers a refusal as a problem document', () => {
+    const refusing = {
+      open: () => problem(429, 'Too many open streams'),
+    } as unknown as FeedStreams;
+
+    const res = serve(refusing);
+
+    expect(res.statusCode).toBe(429);
+    expect(res.body).toMatchObject({ title: 'Too many open streams' });
+  });
+
+  it('answers HEAD with the headers alone, reading nothing', () => {
+    const { stream, streams } = aStream();
+
+    const res = serve(streams, {}, 'HEAD');
+
+    expect(res.headers['content-type']).toContain('text/event-stream');
+    expect(res.ended).toBe(true);
+    expect(stream.write).toBeUndefined();
   });
 });
