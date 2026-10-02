@@ -61,7 +61,11 @@
   }
 }
 
+/* As tall as a chip, so a chip arriving on its line, as a search lands, does not push the list down. */
 .clear {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--content-primary);
