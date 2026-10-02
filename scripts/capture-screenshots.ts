@@ -152,6 +152,9 @@ for (const shot of SHOTS.filter(({ name }) => only.size === 0 || only.has(name))
     deviceScaleFactor: 1,
     reducedMotion: 'reduce',
   });
+  // A screenshot is a still. The live page keeps the copy it was rendered with, and its stream,
+  // held open, would keep the network from ever falling quiet.
+  await context.route(/\/api\/quakes\/recent\/stream\?/, (route) => route.fulfill({ status: 204 }));
   const page = await context.newPage();
   await page.goto(`${BASE_URL}${shot.path}`, { waitUntil: 'networkidle' });
 

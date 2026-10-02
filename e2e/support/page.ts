@@ -115,20 +115,40 @@ export async function traceOrigin(page: Page, id: string): Promise<{ x: number; 
   };
 }
 
+/** The feed's stream, whatever the copy a page follows it from. */
+export const FEED_STREAM = /\/api\/quakes\/recent\/stream\?/;
+
+export interface Arrival {
+  readonly id: string;
+  readonly place: string;
+  readonly magnitude: number;
+}
+
 /**
- * Delivers more events with the page's next poll of the feed, the way a quake
- * that has just happened reaches an open page. Needs the page clock installed
- * before the page loads, to bring that poll forward.
+ * Holds the feed's stream until the function it returns is called, then has
+ * it push more events, the way a quake that has just happened reaches an open
+ * page. Call it before the page loads: a page follows the feed from the moment
+ * it hydrates.
  */
-export async function arrive(
+export async function holdStream(
   page: Page,
-  ...quakes: readonly { readonly id: string; readonly place: string; readonly magnitude: number }[]
-): Promise<void> {
-  await page.route('**/api/quakes/recent?window=day', async (route) => {
-    const response = await route.fetch();
-    const body = (await response.json()) as { quakes: unknown[] };
-    body.quakes.unshift(
-      ...quakes.map((quake) => ({
+): Promise<(...quakes: readonly Arrival[]) => Promise<void>> {
+  let push!: (body: string) => void;
+  const pushed = new Promise<string>((resolve) => (push = resolve));
+  await page.route(FEED_STREAM, async (route) =>
+    route.fulfill({ contentType: 'text/event-stream', body: await pushed }),
+  );
+
+  return async (...quakes) => {
+    const feed = (await (await page.request.get('/api/quakes/recent?window=day')).json()) as {
+      generatedAt: number;
+      skipped: number;
+    };
+    const change = {
+      generatedAt: feed.generatedAt,
+      stale: false,
+      skipped: feed.skipped,
+      upserted: quakes.map((quake) => ({
         id: quake.id,
         time: Date.now() - 60_000,
         magnitude: { value: quake.magnitude, type: 'md' },
@@ -137,8 +157,12 @@ export async function arrive(
         review: 'automatic',
         kind: 'earthquake',
       })),
+      removed: [],
+    };
+    // The body ends with the message, so the browser reconnects: not for an hour, or the real
+    // stream would answer and take the arrivals away again.
+    push(
+      `retry: 3600000\n\nevent: change\nid: ${feed.generatedAt}-f\ndata: ${JSON.stringify(change)}\n\n`,
     );
-    await route.fulfill({ response, json: body });
-  });
-  await page.clock.fastForward('01:00');
+  };
 }

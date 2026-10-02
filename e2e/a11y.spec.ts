@@ -2,8 +2,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import {
   EVENT_API,
-  arrive,
   hold,
+  holdStream,
   scrollThrough,
   settled,
   waitForHydration,
@@ -126,12 +126,12 @@ for (const theme of THEMES) {
     });
 
     test('the log holding a new event meets WCAG 2.2 AA', async ({ page }) => {
-      await page.clock.install();
+      const arrive = await holdStream(page);
       await page.goto('/?mag=any');
       await waitForHydration(page);
       const log = page.getByRole('region', { name: 'Every event' });
       await waitForHydrationOf(page.locator('fl-event-log'));
-      await arrive(page, { id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
+      await arrive({ id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
       const waiting = log.getByRole('status', { name: 'New events' });
       await expect(waiting).toContainText('1 new event');
       await settled(waiting);

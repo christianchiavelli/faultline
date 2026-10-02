@@ -2,9 +2,8 @@ import { DatePipe, PercentPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, RESPONSE_INIT, computed, effect, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { recentQuakesResource } from '@core/api/quakes';
+import { liveQuakesResource } from '@core/api/quakes';
 import { Clock } from '@core/clock';
-import { pollWhileVisible } from '@core/poll';
 import { magnitudeScale } from '@shared/domain/magnitude';
 import { summarise } from '@shared/domain/summary';
 import { AgoPipe } from '@ui/ago.pipe';
@@ -17,8 +16,6 @@ import { EventLog } from './event-log/event-log';
 import { parseLogQuery, toExportPreset, type LogParams } from './event-log/log-query';
 import { Helicorder } from './helicorder/helicorder';
 import { MagnitudeChart } from './magnitude-chart/magnitude-chart';
-
-const FEED_REFRESH_MS = 60_000;
 
 /**
  * The USGS regenerates the feed every minute. Five minutes without a new one
@@ -61,7 +58,7 @@ export class LivePage {
   readonly rows = input<string>();
 
   protected readonly now = inject(Clock).now;
-  protected readonly recent = recentQuakesResource(() => 'day');
+  protected readonly recent = liveQuakesResource('day');
 
   protected readonly feed = computed(() => (this.recent.hasValue() ? this.recent.value() : null));
   /** Nothing to show but the failure: no copy of the feed at all, not even an old one. */
@@ -111,8 +108,6 @@ export class LivePage {
   protected readonly logRows = LOG_ROWS;
 
   constructor() {
-    pollWhileVisible(this.recent, FEED_REFRESH_MS);
-
     // A page rendered without its data says so in its status, so monitors see the outage.
     const response = inject(RESPONSE_INIT, { optional: true });
     effect(() => {

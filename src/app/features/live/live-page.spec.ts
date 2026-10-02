@@ -4,6 +4,7 @@ import { RESPONSE_INIT } from '@angular/core';
 import { DeferBlockBehavior, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import type { RecentQuakesResponse } from '@shared/api/contracts';
+import { FakeEventSource } from '@core/testing/fake-event-source';
 import { aQuake } from '@shared/testing/quake-fixture';
 import { LivePage } from './live-page';
 
@@ -62,6 +63,10 @@ const recent = (http: HttpTestingController) =>
   );
 
 describe('LivePage', () => {
+  // The page follows the feed once it has it; these specs read the copy it was handed.
+  beforeEach(() => vi.stubGlobal('EventSource', FakeEventSource));
+  afterEach(() => vi.unstubAllGlobals());
+
   it('reads the day out: counts, largest event, energy share and review share', async () => {
     const { element, response } = await render((http) => recent(http).flush(feed));
 

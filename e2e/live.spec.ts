@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
-  arrive,
+  holdStream,
   nextFrames,
   readout,
   traceOrigin,
@@ -225,7 +225,7 @@ test('keeps its notes clear of the bars, their counts and both lines, however wi
   isMobile,
 }) => {
   test.skip(isMobile, 'A phone keeps the notes in the caption');
-  await page.clock.install();
+  const arrive = await holdStream(page);
   await page.goto('/');
   await waitForHydration(page);
   const sizes = page.getByRole('region', { name: 'How big' });
@@ -234,7 +234,6 @@ test('keeps its notes clear of the bars, their counts and both lines, however wi
 
   // A busy hour of M3s raises the bars in the gap.
   await arrive(
-    page,
     ...Array.from({ length: 5 }, (_, i) => ({
       id: `ak900${i}`,
       place: '20 km N of Willow, Alaska',
@@ -337,7 +336,7 @@ test('folds the log to its latest ten, and unfolds it through the address bar', 
 test('holds a new event that lands while the log is in view, and shows it on request', async ({
   page,
 }) => {
-  await page.clock.install();
+  const arrive = await holdStream(page);
   await page.goto('/?mag=any');
   await waitForHydration(page);
   const log = page.getByRole('region', { name: 'Every event' });
@@ -345,7 +344,7 @@ test('holds a new event that lands while the log is in view, and shows it on req
   await waitForHydrationOf(page.locator('fl-event-log'));
   await expect(first).toContainText('2 km NNW of The Geysers');
 
-  await arrive(page, { id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
+  await arrive({ id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
 
   const waiting = log.getByRole('status', { name: 'New events' });
   await expect(waiting).toContainText('1 new event');
@@ -361,7 +360,7 @@ test('holds a new event that lands while the log is in view, and shows it on req
 });
 
 test('lets a new event straight in while the log is below the fold', async ({ page }) => {
-  await page.clock.install();
+  const arrive = await holdStream(page);
   await page.goto('/?mag=any');
   await waitForHydration(page);
   const log = page.getByRole('region', { name: 'Every event' });
@@ -370,7 +369,7 @@ test('lets a new event straight in while the log is below the fold', async ({ pa
   await page.evaluate(() => window.scrollTo(0, 0));
   await nextFrames(page);
 
-  await arrive(page, { id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
+  await arrive({ id: 'nc9001', place: '4 km E of Cobb, CA', magnitude: 1.4 });
   await log.scrollIntoViewIfNeeded();
 
   await expect(log.locator('tbody tr:not(.day)').first()).toContainText('4 km E of Cobb');

@@ -1,7 +1,10 @@
 /**
  * A stand-in for earthquake.usgs.gov, so the end-to-end suite runs against a
  * known day instead of whatever the planet did today. Times are relative to
- * each request, so the events always fall inside the helicorder's 24 hours.
+ * when the stub started, so the events fall inside the helicorder's 24 hours
+ * for far longer than a run takes. Like a real event, each keeps its time from
+ * one request to the next: only the feed's generation time moves on, so a page
+ * following the feed mid-test is pushed nothing but that.
  *
  * The day is small but awkward on purpose, like the real feed: mixed
  * magnitude scales, automatic and reviewed events, a depth above sea level, a
@@ -36,6 +39,7 @@ interface StubEvent {
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 const PORT = Number(process.env['PORT'] ?? 4310);
+const STARTED = Date.now();
 
 const EVENTS: readonly StubEvent[] = [
   {
@@ -343,7 +347,7 @@ function send(res: ServerResponse, status: number, body: unknown): void {
 
 createServer((req, res) => {
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
-  const now = Date.now();
+  const now = STARTED;
 
   if (url.pathname === '/earthquakes/feed/v1.0/summary/all_day.geojson') {
     const features = [
@@ -352,7 +356,7 @@ createServer((req, res) => {
     ];
     return send(res, 200, {
       type: 'FeatureCollection',
-      metadata: { generated: now, count: features.length },
+      metadata: { generated: Date.now(), count: features.length },
       features,
     });
   }

@@ -11,8 +11,9 @@ test('says the USGS is not answering, with a status that says so too', async ({ 
   expect(response?.status()).toBe(502);
   await expect(page.getByRole('alert')).toContainText('The USGS feed did not answer');
   await waitForHydration(page);
-  // The render already knows the feed failed; hydrating does not wait on it a second time.
-  expect(calls).toEqual([]);
+  // The render already knows the feed failed; hydrating does not ask for it a second time. It
+  // follows the stream from nothing instead, which sends the day once there is one.
+  await expect.poll(() => calls).toEqual(['/api/quakes/recent/stream?window=day']);
 
   const retry = page.waitForRequest((request) => request.url().includes('/api/quakes/recent'));
   await page.getByRole('button', { name: 'Try again' }).click();
