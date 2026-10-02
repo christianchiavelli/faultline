@@ -102,6 +102,8 @@ const PAGES: readonly Visit[] = [
 ];
 
 const baseline = readBaseline();
+// The baseline is the CI runners' own: another machine's numbers are set against it, not judged by it.
+const judged = !!process.env['CI'];
 
 for (const { journey, ...page } of PAGES) {
   test(`${page.name}, ${page.path}`, async ({ browser, baseURL }, testInfo) => {
@@ -119,10 +121,12 @@ for (const { journey, ...page } of PAGES) {
     });
 
     const base = baseline.pages[page.key];
-    if (!base) {
+    if (!base || !judged) {
       testInfo.annotations.push({
         type: 'notice',
-        description: 'No baseline yet: measured, not judged',
+        description: base
+          ? 'Measured off CI: compared, not judged'
+          : 'No baseline yet: measured, not judged',
       });
       return;
     }

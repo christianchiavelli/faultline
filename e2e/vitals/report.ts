@@ -35,9 +35,9 @@ export interface PageResult extends Page {
 }
 
 export interface Baseline {
-  /** The day it was measured, and the CI run it was accepted from. */
+  /** The day it was measured, and the CI runs it was accepted from. */
   readonly measured?: string;
-  readonly run?: string;
+  readonly runs?: readonly string[];
   readonly pages: Readonly<Record<string, Omit<Page, 'key'> & Readonly<Record<Metric, number>>>>;
 }
 
@@ -47,8 +47,8 @@ export const ATTACHMENT = 'web-vitals';
 /**
  * How far a median may rise over its baseline before the page counts as
  * worse: a share of the baseline, or a floor where that share is smaller than
- * the runner's own noise. GitHub's runners are shared machines, and the same
- * commit measures a little differently from one run to the next.
+ * the runner's own noise. GitHub's runners are not all the same machine: from
+ * one to the next, the same commit moved LCP by 4% and INP by a fifth.
  */
 export const TOLERANCE: Readonly<
   Record<Metric, { readonly share: number; readonly floor: number }>
@@ -57,7 +57,7 @@ export const TOLERANCE: Readonly<
   // Layout does not depend on the machine's speed: a shift is a shift.
   CLS: { share: 0, floor: 0.01 },
   // The browser reports an interaction's duration in steps of 8 ms: two of them are noise.
-  INP: { share: 0.2, floor: 16 },
+  INP: { share: 0.3, floor: 16 },
 };
 
 export const limitOf = (metric: Metric, baseline: number): number =>
@@ -78,25 +78,45 @@ export function readBaseline(): Baseline {
   return JSON.parse(readFileSync(new URL('baseline.json', import.meta.url), 'utf8')) as Baseline;
 }
 
+/** A value as the baseline keeps it: milliseconds whole, a shift to four places. */
+const rounded = (metric: Metric, value: number) =>
+  metric === 'CLS' ? Math.round(value * 10_000) / 10_000 : Math.round(value);
+
+const valuesOf = (metric: (metric: Metric) => number) =>
+  Object.fromEntries(METRICS.map((m) => [m, rounded(m, metric(m))])) as Record<Metric, number>;
+
 /** The measurement as a baseline, to be accepted as the next one: what `vitals-report/web-vitals.json` holds. */
 export function asBaseline(pages: readonly PageResult[]): Baseline {
-  const {
-    GITHUB_SERVER_URL: server,
-    GITHUB_REPOSITORY: repository,
-    GITHUB_RUN_ID: run,
-  } = process.env;
   return {
     measured: new Date().toISOString().slice(0, 10),
-    ...(server && repository && run ? { run: `${server}/${repository}/actions/runs/${run}` } : {}),
     pages: Object.fromEntries(
       pages.map(({ key, name, path, median }) => [
+        key,
+        { name, path, ...valuesOf((metric) => median[metric]) },
+      ]),
+    ),
+  };
+}
+
+/** Measurements from several runs as one baseline: each metric's median across them, so no one runner sets it. */
+export function mergeBaselines(
+  measurements: readonly Baseline[],
+  runs: readonly string[],
+): Baseline {
+  const [first] = measurements;
+  return {
+    measured: measurements
+      .map(({ measured }) => measured ?? '')
+      .sort()
+      .at(-1),
+    runs,
+    pages: Object.fromEntries(
+      Object.entries(first!.pages).map(([key, { name, path }]) => [
         key,
         {
           name,
           path,
-          LCP: Math.round(median.LCP),
-          CLS: Math.round(median.CLS * 10_000) / 10_000,
-          INP: Math.round(median.INP),
+          ...valuesOf((metric) => median(measurements.map((m) => m.pages[key]![metric]))),
         },
       ]),
     ),
@@ -180,6 +200,14 @@ export function readmeTable(baseline: Baseline): string {
         timeZone: 'UTC',
       })
     : 'not yet';
+  const runs = baseline.runs ?? [];
+  const links = runs.map((url, i) => `[${i + 1}](${url})`).join(', ');
+  const where =
+    runs.length > 1
+      ? `, the median of ${COUNTS[runs.length] ?? runs.length} runs in CI (${links})`
+      : runs.length
+        ? `, in [this run](${runs[0]})`
+        : '';
   return [
     '| Page | LCP | CLS | INP |',
     '| --- | --- | --- | --- |',
@@ -187,8 +215,8 @@ export function readmeTable(baseline: Baseline): string {
       (page) => `| ${page.name} | ${METRICS.map((m) => format(m, page[m])).join(' | ')} |`,
     ),
     '',
-    baseline.run
-      ? `Measured on ${measured}, in [this run](${baseline.run}).`
-      : `Measured ${measured}.`,
+    `Measured on ${measured}${where}.`,
   ].join('\n');
 }
+
+const COUNTS: Readonly<Record<number, string>> = { 2: 'two', 3: 'three', 4: 'four', 5: 'five' };
