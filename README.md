@@ -148,9 +148,24 @@ Depths are unsure in two directions. Many are fixed by an analyst when the data 
 ```bash
 pnpm run ci    # format, lint, types, and the unit specs with coverage
 pnpm run e2e   # Playwright across two viewports, on a production build
+pnpm vitals    # the Core Web Vitals of each page, on a production build
 ```
 
 The suites divide by what they can see. Vitest covers the domain, the USGS mapping, the cache, the API router, the feed's changes and the hub that streams them, the export's paging and CSV, the helicorder geometry, what a point on the trace means and the day's distribution of sizes as plain functions, and components through the DOM they render. Playwright owns what only a browser and the real server can answer: whether the page is complete before any script runs, whether hydration asks the API again, whether the feed's stream sends a reader only what it lacks, compressed and the moment it is written, which status a crawler gets for a missing event, in either language, what an outage looks like, what a downloaded file really holds, whether a burst can be read by mouse, by finger and from the keyboard, whether the log holds an event that lands in view, whether an event's page opens on what the day knew and flies its magnitude in, what still moves under reduced motion, whether a filtered, searched or sorted log renders on the server as its address asks, the search included before any script runs, and whether a Portuguese page renders in Portuguese, names its English twin to search engines and switches language with its filters kept. It runs the production server against a stub of the USGS serving a small, awkward day, searchable and exportable like the real service, and audits every page, both pages while they wait for their data, an event's page opened on what the day knew, the export dialog, a card read off the trace, the log holding a new event, the popover of every region and the filters sheet of a phone with axe against WCAG 2.2 AA in both themes, in English and in Portuguese. Six things were broken until the suite caught them: error pages refetched while hydrating, the top bar and footer sat outside any landmark, the Export button lost a press that landed while its section was hydrating, the chart's hidden table widened the page on a phone, the trace's labels were too small as targets once the trace under them became one, and no page had ever cross-faded into the next, since the router hands its hook the roots of its route trees, whose paths are all empty, so every change of page passed for a change of filter.
+
+Every push also measures the Core Web Vitals, on the phone and connection of Lighthouse's mobile run: a CPU four times slower than the runner's, on slow 4G. The day is a real one, 211 events recorded off the USGS, because a page's speed depends on how much it draws: the bursts on the trace, the rows the log unfolds, the options its filters count. Each page is visited five times the way a reader uses it on a phone, loaded cold, read to the end, then put to work: on the live page, reading an event off the trace, taking the magnitude filter off, unfolding and searching the log, switching theme, opening the export and then an event; on an event's page, opening the export of the events around it and going back. Google's `web-vitals` library takes the numbers, the same code that would measure real readers, and INP is the slowest of those interactions. Each median is held against the baseline below, and the build fails when one is worse by more than the runner's own noise. From one runner to the next, the same commit moved LCP by 4% and INP by a fifth, so LCP fails a tenth over its baseline, INP three tenths over, and CLS 0.01 over. The run's summary on GitHub says what each number is about, the element painted, the one shifted, the interaction and where its time went, so a regression arrives with its cause. A baseline comes from CI, never from a laptop: `pnpm vitals:accept` writes the median of the runs it is given, here and in `e2e/vitals/baseline.json`.
+
+<!-- web-vitals -->
+
+| Page            | LCP    | CLS   | INP    |
+| --------------- | ------ | ----- | ------ |
+| The live page   | 0.84 s | 0.037 | 204 ms |
+| An event's page | 0.81 s | 0.001 | 168 ms |
+
+Measured on 2 October 2026, the median of two runs in CI ([1](https://github.com/christianchiavelli/faultline/actions/runs/37042287686), [2](https://github.com/christianchiavelli/faultline/actions/runs/37043588793)).
+<!-- /web-vitals -->
+
+Google rates a page good up to 2.5 s, 0.1 and 200 ms, at the 75th percentile of real visits.
 
 The first run needs the browser: `pnpm exec playwright install chromium`.
 

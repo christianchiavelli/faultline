@@ -1,3 +1,23 @@
 {
-  "pages": {}
+  "measured": "2026-10-02",
+  "runs": [
+    "https://github.com/christianchiavelli/faultline/actions/runs/37042287686",
+    "https://github.com/christianchiavelli/faultline/actions/runs/37043588793"
+  ],
+  "pages": {
+    "live": {
+      "name": "The live page",
+      "path": "/",
+      "LCP": 836,
+      "CLS": 0.0373,
+      "INP": 204
+    },
+    "quake": {
+      "name": "An event's page",
+      "path": "/quakes/us6000tz62",
+      "LCP": 810,
+      "CLS": 0.0012,
+      "INP": 168
+    }
+  }
 }
