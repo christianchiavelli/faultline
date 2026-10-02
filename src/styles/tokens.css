@@ -79,7 +79,8 @@
     /* Type. Archivo carries the words, with its width axis doing the work of
        a second family: condensed for instrument labels, expanded for the
        wordmark. Martian Mono carries every number. */
-    --font-sans: 'Archivo', 'Archivo Fallback', ui-sans-serif, system-ui, sans-serif;
+    --font-sans:
+      'Archivo', 'Archivo Fallback', 'Archivo Fallback Roboto', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'Martian Mono', 'Martian Mono Fallback', ui-monospace, monospace;
 
     --width-condensed: 72%;
