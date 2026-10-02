@@ -76,6 +76,8 @@ const SHOTS: readonly Shot[] = [
   { name: 'sizes-film', path: '/', scheme: 'dark', area: 'section.sizes' },
   // M5.4 north of Svalbard: reviewed, depth fixed by the analyst, full uncertainty.
   { name: 'quake-paper', path: '/quakes/us6000ty57', scheme: 'light' },
+  // The same event in Portuguese: its words, numbers and date the Portuguese way, its place the catalogue's.
+  { name: 'quake-pt-paper', path: '/pt/quakes/us6000ty57', scheme: 'light' },
   { name: 'live-phone-film', path: '/', scheme: 'dark', viewport: PHONE },
   // Every Californian event of the day, largest first: the facets counted, the order in the heading.
   {

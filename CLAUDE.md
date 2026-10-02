@@ -4,9 +4,10 @@ A live seismograph of the planet: Angular 22 with SSR, an Express BFF over the U
 
 ## Commands
 
-- `pnpm dev` — dev server with SSR and the BFF, http://localhost:4200
+- `pnpm dev` — dev server with SSR and the BFF, http://localhost:4200, in English. `pnpm dev:pt` serves the Portuguese build instead
 - `pnpm run ci` — format check, lint, types, unit tests with coverage. Must pass before any change is done.
-- `pnpm e2e` — production build, then Playwright (desktop and mobile) against a USGS stub, with an axe audit of every page in both themes. Must pass before any change to a page is done.
+- `pnpm e2e` — production build, then Playwright (desktop and mobile) against a USGS stub, with an axe audit of every page in both themes, the Portuguese build's pages included. Must pass before any change to a page is done.
+- `pnpm i18n` — extracts the app's messages and checks `src/locale/messages.pt-BR.xlf` against them: what is left to translate, and what the app no longer has. Run it after changing any text
 - `pnpm build` then `pnpm preview` — production build served by the real Express server on :4000
 - `pnpm basemap` — regenerates `public/maps/earth.svg` from Natural Earth and PB2002
 - `pnpm screenshots` — recaptures `docs/screenshots` from a running production server (`pnpm build`, then `pnpm preview`)
@@ -42,7 +43,11 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - Icons: drawn for the app, no icon library. Each is one path in `ui/icons.ts`, the centre line of its strokes on a 16 px grid inside a two-unit margin; `ui-icon` strokes it with the wordmark's square ends. Beside a word an icon is decoration; a control that has only an icon, like a dialog's close button, carries an `aria-label`. A standalone link to another site ends with the external-link icon; a link inside running text does not.
 - Honest data: a missing value renders as `—`, never as zero; provisional and reviewed values must look different; scales and uncertainties are shown next to the numbers they qualify.
 - Comments explain why, at the line that needs it. No comments that restate the code.
-- UI copy is English (British spelling, as in the rest of the app).
+- Languages: British English, the source, at `/`, and Brazilian Portuguese under `/pt`, each a build of its own with Angular's compile-time i18n, rendered on the server in its language. Every word a reader sees is a message, `i18n` in a template and `$localize` in TypeScript, with a description of where it stands; its Portuguese is in `src/locale/messages.pt-BR.xlf`, and a build with a message untranslated fails.
+- A message is a whole sentence. A count is an ICU `plural` with a sentence per case, `=1` and `other` (Portuguese's `one` takes 0 too), or `count === 1` in TypeScript; never a word glued to a number. A word that translates two ways takes a meaning, `meaning|description`, since a message's id is its text and meaning (see "Reviewed" in `core/words/domain.ts` and `facets.ts`).
+- Numbers go through `formatDecimal()` (`ui/numbers.ts`) and dates through the `DATES` patterns (`ui/dates.ts`), in the page's `LOCALE_ID`; never `toFixed()` or a format of one's own. A machine-readable value, like a `datetime` or a file, stays as it is in every language.
+- Place names are the USGS catalogue's, in English in every language, and a page in another language says so in its footer.
+- A page has an address in each language, its query kept (`core/languages.ts`): the bar links to it, and the head names it to search engines with `hreflang`. Nobody is sent from one language to the other.
 - Tab titles read `<page> | Faultline`, and the home page just `Faultline`. Static pages set the route `title`; pages titled by their data call `pageTitle()` from `core/page-title.ts`. Never write the suffix by hand.
 
 ## Gotchas
@@ -59,7 +64,7 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - In an e2e spec, a deferred section's server HTML is on the page long before its code runs. Wait with `waitForHydrationOf()` before anything that needs the code, like a live update (see `e2e/support/page.ts`).
 - A visually hidden `<table>` still widens the page, since a table grows to fit its cells whatever width it is given: hide a wrapper `div` instead (see `magnitude-chart.html`).
 - The trace is a target of its own, so every label on it is a target beside another, and WCAG 2.5.8 then wants it 24 px tall. The labels keep their look by masking only the band behind their text (see `helicorder.css`).
-- The initial bundle budget is tight on purpose, 400 kB to warn and 450 kB to fail. A library that drags all of Angular into the first load shows up there first: find the cause with `pnpm build --stats-json` rather than raise the budget.
+- The initial bundle budget is tight on purpose, 425 kB to warn and 450 kB to fail. It was 400 kB until the app spoke two languages: Angular's i18n runtime shares a module with its core, and esbuild never splits a module across chunks, so one translated template puts all of it in the first load. A library that drags all of Angular into the first load shows up there first: find the cause with `pnpm build --stats-json` rather than raise the budget.
 - A library pipe or directive used only inside a `@defer` block is imported through its package's whole namespace, which keeps every export of it in the first load. Put the block's content in a component of the app instead (see `log-sheet.ts`).
 - A `<table>` restyled with `display: grid` or `block` loses its semantics in some browsers. The log's spells out its roles in the markup so the phone layout can restyle it (see `event-log.html`).
 - A USGS place name is a locality, then the region after the last comma; the Californian networks write `CA` and `MX`, and a remote event has only a Flinn–Engdahl region. Read it with `splitPlace()` in `shared/domain/place.ts`, never by hand.
@@ -77,6 +82,16 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - jsdom has no `EventSource`. A spec that renders a page following the feed stubs it with `FakeEventSource` (`core/testing/fake-event-source.ts`) and answers for the server through it (see `quakes.spec.ts`).
 - A browser opens at most six connections to one origin over HTTP/1.1, and an event stream holds one for as long as it is open. A page lets its stream go while the tab is hidden, or a reader's seventh tab would not load.
 - An open event stream keeps Playwright's `networkidle` from ever coming. A test that waits for the network answers the stream with a 204 first (see `hydration.spec.ts`, `scripts/capture-screenshots.ts`); one that needs a new event holds the stream with `holdStream()` before the page loads, and pushes it when it is ready (`e2e/support/page.ts`). The USGS stub keeps every event's time from its start-up, so a page following the real stream mid-test is pushed nothing but a newer generation time.
+
+- Hydration skips every component holding a translated message unless it is told how to read one: `withI18nSupport()` in `app.config.ts`. Without it the server writes no hydration data for those, and the browser draws them again, a deferred section down to its placeholder.
+- An ICU in a component repeated on a page breaks its hydration, an Angular bug: the server writes one copy of hydration data that several instances share, and the first instance to hydrate uses up its list of cases, so the next finds none ("expected matching nodeType" in a development build, "is not iterable" in production). A repeated component words its count in TypeScript (see `log-option.ts`); `e2e/hydration.spec.ts` fails on any error a page logs while it hydrates.
+- The whitespace between an element and an `@if` block is dropped, as the parser keeps it for an `@else`, so a sentence before a block runs into the one inside it. Write `&ngsp;` before the block (see `quake-page.html`).
+- A message's text includes the line breaks Prettier wraps it with, and a message's id is its text: the same English laid out differently is two messages to translate.
+- `$localize` metadata ends at the first colon, so a description with one cuts the message short. Describe a time without its colons. A colon in the message itself is fine.
+- The server's DOM has only the classic node methods: no `append()` or `remove()`, and no reflected properties like `link.rel`. Use `appendChild()`, `removeChild()` and `setAttribute()` (see `core/languages.ts`).
+- Unit specs run in the source locale, `en-GB`. A spec that renders Portuguese provides `LOCALE_ID` and registers the locale's data with `registerLocaleData(localePt)` first.
+- The build warns that it found no locale data for `pt-BR` and uses `pt`: Angular's `pt` is Brazilian Portuguese, so the warning is expected.
+- A decimal comma hangs below the digits, where a point sits on their line. A numeral cut to its digits leaves room under it in a language that writes one (`.numeral--comma` in `quake-page.css`).
 
 ## Design changes
 
