@@ -18,6 +18,7 @@
             <p
               class="numeral mono"
               [class.numeral--notable]="(view.quake.magnitude?.value ?? 0) >= 4.5"
+              [class.numeral--comma]="view.decimalComma"
             >
               <span class="visually-hidden" i18n="read out before an event's magnitude"
                 >Magnitude </span
@@ -143,7 +144,7 @@
                 @if (record.origin?.azimuthalGapDeg; as gap) {
                   <ng-container i18n="the widest angle between the stations, as seen from the event"
                     >{{ gap | number: '1.0-0' }}° azimuthal gap.</ng-container
-                  >
+                  >&ngsp;
                   @if (record.wideGap) {
                     <ng-container i18n="hint after a wide azimuthal gap"
                       >Wide: the stations see it from one side, so the position is less

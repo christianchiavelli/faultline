@@ -33,6 +33,11 @@
   letter-spacing: -0.06em;
 }
 
+/* Its line is cut to the digits; a decimal comma reaches below them, into the scale's line. */
+.numeral--comma {
+  margin-block-end: 0.2em;
+}
+
 .numeral--notable {
   color: var(--content-accent);
 }

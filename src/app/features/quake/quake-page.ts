@@ -130,6 +130,8 @@ export class QuakePage {
       kind: kindName(quake.kind),
       review: reviewTag(quake.review),
       magnitude: quake.magnitude ? formatDecimal(quake.magnitude.value, locale, '1.1-1') : null,
+      // A decimal comma hangs below the digits, where a point sits on their line.
+      decimalComma: formatDecimal(0.5, locale, '1.1-1').includes(','),
       energy: quake.magnitude
         ? describeEnergy(radiatedEnergy(quake.magnitude.value), locale)
         : null,
