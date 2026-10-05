@@ -5,13 +5,13 @@ A live seismograph of the planet: Angular 22 with SSR, an Express BFF over the U
 ## Commands
 
 - `pnpm dev` — dev server with SSR and the BFF, http://localhost:4200, in English. `pnpm dev:pt` serves the Portuguese build instead
-- `pnpm run ci` — format check, lint, types, unit tests with coverage. Must pass before any change is done.
+- `pnpm run ci` — format check, lint and types, the scripts in `scripts/` included, then the unit tests with coverage, which fails under its floor in `angular.json`. Must pass before any change is done.
 - `pnpm e2e` — production build, then Playwright (desktop and mobile) against a USGS stub, with an axe audit of every page in both themes, the Portuguese build's pages included. Must pass before any change to a page is done.
 - `pnpm i18n` — extracts the app's messages and checks `src/locale/messages.pt-BR.xlf` against them: what is left to translate, and what the app no longer has. Run it after changing any text
 - `pnpm vitals` — production build, then the Core Web Vitals of each page on the phone and connection of Lighthouse's mobile run, against a real day recorded off the USGS (`e2e/vitals/day.json`). On CI it fails when a median is worse than `e2e/vitals/baseline.json` by more than the runner's noise (`TOLERANCE` in `e2e/vitals/report.ts`); anywhere else it only compares, since the baseline is the CI runners'. A new baseline comes from CI, never from this machine: `pnpm vitals:accept <run> <run>` takes the median of those runs, into the baseline and the README (the latest run without one). `pnpm vitals:day` records a new day, which moves every number
 - `pnpm build` then `pnpm preview` — production build served by the real Express server on :4000
 - `pnpm basemap` — regenerates `public/maps/earth.svg` from Natural Earth and PB2002
-- `pnpm fonts` — copies the web fonts into `public/fonts` and writes their rules and fallbacks into the head of `src/index.html`, measuring in Chromium how narrow each font gets at the stretches the app sets. Run it after setting text in a weight or width the fallbacks do not cover (`FALLBACKS` in `scripts/build-fonts.ts`)
+- `pnpm fonts` — copies the web fonts into `public/fonts` and writes their rules and fallbacks into the head of `src/index.html`, measuring in Chromium how narrow each font gets at the stretches the app sets. Run it after setting text in a weight or width the fallbacks do not cover (`fallbacks()` in `scripts/build-fonts.ts`)
 - `pnpm screenshots` — production build, then recaptures `docs/screenshots` from it, served by the script itself on a free port against the real USGS; `pnpm screenshots quake-paper` recaptures only the shots named
 - `docs/upstream-api.md` — how the two USGS services really behave, probed live. Read it before touching `src/server/usgs`, and update it when a probe says otherwise
 
