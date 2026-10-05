@@ -4,11 +4,11 @@ import { createRateLimiter } from '../http/rate-limit';
 import { UpstreamBusyError } from '../http/upstream';
 
 /**
- * One budget for every USGS call a cache could not answer, for the whole
- * process: event lookups, counts and the pages of an export. However many
- * addresses a script rotates through, the USGS sees at most a burst of ten,
- * then two calls a second. Feeds do not draw on it: they are fetched once a
- * minute per window whatever the traffic.
+ * One budget for every USGS call a cache could not answer, retries included,
+ * for the whole process: event lookups, counts and the pages of an export.
+ * However many addresses a script rotates through, the USGS sees at most a
+ * burst of ten, then two calls a second. Feeds do not draw on it: they are
+ * fetched once a minute per window whatever the traffic.
  */
 const budget = createRateLimiter(serverConfig.upstreamRate);
 const KEY = 'usgs';

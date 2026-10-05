@@ -6,7 +6,8 @@ export interface SwrCacheOptions {
   /** Oldest entries are evicted beyond this. Keys such as event ids are unbounded. */
   readonly maxEntries?: number;
   readonly now?: () => number;
-  readonly onBackgroundError?: (key: string, error: unknown) => void;
+  /** A refresh failed, and the old value was served in its place. */
+  readonly onRefreshError?: (key: string, error: unknown) => void;
 }
 
 export interface CacheHit<T> {
@@ -35,9 +36,12 @@ interface Entry<T> {
  * - Past the stale window, the caller waits for the refresh; if it fails, the
  *   old value is served anyway, flagged `stale`. An hour-old feed labelled as
  *   such is more useful than an error page, and the payload says how old it is.
+ * - Once a refresh has failed, the old value is served at once while the next
+ *   one runs behind it: nobody waits out the upstream's timeout to be handed
+ *   what the cache already holds.
  */
 export function createSwrCache<T>(options: SwrCacheOptions) {
-  const { freshForMs, staleForMs, maxEntries = 100, now = Date.now, onBackgroundError } = options;
+  const { freshForMs, staleForMs, maxEntries = 100, now = Date.now, onRefreshError } = options;
   const entries = new Map<string, Entry<T>>();
   const inflight = new Map<string, Promise<T>>();
 
@@ -77,16 +81,17 @@ export function createSwrCache<T>(options: SwrCacheOptions) {
 
     if (entry && age < freshForMs) return { value: entry.value, stale: false };
 
-    if (entry && age < freshForMs + staleForMs) {
-      load(key, loader).catch((error: unknown) => onBackgroundError?.(key, error));
+    if (entry && (age < freshForMs + staleForMs || entry.failing)) {
+      load(key, loader).catch((error: unknown) => onRefreshError?.(key, error));
       return { value: entry.value, stale: entry.failing };
     }
 
     try {
       return { value: await load(key, loader), stale: false };
     } catch (error) {
-      if (entry) return { value: entry.value, stale: true };
-      throw error;
+      if (!entry) throw error;
+      onRefreshError?.(key, error);
+      return { value: entry.value, stale: true };
     }
   }
 

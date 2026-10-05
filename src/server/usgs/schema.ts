@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UpstreamError } from '../http/upstream';
 
 /**
  * The USGS GeoJSON, validated at the boundary. Tolerant where the upstream is
@@ -7,6 +8,19 @@ import { z } from 'zod';
  *
  * https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php
  */
+
+/**
+ * The USGS's answer in the shape this server reads, or an `UpstreamError`: a
+ * shape it no longer sends is the USGS's change, a 502 to whoever asked, not a
+ * fault of this server's own.
+ */
+export function parseUpstream<T>(schema: z.ZodType<T>, body: unknown, what: string): T {
+  const parsed = schema.safeParse(body);
+  if (parsed.success) return parsed.data;
+  throw new UpstreamError(`The USGS ${what} came in a shape this server cannot read`, undefined, {
+    cause: parsed.error,
+  });
+}
 
 export const featureSchema = z.object({
   type: z.literal('Feature'),

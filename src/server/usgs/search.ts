@@ -2,10 +2,10 @@ import type { ExportEvent, ExportQuery } from '@shared/api/export';
 import { serverConfig } from '../config';
 import { parseCsv } from '../formats/csv';
 import { createSwrCache } from '../http/swr-cache';
-import { getJson, getText, UpstreamError } from '../http/upstream';
+import { describeError, getJson, getText, UpstreamError } from '../http/upstream';
 import { spendOrRefuse, spendWhenAvailable } from './budget';
 import { toExportEvent } from './map';
-import { CSV_COLUMNS, countSchema, csvEventSchema } from './schema';
+import { CSV_COLUMNS, countSchema, csvEventSchema, parseUpstream } from './schema';
 
 /**
  * Searches of the whole catalogue through the FDSN event service: how many
@@ -21,21 +21,23 @@ const countCache = createSwrCache<number>({
   freshForMs: 60_000,
   staleForMs: 60_000,
   maxEntries: 500,
-  onBackgroundError: (key, error) => console.warn(`[usgs] count ${key} failed`, error),
+  onRefreshError: (key, error) =>
+    console.warn(`[usgs] count ${key} failed: ${describeError(error)}`),
 });
 
 export async function countEvents(query: ExportQuery): Promise<number> {
   const params = searchParams(query, query.from);
   const { value } = await countCache.get(params.toString(), async () => {
-    spendOrRefuse();
     params.set('format', 'geojson');
     // Wide counts are slow: M4.5 and up since 2000 took ten seconds.
     const response = await getJson(`${serverConfig.usgsBaseUrl}/fdsnws/event/1/count?${params}`, {
       timeoutMs: 30_000,
+      retryTimeouts: false,
+      beforeAttempt: spendOrRefuse,
     });
     if (response.status !== 200)
       throw new UpstreamError(`USGS count answered ${response.status}`, response.status);
-    return countSchema.parse(response.body).count;
+    return parseUpstream(countSchema, response.body, 'count').count;
   });
   return value;
 }
@@ -73,8 +75,6 @@ export async function* searchEvents(
   let written = new Set<string>();
 
   for (;;) {
-    await spend(signal);
-
     const params = searchParams(query, start);
     params.set('orderby', 'time-asc');
     params.set('limit', String(pageSize));
@@ -83,6 +83,8 @@ export async function* searchEvents(
       signal,
       fetchFn,
       timeoutMs: 60_000,
+      retryTimeouts: false,
+      beforeAttempt: () => spend(signal),
     });
 
     // No match is the header alone in CSV, and a 204 in some other formats.

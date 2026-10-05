@@ -84,7 +84,7 @@ GET /query?starttime=2026-07-01&endtime=2026-09-29T19:00:00          (34,348 mat
 
 A page carries no total, since `metadata.count` is absent, so the total comes from `/count`, which answers without running the search. Offsets drift when events land in the window or leave it while a search is being paged, as automatic solutions do, so a long export should page by time instead: `orderby=time-asc` with a fixed `endtime`, each page starting at the time of the last event of the one before, and the duplicates at the seam dropped by id.
 
-Counting is not free on wide searches: M4.5 and up since 2000 took ten seconds to count, and every event since 2000 got a 504 from the gateway instead of an answer.
+Counting is not free on wide searches: M4.5 and up since 2000 took ten seconds to count, and every event since 2000 got a 504 from the gateway instead of an answer. That 504, like a count or a page that runs out of time here, is not retried: the same search runs out of time again, and every try costs the USGS the whole of it. Every other call is retried twice, and each try, retries included, spends a call from the budget in `budget.ts`.
 
 ## How much the catalogue holds
 

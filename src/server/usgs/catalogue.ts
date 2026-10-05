@@ -2,10 +2,10 @@ import type { FeedWindow, QuakeDetailResponse, RecentQuakesResponse } from '@sha
 import { byTimeDescending, type QuakeSummary } from '@shared/domain/quake';
 import { serverConfig } from '../config';
 import { createSwrCache } from '../http/swr-cache';
-import { getJson, UpstreamError } from '../http/upstream';
+import { describeError, getJson, UpstreamError } from '../http/upstream';
 import { spendOrRefuse } from './budget';
 import { preferredProduct, toOriginQuality, toQuake, toSummary } from './map';
-import { detailSchema, featureSchema, feedSchema } from './schema';
+import { detailSchema, featureSchema, feedSchema, parseUpstream } from './schema';
 
 /** The USGS regenerates the summary feeds once a minute; asking more often returns the same file. */
 const feedCache = createSwrCache<FeedSnapshot>({
@@ -15,14 +15,16 @@ const feedCache = createSwrCache<FeedSnapshot>({
   // current file instead of being handed a ten-minute-old one. When the USGS is
   // down, the old copy is still served, flagged stale.
   staleForMs: 60_000,
-  onBackgroundError: (key, error) => console.warn(`[usgs] feed ${key} refresh failed`, error),
+  onRefreshError: (key, error) =>
+    console.warn(`[usgs] feed ${key} refresh failed: ${describeError(error)}`),
 });
 
 const detailCache = createSwrCache<QuakeDetailResponse | EventGone>({
   freshForMs: 60_000,
   staleForMs: 10 * 60_000,
   maxEntries: 500,
-  onBackgroundError: (key, error) => console.warn(`[usgs] event ${key} refresh failed`, error),
+  onRefreshError: (key, error) =>
+    console.warn(`[usgs] event ${key} refresh failed: ${describeError(error)}`),
 });
 
 interface FeedSnapshot {
@@ -52,7 +54,7 @@ async function fetchFeed(window: FeedWindow): Promise<FeedSnapshot> {
   if (response.status !== 200)
     throw new UpstreamError(`USGS feed answered ${response.status}`, response.status);
 
-  const feed = feedSchema.parse(response.body);
+  const feed = parseUpstream(feedSchema, response.body, 'feed');
   const quakes: QuakeSummary[] = [];
   let skipped = 0;
 
@@ -74,10 +76,8 @@ export async function quakeDetail(id: string): Promise<QuakeDetailResponse | Eve
 }
 
 async function fetchDetail(id: string): Promise<QuakeDetailResponse | EventGone> {
-  spendOrRefuse();
-
   const url = `${serverConfig.usgsBaseUrl}/fdsnws/event/1/query?eventid=${encodeURIComponent(id)}&format=geojson`;
-  const response = await getJson(url);
+  const response = await getJson(url, { beforeAttempt: spendOrRefuse });
 
   // The FDSN service answers 404 for ids it never had and 409 for events it has since deleted.
   if (response.status === 404 || response.status === 204) return { gone: 'not-found' };
@@ -85,7 +85,7 @@ async function fetchDetail(id: string): Promise<QuakeDetailResponse | EventGone>
   if (response.status !== 200)
     throw new UpstreamError(`USGS event answered ${response.status}`, response.status);
 
-  const detail = detailSchema.parse(response.body);
+  const detail = parseUpstream(detailSchema, response.body, 'event');
   const quake = toQuake(detail);
   if (!quake) return { gone: 'deleted' };
 

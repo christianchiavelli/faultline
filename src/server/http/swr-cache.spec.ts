@@ -2,9 +2,11 @@ import { createSwrCache } from './swr-cache';
 
 function setup(freshForMs = 1_000, staleForMs = 10_000) {
   let now = 0;
-  const cache = createSwrCache<string>({ freshForMs, staleForMs, now: () => now });
+  const onRefreshError = vi.fn();
+  const cache = createSwrCache<string>({ freshForMs, staleForMs, now: () => now, onRefreshError });
   return {
     cache,
+    onRefreshError,
     advance: (ms: number) => {
       now += ms;
     },
@@ -58,15 +60,29 @@ describe('createSwrCache', () => {
     expect(await cache.get('k', failing)).toEqual({ value: 'v1', stale: true });
   });
 
-  it('falls back to an expired value rather than failing outright', async () => {
+  it('falls back to an expired value rather than failing outright, and says why', async () => {
+    const { cache, advance, onRefreshError } = setup();
+    await cache.get('k', () => Promise.resolve('v1'));
+    advance(60_000);
+    const down = new Error('down');
+
+    expect(await cache.get('k', () => Promise.reject(down))).toEqual({ value: 'v1', stale: true });
+    expect(onRefreshError).toHaveBeenCalledWith('k', down);
+  });
+
+  it('hands over the old value at once while the upstream is known to be failing', async () => {
     const { cache, advance } = setup();
     await cache.get('k', () => Promise.resolve('v1'));
     advance(60_000);
+    await cache.get('k', () => Promise.reject(new Error('down')));
 
-    expect(await cache.get('k', () => Promise.reject(new Error('down')))).toEqual({
-      value: 'v1',
-      stale: true,
-    });
+    // A refresh that would never answer: the reader is not kept waiting for it.
+    const hanging = vi.fn(() => new Promise<string>(() => undefined));
+    expect(await cache.get('k', hanging)).toEqual({ value: 'v1', stale: true });
+    expect(hanging).toHaveBeenCalledTimes(1);
+    // One refresh at a time, however many readers come.
+    expect(await cache.get('k', hanging)).toEqual({ value: 'v1', stale: true });
+    expect(hanging).toHaveBeenCalledTimes(1);
   });
 
   it('fails when there is nothing to fall back to', async () => {

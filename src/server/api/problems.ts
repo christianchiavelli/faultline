@@ -1,6 +1,6 @@
 import type { $ZodError } from 'zod/v4/core';
 import { problem, type ApiResult } from '../http/result';
-import { UpstreamBusyError, UpstreamError } from '../http/upstream';
+import { UpstreamBusyError, UpstreamError, describeError } from '../http/upstream';
 
 /**
  * What a failure below the API means to whoever asked, as an RFC 9457 problem.
@@ -20,7 +20,8 @@ export function upstreamProblem(error: unknown, path: string): ApiResult {
     };
   }
   if (error instanceof UpstreamError) {
-    console.warn(`[api] ${path}: ${error.message}`);
+    // One line with every cause, the address that refused included: an outage logs this per request.
+    console.warn(`[api] ${path}: ${describeError(error)}`);
     return problem(
       502,
       'The USGS did not answer',
