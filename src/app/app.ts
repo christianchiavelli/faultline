@@ -1,5 +1,12 @@
 import { Location, ViewportScroller } from '@angular/common';
-import { Component, computed, inject, viewChild, type ElementRef, type Signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  viewChild,
+  type ElementRef,
+  type Signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Meta } from '@angular/platform-browser';
 import { NavigationEnd, Router, RouterOutlet, Scroll } from '@angular/router';
