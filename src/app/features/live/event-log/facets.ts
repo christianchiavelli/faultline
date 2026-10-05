@@ -55,14 +55,17 @@ const TESTS: Record<FacetKey, (entry: LogEntry, query: LogQuery) => boolean> = {
 };
 
 /**
- * Whether the query shows this entry, leaving one filter out when asked to.
+ * Whether the query shows an entry, leaving one filter out when asked to.
  * The search always applies: the counts are of what the reader is looking for.
+ * Made once per query and filter, so the search is read once, not once per
+ * entry: the facets alone test every entry once for each of their options.
  */
-export function matches(entry: LogEntry, query: LogQuery, except?: FacetKey): boolean {
-  return (
-    FACET_KEYS.every((key) => key === except || TESTS[key](entry, query)) &&
-    searchWords(query.search).every((word) => entry.text.includes(word))
-  );
+export function matcher(query: LogQuery, except?: FacetKey): (entry: LogEntry) => boolean {
+  const keys = FACET_KEYS.filter((key) => key !== except);
+  const words = searchWords(query.search);
+  return (entry) =>
+    keys.every((key) => TESTS[key](entry, query)) &&
+    words.every((word) => entry.text.includes(word));
 }
 
 export interface FacetOption {
@@ -118,12 +121,12 @@ export function facetsOf(entries: readonly LogEntry[], query: LogQuery, locale: 
     hint: string | null = null,
   ): FacetOption => {
     const chosen = { ...query, [key]: value } as LogQuery;
+    const shown = matcher(query, key);
     return {
       value,
       label,
       hint,
-      count: entries.filter((entry) => matches(entry, query, key) && TESTS[key](entry, chosen))
-        .length,
+      count: entries.filter((entry) => shown(entry) && TESTS[key](entry, chosen)).length,
       current: query[key] === value,
       params: logParams(chosen),
     };

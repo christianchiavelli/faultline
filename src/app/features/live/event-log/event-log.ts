@@ -28,7 +28,7 @@ import { formatDecimal } from '@ui/numbers';
 import { capitalise } from '@ui/text';
 import { dotRadius } from '../../common/world-chart/world-chart';
 import { quakeLinkState, type QuakeLinkState } from '../../quake/quake-link';
-import { facetsOf, matches, sortEntries, toEntries } from './facets';
+import { facetsOf, matcher, sortEntries, toEntries } from './facets';
 import { LogFacets } from './log-facets';
 import { LogFilters } from './log-filters';
 import { LogSearch } from './log-search';
@@ -158,10 +158,9 @@ export class EventLog {
 
   readonly visible = computed(() => {
     const query = this.query();
-    return sortEntries(
-      this.#entries().filter((entry) => matches(entry, query)),
-      query.order,
-    ).map((entry) => entry.quake);
+    return sortEntries(this.#entries().filter(matcher(query)), query.order).map(
+      (entry) => entry.quake,
+    );
   });
 
   protected readonly order = computed(() => this.query().order);
@@ -178,9 +177,8 @@ export class EventLog {
   readonly waiting = computed(() => {
     const held = this.#held();
     const query = this.query();
-    return toEntries(this.quakes().filter((quake) => held.has(quake.id))).filter((entry) =>
-      matches(entry, query),
-    ).length;
+    return toEntries(this.quakes().filter((quake) => held.has(quake.id))).filter(matcher(query))
+      .length;
   });
 
   /**

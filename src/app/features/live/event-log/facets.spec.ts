@@ -6,7 +6,7 @@ import {
   describeFloor,
   facetsOf,
   filtersOn,
-  matches,
+  matcher,
   sortEntries,
   toEntries,
   type Facet,
@@ -32,8 +32,8 @@ registerLocaleData(localePt);
 const entries = toEntries(day);
 const facet = (facets: readonly Facet[], key: string) => facets.find((f) => f.key === key)!;
 const counts = (f: Facet) => Object.fromEntries(f.options.map((o) => [o.label, o.count]));
-const ids = (query: LogQuery, except?: Parameters<typeof matches>[2]) =>
-  entries.filter((entry) => matches(entry, query, except)).map((entry) => entry.quake.id);
+const ids = (query: LogQuery, except?: Parameters<typeof matcher>[1]) =>
+  entries.filter(matcher(query, except)).map((entry) => entry.quake.id);
 
 describe('toEntries', () => {
   it('reads the region and the depth class of each event once', () => {
@@ -67,7 +67,7 @@ describe('toEntries', () => {
   });
 });
 
-describe('matches', () => {
+describe('matcher', () => {
   it('applies every filter, or every filter but one', () => {
     const query: LogQuery = { ...DEFAULT_LOG_QUERY, region: 'alaska', depth: 'intermediate' };
 
@@ -81,7 +81,7 @@ describe('matches', () => {
   });
 });
 
-describe('matches, searching', () => {
+describe('matcher, searching', () => {
   it('finds every word of a search in the place or its region, accents aside', () => {
     expect(ids({ ...DEFAULT_LOG_QUERY, magnitude: 'any', search: 'california' })).toEqual([
       'c1',
