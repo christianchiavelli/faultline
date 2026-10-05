@@ -473,19 +473,49 @@ test('goes to the search on "/", from anywhere on the page', async ({ page, isMo
   await expect(page.getByRole('searchbox', { name: 'Search places' })).toBeFocused();
 });
 
-test('searches before any script runs, accents or not', async ({ browser }) => {
+const NO_SCRIPT_SEARCHES = [
+  { home: '/', log: 'Every event', field: 'Search places' },
+  // The form's address is read against `<base href>`, so a Portuguese search stays Portuguese.
+  { home: '/pt/', log: 'Todos os eventos', field: 'Buscar lugares' },
+];
+
+for (const { home, log: name, field } of NO_SCRIPT_SEARCHES) {
+  test(`searches ${home} before any script runs, accents or not`, async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto(`${home}?mag=any`);
+    const log = page.getByRole('region', { name });
+
+    await log.getByRole('searchbox', { name: field }).fill('pahala');
+    await log.getByRole('searchbox', { name: field }).press('Enter');
+
+    await expect(page).toHaveURL(
+      (url) => url.pathname === home && url.search === '?mag=any&q=pahala',
+    );
+    await expect(log.locator('tbody tr:not(.day)')).toHaveCount(1);
+    await expect(log.locator('tbody mark')).toHaveText('Pāhala');
+    await context.close();
+  });
+}
+
+test('names the order in its menu before any script runs', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await page.goto('/?mag=any');
-  const log = page.getByRole('region', { name: 'Every event' });
+  await page.goto('/?mag=any&sort=largest');
 
-  await log.getByRole('searchbox', { name: 'Search places' }).fill('pahala');
-  await log.getByRole('searchbox', { name: 'Search places' }).press('Enter');
-
-  await expect(page).toHaveURL(/[?&]q=pahala/);
-  await expect(log.locator('tbody tr:not(.day)')).toHaveCount(1);
-  await expect(log.locator('tbody mark')).toHaveText('Pāhala');
+  // A phone's menu: a wide screen sorts from the headings, and hides it.
+  await expect(page.locator('fl-log-filters select')).toHaveValue('largest');
   await context.close();
+});
+
+test('reads a parameter given twice by its first value, rather than failing', async ({ page }) => {
+  const response = await page.goto('/?mag=4.5&mag=any&q=fiji&q=tonga');
+
+  expect(response?.status()).toBe(200);
+  const log = page.getByRole('region', { name: 'Every event' });
+  await expect(log.getByRole('searchbox', { name: 'Search places' })).toHaveValue('fiji');
+  await expect(log.locator('tbody tr:not(.day)')).toHaveCount(1);
+  await expect(log.locator('tbody tr:not(.day)')).toContainText('South of the Fiji Islands');
 });
 
 test('sorts the log by size or by depth from its headings', async ({ page, isMobile }) => {

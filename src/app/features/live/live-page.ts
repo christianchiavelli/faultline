@@ -44,6 +44,14 @@ const READOUTS = {
 /** The waiting log's lines, uneven like the places they stand for. */
 const LOG_ROWS = ['62%', '48%', '71%', '55%', '66%', '44%', '58%', '69%', '51%', '63%'] as const;
 
+/**
+ * A parameter given twice, `?q=a&q=b`, reaches the page as an array, whatever
+ * its input says. The first counts, as `URLSearchParams.get()` reads it.
+ */
+function firstValue(value: string | readonly string[] | undefined): string | undefined {
+  return typeof value === 'object' ? value[0] : value;
+}
+
 @Component({
   selector: 'fl-live-page',
   imports: [
@@ -63,14 +71,14 @@ const LOG_ROWS = ['62%', '48%', '71%', '55%', '66%', '44%', '58%', '69%', '51%',
 })
 export class LivePage {
   /** The log's view, from the query parameters the router binds here (see `log-query.ts`). */
-  readonly mag = input<string>();
-  readonly region = input<string>();
-  readonly depth = input<string>();
-  readonly review = input<string>();
-  readonly kind = input<string>();
-  readonly q = input<string>();
-  readonly sort = input<string>();
-  readonly rows = input<string>();
+  readonly mag = input(undefined, { transform: firstValue });
+  readonly region = input(undefined, { transform: firstValue });
+  readonly depth = input(undefined, { transform: firstValue });
+  readonly review = input(undefined, { transform: firstValue });
+  readonly kind = input(undefined, { transform: firstValue });
+  readonly q = input(undefined, { transform: firstValue });
+  readonly sort = input(undefined, { transform: firstValue });
+  readonly rows = input(undefined, { transform: firstValue });
 
   protected readonly now = inject(Clock).now;
   readonly #locale = inject(LOCALE_ID);

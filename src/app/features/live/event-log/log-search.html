@@ -1,5 +1,6 @@
 <search>
-  <form class="search" method="get" action="/" (submit)="submit($event)">
+  <!-- `./` is read against <base href>: a Portuguese page searches in Portuguese. -->
+  <form class="search" method="get" action="./" (submit)="submit($event)">
     @for (carry of carried(); track carry.name) {
       <input type="hidden" [attr.name]="carry.name" [attr.value]="carry.value" />
     }

@@ -19,7 +19,12 @@
   <span class="visually-hidden" i18n="label of the menu that orders the log">Order</span>
   <select (change)="sortBy($event)">
     @for (choice of orders; track choice.value) {
-      <option [value]="choice.value" [selected]="choice.value === order()">
+      <!-- The attribute for the server's HTML, the property once the page runs: the reader may have chosen since. -->
+      <option
+        [value]="choice.value"
+        [attr.selected]="choice.value === order() ? '' : null"
+        [selected]="choice.value === order()"
+      >
         {{ choice.label }}
       </option>
     }
