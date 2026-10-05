@@ -39,6 +39,8 @@ import {
   isoDay,
   magnitudeChoices,
   periodChoices,
+  sameAnchor,
+  samePreset,
   suggestionsFor,
   toAnchor,
   toQuery,
@@ -63,9 +65,9 @@ type Footer =
 
 /**
  * The export dialog: a search of the whole catalogue, counted as it is
- * narrowed, and downloaded as one file when it fits in one. Loaded with the
- * first click on an export button, so none of it, TanStack Query and Zod
- * included, weighs on the pages that never open it.
+ * narrowed, and downloaded as one file when it fits in one. A chunk of its
+ * own, built closed once the page is idle (see `export-button.ts`), so none
+ * of it, TanStack Query and Zod included, weighs on the page's first load.
  */
 @Component({
   selector: 'fl-export-dialog',
@@ -86,14 +88,22 @@ export class ExportDialog {
   /** The counts are for this minute: the clock ticks every second, the query only when this moves. */
   readonly #minute = computed(() => Math.ceil(this.#now() / 60_000) * 60_000);
 
-  protected readonly anchor = computed(() => {
-    const event = this.event();
-    return event ? toAnchor(event, this.#locale) : null;
-  });
+  protected readonly anchor = computed(
+    () => {
+      const event = this.event();
+      return event ? toAnchor(event, this.#locale) : null;
+    },
+    { equal: sameAnchor },
+  );
+  readonly #preset = computed(() => this.preset(), { equal: samePreset });
 
-  /** Starts again from the defaults when the page it was opened from changes, and not before. */
+  /**
+   * Starts again from the defaults when what it was opened on changes, and not
+   * before: built while the page is idle, it outlives a change of the log's
+   * order, which hands it a new preset with the same filters.
+   */
   protected readonly model = linkedSignal(() =>
-    initialForm(this.anchor(), this.preset(), untracked(this.#now)),
+    initialForm(this.anchor(), this.#preset(), untracked(this.#now)),
   );
 
   protected readonly form = form(this.model, (path) => {

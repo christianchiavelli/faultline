@@ -47,6 +47,7 @@ function render(options: { event?: QuakeSummary; open?: boolean } = {}) {
   fixture.componentRef.setInput('open', options.open ?? true);
   TestBed.tick();
   return {
+    fixture,
     dialog: fixture.componentInstance,
     element: fixture.nativeElement as HTMLElement,
     http: TestBed.inject(HttpTestingController),
@@ -330,6 +331,23 @@ describe('ExportDialog', () => {
 
       expect(text(element.querySelector('.count .value'))).toBe('1event');
       expect(text(download(element))).toBe('Download 1 event');
+    });
+
+    it('keeps what the reader chose through a new copy of its event, and starts over for another', async () => {
+      const { fixture, element, http } = render({ event: ende });
+      await answer(onlyCount(http), 312);
+      choose(element, '250');
+      await answer(onlyCount(http), 400);
+
+      // The record comes in: the same event, in a new object.
+      fixture.componentRef.setInput('event', { ...ende });
+      TestBed.tick();
+      expect(counts(http)).toEqual([]);
+      expect(paramsOf(download(element)!.href)['radiuskm']).toBe('250');
+
+      fixture.componentRef.setInput('event', { ...ende, time: ende.time + 3_600_000 });
+      TestBed.tick();
+      expect(paramsOf(onlyCount(http))['radiuskm']).toBe('100');
     });
 
     it('widens the circle, or lets it go for the whole world', async () => {

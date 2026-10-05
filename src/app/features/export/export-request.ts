@@ -1,5 +1,6 @@
 import { formatDate } from '@angular/common';
 import { depthName } from '@core/words/domain';
+import { formatMagnitude } from '@core/words/magnitude';
 import {
   EXPORT_LIMIT,
   depthClassOfRange,
@@ -134,8 +135,32 @@ export const KIND_CHOICES: readonly Choice<KindChoice>[] = [
   { value: 'earthquake', label: $localize`:a kind choice of the export:Earthquakes only` },
 ];
 
+/** The same anchor, field by field: an event's page hands over a new copy as its record comes in. */
+export function sameAnchor(a: ExportAnchor | null, b: ExportAnchor | null): boolean {
+  return (
+    a === b ||
+    (!!a &&
+      !!b &&
+      a.time === b.time &&
+      a.latitude === b.latitude &&
+      a.longitude === b.longitude &&
+      a.description === b.description)
+  );
+}
+
+/** The same preset, field by field: the log makes a new one at every change of its address. */
+export function samePreset(a: ExportPreset, b: ExportPreset): boolean {
+  return (
+    a.magnitude === b.magnitude &&
+    a.depth === b.depth &&
+    a.review === b.review &&
+    a.kind === b.kind &&
+    a.leftOut.join() === b.leftOut.join()
+  );
+}
+
 export function toAnchor(quake: QuakeSummary, locale: string): ExportAnchor {
-  const magnitude = quake.magnitude ? formatDecimal(quake.magnitude.value, locale, '1.1-1') : null;
+  const magnitude = quake.magnitude ? formatMagnitude(quake.magnitude.value, locale) : null;
   const place = quake.place;
   return {
     time: quake.time,
