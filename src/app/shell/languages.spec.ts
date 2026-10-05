@@ -20,19 +20,27 @@ async function render(locale: string) {
   return fixture.nativeElement as HTMLElement;
 }
 
+/** What a sighted reader sees: the text less what is there for screen readers alone. */
+function shown(element: HTMLElement): string {
+  const copy = element.cloneNode(true) as HTMLElement;
+  copy.querySelectorAll('.visually-hidden').forEach((node) => node.remove());
+  return copy.textContent?.replace(/\s+/g, '') ?? '';
+}
+
 describe('Languages', () => {
   it('marks the language of the page, and links the other in its own words', async () => {
     const element = await render('en-GB');
     const current = element.querySelector('.current')!;
     const other = element.querySelector('a')!;
 
-    expect(element.textContent?.replace(/\s+/g, '')).toBe('EN·PT');
+    expect(shown(element)).toBe('EN·PT');
     expect(current.getAttribute('aria-current')).toBe('true');
     expect(current.getAttribute('lang')).toBe('en-GB');
     expect(other.getAttribute('href')).toBe('/pt/quakes/us7000abcd');
     expect(other.getAttribute('hreflang')).toBe('pt');
     expect(other.getAttribute('lang')).toBe('pt-BR');
-    expect(other.getAttribute('aria-label')).toBe('Ler em português');
+    // Its name starts with what it shows, so "PT" said to a voice control finds it.
+    expect(other.textContent).toBe('PT, Ler em português');
   });
 
   it('links back to English from a Portuguese page', async () => {
@@ -40,6 +48,6 @@ describe('Languages', () => {
 
     expect(element.querySelector('.current')?.textContent?.trim()).toBe('PT');
     expect(element.querySelector('a')?.getAttribute('href')).toBe('/quakes/us7000abcd');
-    expect(element.querySelector('a')?.getAttribute('aria-label')).toBe('Read in English');
+    expect(element.querySelector('a')?.textContent).toBe('EN, Read in English');
   });
 });

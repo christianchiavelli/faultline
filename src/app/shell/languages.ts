@@ -4,7 +4,8 @@ import { pageInEveryLanguage } from '@core/languages';
 /**
  * The languages, the current one marked: "EN · PT". The other is a plain link
  * to the same page in it, a full load, since each language is a build of its
- * own; it is named in its own language, for the reader who reads that one.
+ * own. Its name goes on in its own language, for the reader who reads that
+ * one, after the code it shows: a reader who speaks to the page says "PT".
  */
 @Component({
   selector: 'fl-languages',
@@ -15,12 +16,8 @@ import { pageInEveryLanguage } from '@core/languages';
           language.short
         }}</span>
       } @else {
-        <a
-          [href]="language.href"
-          [attr.hreflang]="language.hreflang"
-          [attr.lang]="language.locale"
-          [attr.aria-label]="language.readIn"
-          >{{ language.short }}</a
+        <a [href]="language.href" [attr.hreflang]="language.hreflang" [attr.lang]="language.locale"
+          >{{ language.short }}<span class="visually-hidden">, {{ language.readIn }}</span></a
         >
       }
       @if (!last) {
