@@ -6,9 +6,9 @@ import { defineConfig } from 'vitest/config';
  * Every story as a test, in Chromium: rendered, its play function run, and
  * the result audited by axe, which fails the test on a violation.
  *
- * The browser asks for reduced motion, which zeroes the motion roles in
- * `tokens.css`: a check made the moment a dialog opens finds it open, not
- * halfway through fading in.
+ * Motion stays on, as it is for most visitors: a play function that checks a
+ * dialog the instant it opens fails here, not in someone's Storybook. Axe runs
+ * once Storybook has settled every animation at its end.
  */
 export default defineConfig({
   plugins: [storybookTest({ configDir: import.meta.dirname })],
@@ -17,7 +17,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: true,
-      provider: playwright({ contextOptions: { reducedMotion: 'reduce' } }),
+      provider: playwright(),
       instances: [{ browser: 'chromium' }],
     },
   },

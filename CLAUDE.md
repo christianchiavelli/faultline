@@ -106,7 +106,7 @@ Layers are enforced by ESLint (`eslint.config.js`); do not weaken the rules to m
 - The build warns that it found no locale data for `pt-BR` and uses `pt`: Angular's `pt` is Brazilian Portuguese, so the warning is expected.
 - A decimal comma hangs below the digits, where a point sits on their line. A numeral cut to its digits leaves room under it in a language that writes one (`.numeral--comma` in `quake-page.css`).
 - A play function's events are synthetic, and the platform closes a dialog or a popover on Escape only for a real key: a story closes one through its own controls, and the e2e suite covers Escape.
-- Story tests ask for reduced motion (`.storybook/vitest.config.ts`), which zeroes the motion roles: a check made as a dialog opens finds it open, not halfway through fading in.
+- Story tests keep motion on, as most visitors do, so a play function sees a dialog or a popover fade in: it checks one with `waitFor`, which finds it visible from its first frame, and waits for one to leave the same way. Axe runs after Storybook has settled every animation at its end.
 - Storybook's Angular renderer imports `@angular/platform-browser/animations`, which needs `@angular/animations`, and the app has none: Storybook resolves it to a stub (`.storybook/no-animations.ts`).
 
 ## Design changes
