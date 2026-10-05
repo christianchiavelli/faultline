@@ -17,16 +17,16 @@
           @if (view.magnitude; as magnitude) {
             <p
               class="numeral mono"
-              [class.numeral--notable]="(view.quake.magnitude?.value ?? 0) >= 4.5"
+              [class.numeral--notable]="view.notable"
               [class.numeral--comma]="view.decimalComma"
             >
               <span class="visually-hidden" i18n="read out before an event's magnitude"
                 >Magnitude </span
-              >{{ magnitude }}
+              >{{ magnitude.value }}
             </p>
             <p class="scale">
-              <span class="scale__code mono">{{ view.scale!.code }}</span>
-              <span class="scale__name">{{ view.scale!.name }}</span>
+              <span class="scale__code mono">{{ magnitude.scale.code }}</span>
+              <span class="scale__name">{{ magnitude.scale.name }}</span>
             </p>
           } @else {
             <p class="numeral numeral--missing mono">—</p>
@@ -54,8 +54,8 @@
             </time>
             <span class="when__ago">{{ view.quake.time | ago: now() }}</span>
           </p>
-          @if (view.scale; as scale) {
-            <p class="lede">{{ scale.summary }}</p>
+          @if (view.magnitude; as magnitude) {
+            <p class="lede">{{ magnitude.scale.summary }}</p>
           }
         </div>
       </header>
@@ -212,9 +212,12 @@
       </dl>
     } @else if (failure(); as failure) {
       <div class="gone">
-        <p class="eyebrow" i18n="the error an event's page answers, as in Error 404">
-          Error {{ problem()?.status }}
-        </p>
+        <!-- A connection that dropped has no status to give. -->
+        @if (failure.status) {
+          <p class="eyebrow" i18n="the error an event's page answers, as in Error 404">
+            Error {{ failure.status }}
+          </p>
+        }
         <h1 class="title">{{ failure.title }}</h1>
         @if (failure.detail) {
           <p class="lede">{{ failure.detail }}</p>

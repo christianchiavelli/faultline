@@ -221,4 +221,32 @@ describe('QuakePage', () => {
     expect(TestBed.inject(Title).getTitle()).toBe('Event not found | Faultline');
     expect(response.status).toBe(404);
   });
+
+  it("words a refusal of its own, not the API's English", async () => {
+    const { element } = await render((http) =>
+      http
+        .expectOne('/api/quakes/us6000ty57')
+        .flush(
+          { type: 'about:blank', title: 'Too many requests', status: 429 },
+          { status: 429, statusText: 'Too Many Requests' },
+        ),
+    );
+
+    expect(element.querySelector('.gone .eyebrow')?.textContent?.trim()).toBe('Error 429');
+    expect(element.querySelector('h1')?.textContent).toBe('Too many requests from you right now');
+  });
+
+  it('says nothing answered when the connection drops, with no error number to give', async () => {
+    const { element, response } = await render((http) =>
+      http.expectOne('/api/quakes/us6000ty57').error(new ProgressEvent('error')),
+    );
+
+    expect(element.querySelector('.gone .eyebrow')).toBeNull();
+    expect(element.querySelector('h1')?.textContent).toBe('This server did not answer');
+    expect(element.querySelector('.gone .lede')?.textContent).toBe(
+      'Check your connection, then try again.',
+    );
+    expect(TestBed.inject(Title).getTitle()).toBe('Event unavailable | Faultline');
+    expect(response.status).toBeUndefined();
+  });
 });

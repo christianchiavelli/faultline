@@ -16,11 +16,10 @@ import { Clock } from '@core/clock';
 import { describePage } from '@core/page-description';
 import { pageTitle } from '@core/page-title';
 import { alertLevelName, alertMeaning, kindName, placeName, reviewTag } from '@core/words/domain';
-import { describeScale } from '@core/words/magnitude';
-import type { Problem } from '@shared/api/contracts';
+import { describeMagnitude } from '@core/words/magnitude';
 import { radiatedEnergy } from '@shared/domain/magnitude';
 import { networkName } from '@shared/domain/network';
-import type { QuakeSummary } from '@shared/domain/quake';
+import { isNotable, type QuakeSummary } from '@shared/domain/quake';
 import { AgoPipe } from '@ui/ago.pipe';
 import { arrival } from '@ui/arrival';
 import { DATES } from '@ui/dates';
@@ -93,28 +92,30 @@ export class QuakePage {
   protected readonly waitingFacts = Object.values(FACTS);
   protected readonly dates = DATES;
 
-  protected readonly problem = computed<Problem | null>(() => {
+  /** The status the record failed with, 0 when nothing answered at all, `null` while none has. */
+  readonly #failedWith = computed(() => {
     const error = this.detail.error();
-    if (!(error instanceof HttpErrorResponse)) return null;
-    return isProblem(error.error)
-      ? error.error
-      : { type: 'about:blank', title: 'The USGS did not answer', status: error.status };
+    return error instanceof HttpErrorResponse ? error.status : null;
   });
 
-  /** What went wrong, in the reader's language: the API words its problems in English, for whoever calls it. */
+  /**
+   * What went wrong, in the reader's language, by status alone: the API words
+   * its problems in English, for whoever calls it, and a proxy or a dropped
+   * connection words them not at all.
+   */
   protected readonly failure = computed(() => {
-    const problem = this.problem();
-    return problem ? describeProblem(problem, this.id()) : null;
+    const status = this.#failedWith();
+    return status === null ? null : { status, ...describeFailure(status, this.id()) };
   });
 
   /**
    * The catalogue has no such event, or no longer: whatever the link knew of
    * it went with it. Any other failure leaves what the link knew standing.
    */
-  readonly #gone = computed(() => GONE.has(this.problem()?.status ?? 0));
+  readonly #gone = computed(() => GONE.has(this.#failedWith() ?? 0));
 
   /** The record is still on its way: its lines wait in their places. */
-  protected readonly pending = computed(() => !this.data() && !this.problem());
+  protected readonly pending = computed(() => !this.data() && this.#failedWith() === null);
 
   /** What the event was: everything the page opens on. */
   protected readonly view = computed(() => {
@@ -126,11 +127,11 @@ export class QuakePage {
 
     return {
       quake,
-      scale: quake.magnitude ? describeScale(quake.magnitude.type) : null,
       place: placeName(quake.place),
       kind: kindName(quake.kind),
       review: reviewTag(quake.review),
-      magnitude: quake.magnitude ? formatDecimal(quake.magnitude.value, locale, '1.1-1') : null,
+      magnitude: describeMagnitude(quake.magnitude, locale),
+      notable: isNotable(quake),
       // A decimal comma hangs below the digits, where a point sits on their line.
       decimalComma: formatDecimal(0.5, locale, '1.1-1').includes(','),
       energy: quake.magnitude
@@ -173,7 +174,7 @@ export class QuakePage {
   readonly #name = computed(() => {
     const view = this.view();
     if (!view) return null;
-    return view.magnitude ? `M${view.magnitude} ${view.place}` : view.place;
+    return view.magnitude ? `M${view.magnitude.value} ${view.place}` : view.place;
   });
 
   constructor() {
@@ -190,15 +191,15 @@ export class QuakePage {
 
     effect(() => {
       const name = this.#name();
-      const problem = this.problem();
+      const status = this.#failedWith();
       if (name) {
         title.setTitle(pageTitle(name));
-      } else if (problem) {
-        title.setTitle(pageTitle(problemPageName(problem.status)));
+      } else if (status !== null) {
+        title.setTitle(pageTitle(failurePageName(status)));
       }
       // Server-rendered error pages carry the real status, so crawlers and
       // monitors see a 404 for a missing event rather than a 200 page.
-      if (problem && response) response.status = problem.status;
+      if (status && response) response.status = status;
     });
   }
 }
@@ -219,11 +220,11 @@ function describeEnergy(joules: number, locale: string) {
 }
 
 /**
- * The page's own words for the API's problems, by status: the same as the
- * API's in English. A status it has no words for keeps the API's.
+ * The page's own words for a failure, by status: the same as the API's in
+ * English, for every status it sends. Any other is a fault of the server's.
  */
-function describeProblem(problem: Problem, id: string): { title: string; detail: string | null } {
-  switch (problem.status) {
+function describeFailure(status: number, id: string): { title: string; detail: string | null } {
+  switch (status) {
     case 404:
       return {
         title: $localize`:heading of the page of an event the catalogue does not have:No such event`,
@@ -233,6 +234,11 @@ function describeProblem(problem: Problem, id: string): { title: string; detail:
       return {
         title: $localize`:heading of the page of an event the catalogue deleted:This event was deleted`,
         detail: $localize`:what the page of a deleted event says:The USGS removed it from the catalogue, usually because it was a false detection or a duplicate.`,
+      };
+    case 429:
+      return {
+        title: $localize`:heading of an event's page when the reader has asked for too much too fast:Too many requests from you right now`,
+        detail: $localize`:what an event's page says when the reader has asked for too much too fast:This server answers each reader at a steady pace. Try again in a few seconds.`,
       };
     case 502:
       return {
@@ -244,24 +250,23 @@ function describeProblem(problem: Problem, id: string): { title: string; detail:
         title: $localize`:heading of an event's page when the server is pacing its requests:Too many lookups right now`,
         detail: $localize`:what an event's page says when the server is pacing its requests:This server is pacing its requests to the USGS. Try again in a few seconds.`,
       };
-    case 500:
+    case 0:
+      return {
+        title: $localize`:heading of an event's page when no answer came at all:This server did not answer`,
+        detail: $localize`:what an event's page says when no answer came at all:Check your connection, then try again.`,
+      };
+    default:
       return {
         title: $localize`:heading of an event's page after a fault of the server's own:Something went wrong on our side`,
         detail: null,
       };
-    default:
-      return { title: problem.title, detail: problem.detail ?? null };
   }
 }
 
 /** The heading says what happened; the tab only names the page, plainly. */
-function problemPageName(status: number): string {
+function failurePageName(status: number): string {
   if (status === 404)
     return $localize`:tab title of the page of an event that does not exist:Event not found`;
   if (status === 410) return $localize`:tab title of the page of a deleted event:Event deleted`;
   return $localize`:tab title of an event's page that could not load:Event unavailable`;
-}
-
-function isProblem(value: unknown): value is Problem {
-  return typeof value === 'object' && value !== null && 'title' in value && 'status' in value;
 }

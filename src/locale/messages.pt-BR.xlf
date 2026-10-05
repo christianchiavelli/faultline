@@ -1869,6 +1869,16 @@
         <target state="translated">O USGS o removeu do catálogo, em geral por ser uma detecção falsa ou uma duplicata.</target>
         <note priority="1" from="description">what the page of a deleted event says</note>
       </trans-unit>
+      <trans-unit id="5499428424457142907" datatype="html">
+        <source>Too many requests from you right now</source>
+        <target state="translated">Pedidos demais vindos de você agora</target>
+        <note priority="1" from="description">heading of an event&apos;s page when the reader has asked for too much too fast</note>
+      </trans-unit>
+      <trans-unit id="3004392382092685234" datatype="html">
+        <source>This server answers each reader at a steady pace. Try again in a few seconds.</source>
+        <target state="translated">Este servidor responde a cada leitor num ritmo constante. Tente de novo em alguns segundos.</target>
+        <note priority="1" from="description">what an event&apos;s page says when the reader has asked for too much too fast</note>
+      </trans-unit>
       <trans-unit id="6128180942884953095" datatype="html">
         <source>The USGS did not answer</source>
         <target state="translated">O USGS não respondeu</target>
@@ -1888,6 +1898,16 @@
         <source>This server is pacing its requests to the USGS. Try again in a few seconds.</source>
         <target state="translated">Este servidor está espaçando os pedidos ao USGS. Tente de novo em alguns segundos.</target>
         <note priority="1" from="description">what an event&apos;s page says when the server is pacing its requests</note>
+      </trans-unit>
+      <trans-unit id="5722435752444766404" datatype="html">
+        <source>This server did not answer</source>
+        <target state="translated">Este servidor não respondeu</target>
+        <note priority="1" from="description">heading of an event&apos;s page when no answer came at all</note>
+      </trans-unit>
+      <trans-unit id="7489237966099982725" datatype="html">
+        <source>Check your connection, then try again.</source>
+        <target state="translated">Confira sua conexão e tente de novo.</target>
+        <note priority="1" from="description">what an event&apos;s page says when no answer came at all</note>
       </trans-unit>
       <trans-unit id="181758440260798511" datatype="html">
         <source>Something went wrong on our side</source>
