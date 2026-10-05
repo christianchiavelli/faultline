@@ -46,6 +46,14 @@ function dependencies(overrides: Partial<ExportDependencies> = {}): ExportDepend
   };
 }
 
+/** Whether an export would be accepted now. One that is gives its place straight back. */
+async function accepts(): Promise<boolean> {
+  const reader = new AbortController();
+  const result = await prepareExport(url(EXPORT), reader.signal, dependencies());
+  reader.abort();
+  return 'chunks' in result;
+}
+
 async function read(result: Awaited<ReturnType<typeof prepareExport>>): Promise<string> {
   let text = '';
   for await (const chunk of (result as ExportFile).chunks) text += chunk;
@@ -173,6 +181,39 @@ describe('prepareExport', () => {
     });
 
     await Promise.all(iterators.map((iterator) => iterator.return?.()));
-    expect(await prepareExport(url(EXPORT), signal, dependencies())).toHaveProperty('chunks');
+    expect(await accepts()).toBe(true);
+  });
+
+  it('holds its place from the moment it is accepted, through the count', async () => {
+    let answer: (count: number) => void = () => undefined;
+    const counted = new Promise<number>((resolve) => (answer = resolve));
+    const counting = Array.from({ length: 4 }, () =>
+      prepareExport(url(EXPORT), signal, dependencies({ count: () => counted })),
+    );
+
+    expect(await prepareExport(url(EXPORT), signal, dependencies())).toMatchObject({
+      status: 503,
+    });
+
+    // Refused after its count, too large for a file: each gives its place back.
+    answer(187_394);
+    expect(await Promise.all(counting)).toMatchObject(Array(4).fill({ status: 422 }));
+    expect(await accepts()).toBe(true);
+  });
+
+  it('gives its place back when the reader leaves before the file starts', async () => {
+    const readers = Array.from({ length: 4 }, () => new AbortController());
+    for (const reader of readers) {
+      expect(await prepareExport(url(EXPORT), reader.signal, dependencies())).toHaveProperty(
+        'chunks',
+      );
+    }
+    expect(await prepareExport(url(EXPORT), signal, dependencies())).toMatchObject({
+      status: 503,
+    });
+
+    for (const reader of readers) reader.abort();
+
+    expect(await accepts()).toBe(true);
   });
 });

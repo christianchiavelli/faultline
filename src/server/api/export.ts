@@ -61,17 +61,22 @@ export async function prepareExport(
     const busy = problem(503, 'Too many exports right now', 'Try again in a few seconds.');
     return { ...busy, headers: { ...busy.headers, 'retry-after': '10' } };
   }
+  // Taken now, not when the file starts: the count is a round trip to the
+  // USGS, and every export asked for meanwhile would pass the check above.
+  const release = holdSlot(signal);
 
   let count: number;
   try {
     count = await dependencies.count(query.data);
   } catch (error) {
+    release();
     return upstreamProblem(error, url.pathname);
   }
 
   // An export holds every match or does not happen: the first 100,000 of a
   // larger search would be an arbitrary slice presented as a whole.
   if (count > EXPORT_LIMIT) {
+    release();
     return problem(
       422,
       'Too many events for one file',
@@ -83,16 +88,39 @@ export async function prepareExport(
     fileName: exportFileName(query.data, format.data),
     contentType:
       format.data === 'csv' ? 'text/csv; charset=utf-8' : 'application/geo+json; charset=utf-8',
-    chunks: track(write(dependencies.search(query.data, { signal }), query.data, format.data)),
+    chunks: releasing(
+      write(dependencies.search(query.data, { signal }), query.data, format.data),
+      release,
+    ),
   };
 }
 
-async function* track(chunks: AsyncIterable<string>): AsyncGenerator<string> {
+/**
+ * Takes one of the running exports' places until `release`, or until whoever
+ * asked has gone: a file the transport never starts must not keep its place.
+ */
+function holdSlot(signal: AbortSignal): () => void {
   running++;
+  let held = true;
+  const release = () => {
+    if (!held) return;
+    held = false;
+    running--;
+    signal.removeEventListener('abort', release);
+  };
+  if (signal.aborted) release();
+  else signal.addEventListener('abort', release, { once: true });
+  return release;
+}
+
+async function* releasing(
+  chunks: AsyncIterable<string>,
+  release: () => void,
+): AsyncGenerator<string> {
   try {
     yield* chunks;
   } finally {
-    running--;
+    release();
   }
 }
 
