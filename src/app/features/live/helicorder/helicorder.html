@@ -121,8 +121,8 @@
           <p class="card__head">
             @if (reading.magnitude; as magnitude) {
               <span class="card__magnitude mono" [attr.data-magnitude-of]="reading.id"
-                >M{{ magnitude
-                }}<abbr [title]="reading.scale!.title">{{ reading.scale!.code }}</abbr></span
+                >M{{ magnitude.value
+                }}<abbr [title]="magnitude.scale.title">{{ magnitude.scale.code }}</abbr></span
               >
             } @else {
               <span class="card__magnitude mono missing">—</span>

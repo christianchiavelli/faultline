@@ -12,15 +12,13 @@ import {
 import { RouterLink } from '@angular/router';
 import { liveQuakesResource } from '@core/api/quakes';
 import { Clock } from '@core/clock';
-import { countKind } from '@core/words/domain';
-import { describeScale } from '@core/words/magnitude';
+import { countKind, placeName } from '@core/words/domain';
+import { describeScale, formatMagnitude } from '@core/words/magnitude';
 import { isEarthquake } from '@shared/domain/quake';
 import { summarise } from '@shared/domain/summary';
 import { AgoPipe } from '@ui/ago.pipe';
 import { arrival } from '@ui/arrival';
-import { formatDecimal } from '@ui/numbers';
 import { Skeleton } from '@ui/skeleton';
-import { capitalise } from '@ui/text';
 import { WorldChart } from '../common/world-chart/world-chart';
 import { ExportButton } from '../export/export-button';
 import { quakeLinkState } from '../quake/quake-link';
@@ -107,10 +105,8 @@ export class LivePage {
     if (!largest?.magnitude) return null;
     return {
       quake: largest,
-      place: largest.place
-        ? capitalise(largest.place)
-        : $localize`:in place of an event's place name, when the USGS gives none:Location not described`,
-      value: formatDecimal(largest.magnitude.value, this.#locale, '1.1-1'),
+      place: placeName(largest.place),
+      value: formatMagnitude(largest.magnitude.value, this.#locale),
       scale: describeScale(largest.magnitude.type),
       link: quakeLinkState(largest),
     };

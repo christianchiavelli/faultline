@@ -6,7 +6,7 @@
  * is how a reader finds them.
  */
 import { depthPhrase, kindName, placeName } from '@core/words/domain';
-import { describeScale } from '@core/words/magnitude';
+import { describeMagnitude, type MagnitudeInWords } from '@core/words/magnitude';
 import { isEarthquake, type QuakeSummary } from '@shared/domain/quake';
 import { formatDecimal } from '@ui/numbers';
 import { HOUR_MS, burstDuration, type TraceEvent } from './trace';
@@ -101,8 +101,7 @@ export function eventAt(placed: readonly Placed[], probe: Probe, hours: number):
 
 /** What the card says about an event, and the same as one sentence for a screen reader. */
 export interface EventDescription {
-  readonly magnitude: string | null;
-  readonly scale: { readonly code: string; readonly title: string } | null;
+  readonly magnitude: MagnitudeInWords | null;
   readonly place: string;
   readonly depth: { readonly km: string; readonly above: boolean } | null;
   readonly reviewed: boolean;
@@ -113,8 +112,7 @@ export interface EventDescription {
 
 /** `locale` sets its numbers: "M5.1, 10.0 km deep" in English, "M5,1, 10,0 km de profundidade" in Portuguese. */
 export function describeEvent(quake: QuakeSummary, locale: string): EventDescription {
-  const scale = quake.magnitude ? describeScale(quake.magnitude.type) : null;
-  const magnitude = quake.magnitude ? formatDecimal(quake.magnitude.value, locale, '1.1-1') : null;
+  const magnitude = describeMagnitude(quake.magnitude, locale);
   const place = placeName(quake.place);
   const depthKm = quake.location.depthKm;
   const depth =
@@ -125,8 +123,8 @@ export function describeEvent(quake: QuakeSummary, locale: string): EventDescrip
   const reviewed = quake.review === 'reviewed';
 
   const text = [
-    magnitude && scale
-      ? `M${magnitude} ${scale.code}`
+    magnitude
+      ? `M${magnitude.value} ${magnitude.scale.code}`
       : $localize`:read out for an event the USGS has not sized yet:No magnitude yet`,
     place,
     `${new Date(quake.time).toISOString().slice(11, 19)} UTC`,
@@ -143,7 +141,6 @@ export function describeEvent(quake: QuakeSummary, locale: string): EventDescrip
 
   return {
     magnitude,
-    scale: scale ? { code: scale.code, title: scale.title } : null,
     place,
     depth,
     reviewed,

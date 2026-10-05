@@ -170,9 +170,11 @@
                   @if (row.magnitude; as magnitude) {
                     <span class="dot" aria-hidden="true" [style.--dot.px]="row.dot"></span>
                     <span class="mono value" [attr.data-magnitude-of]="row.id">{{
-                      magnitude
+                      magnitude.value
                     }}</span>
-                    <abbr class="scale" [title]="row.scale!.title">{{ row.scale!.code }}</abbr>
+                    <abbr class="scale" [title]="magnitude.scale.title">{{
+                      magnitude.scale.code
+                    }}</abbr>
                   } @else {
                     <span
                       class="missing"

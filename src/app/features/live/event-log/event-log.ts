@@ -17,7 +17,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { depthPhrase, kindName, placeName, reviewTag } from '@core/words/domain';
-import { describeScale } from '@core/words/magnitude';
+import { describeMagnitude, formatMagnitude, type MagnitudeInWords } from '@core/words/magnitude';
 import { splitPlace } from '@shared/domain/place';
 import { isEarthquake, isNotable, type QuakeSummary } from '@shared/domain/quake';
 import { AgoPipe } from '@ui/ago.pipe';
@@ -240,10 +240,9 @@ export class EventLog {
 
   readonly latest = LATEST;
   /** The floor of a log nobody has filtered, as its empty state names it. */
-  protected readonly defaultFloor = formatDecimal(
+  protected readonly defaultFloor = formatMagnitude(
     minimumMagnitude(DEFAULT_LOG_QUERY.magnitude) ?? 0,
     this.#locale,
-    '1.1-1',
   );
   protected readonly dates = DATES;
   protected readonly freshFor = `${FRESH_MS}ms`;
@@ -342,8 +341,7 @@ interface Row {
   readonly id: string;
   readonly time: number;
   readonly iso: string;
-  readonly magnitude: string | null;
-  readonly scale: { readonly code: string; readonly title: string } | null;
+  readonly magnitude: MagnitudeInWords | null;
   /** The map's dot for this magnitude, in pixels across. */
   readonly dot: number;
   readonly notable: boolean;
@@ -369,15 +367,13 @@ interface Row {
 
 /** `locale` sets the row's numbers: "5.1" and "35.0" in English, "5,1" and "35,0" in Portuguese. */
 function toRow(quake: QuakeSummary, fresh: boolean, locale: string): Row {
-  const scale = quake.magnitude ? describeScale(quake.magnitude.type) : null;
   const { latitude, longitude, depthKm: depth } = quake.location;
   const { locality, region } = splitPlace(quake.place);
   return {
     id: quake.id,
     time: quake.time,
     iso: new Date(quake.time).toISOString(),
-    magnitude: quake.magnitude ? formatDecimal(quake.magnitude.value, locale, '1.1-1') : null,
-    scale: scale ? { code: scale.code, title: scale.title } : null,
+    magnitude: describeMagnitude(quake.magnitude, locale),
     dot: dotSize(quake.magnitude?.value ?? null),
     notable: isNotable(quake),
     where: placeName(locality ?? quake.place),

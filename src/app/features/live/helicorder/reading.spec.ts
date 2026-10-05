@@ -123,8 +123,7 @@ describe('describeEvent', () => {
     );
 
     expect(description).toMatchObject({
-      magnitude: '2.0',
-      scale: { code: 'ML' },
+      magnitude: { value: '2.0', scale: { code: 'ML' } },
       place: '3 km NW of Petersville, Alaska',
       depth: { km: '80.7', above: false },
       reviewed: false,
@@ -148,7 +147,6 @@ describe('describeEvent', () => {
 
     expect(description).toMatchObject({
       magnitude: null,
-      scale: null,
       place: 'Location not described',
       depth: { km: '1.2', above: true },
       kind: 'quarry blast',
@@ -158,7 +156,7 @@ describe('describeEvent', () => {
 
   it('writes a magnitude below zero with a real minus sign', () => {
     expect(
-      describeEvent(aQuake({ magnitude: { value: -0.4, type: 'md' } }), 'en-GB').magnitude,
+      describeEvent(aQuake({ magnitude: { value: -0.4, type: 'md' } }), 'en-GB').magnitude?.value,
     ).toBe('−0.4');
   });
 
@@ -171,7 +169,10 @@ describe('describeEvent', () => {
       'pt-BR',
     );
 
-    expect(description).toMatchObject({ magnitude: '5,1', depth: { km: '10,0', above: false } });
+    expect(description).toMatchObject({
+      magnitude: { value: '5,1' },
+      depth: { km: '10,0', above: false },
+    });
     expect(description.text).toMatch(/^M5,1 Mww, /);
   });
 });

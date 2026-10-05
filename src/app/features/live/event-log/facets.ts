@@ -1,9 +1,9 @@
 import type { Params } from '@angular/router';
 import { depthName } from '@core/words/domain';
+import { formatMagnitude } from '@core/words/magnitude';
 import { DEPTH_CLASSES, depthClassOf, type DepthClass } from '@shared/domain/depth';
 import { regionSlug, splitPlace } from '@shared/domain/place';
 import { EARTHQUAKE_KIND, type QuakeSummary } from '@shared/domain/quake';
-import { formatDecimal } from '@ui/numbers';
 import { capitalise, fold, searchWords } from '@ui/text';
 import {
   MAGNITUDE_FLOORS,
@@ -100,7 +100,7 @@ const ANY = $localize`:filter option of the log that leaves its filter off:Any`;
 /** "2.5 and up": a magnitude floor as the facet offers it. */
 function floorOption(min: number | null, locale: string): string {
   if (min === null) return ANY;
-  const magnitude = formatDecimal(min, locale, '1.1-1');
+  const magnitude = formatMagnitude(min, locale);
   return $localize`:a magnitude floor, as a filter option of the log, as in 2.5 and up:${magnitude}:magnitude: and up`;
 }
 
@@ -225,7 +225,7 @@ export function describeFloor(query: LogQuery, locale: string): string {
   if (min === null) {
     return $localize`:the log's magnitude floor beside its count, when it has none:any magnitude`;
   }
-  const magnitude = formatDecimal(min, locale, '1.1-1');
+  const magnitude = formatMagnitude(min, locale);
   return $localize`:the log's magnitude floor beside its count, as in M2.5 and up:M${magnitude}:magnitude: and up`;
 }
 

@@ -1,4 +1,6 @@
 import { magnitudeScale, type MagnitudeScale } from '@shared/domain/magnitude';
+import type { Magnitude } from '@shared/domain/quake';
+import { formatDecimal } from '@ui/numbers';
 
 export interface ScaleInWords extends MagnitudeScale {
   /** What it is called, as in "Moment W-phase magnitude". */
@@ -83,4 +85,23 @@ export function describeScale(type: string): ScaleInWords {
   const scale = magnitudeScale(type);
   const words = SCALES[scale.key] ?? NETWORK_SPECIFIC;
   return { ...scale, ...words, title: `${words.name}. ${words.summary}` };
+}
+
+/** A magnitude to one decimal, as catalogues give it: "6.2", or "6,2" in Portuguese. */
+export function formatMagnitude(value: number, locale: string): string {
+  return formatDecimal(value, locale, '1.1-1');
+}
+
+/** An event's magnitude as it is shown: its number and the scale it was measured on, both or neither. */
+export interface MagnitudeInWords {
+  readonly value: string;
+  readonly scale: ScaleInWords;
+}
+
+export function describeMagnitude(
+  magnitude: Magnitude | null,
+  locale: string,
+): MagnitudeInWords | null {
+  if (!magnitude) return null;
+  return { value: formatMagnitude(magnitude.value, locale), scale: describeScale(magnitude.type) };
 }
