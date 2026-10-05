@@ -74,7 +74,10 @@ export function isEarthquake(quake: Pick<QuakeSummary, 'kind'>): boolean {
  */
 export const NOTABLE_MAGNITUDE = 4.5;
 
-export function isNotable(quake: QuakeSummary): boolean {
+/** A notable event has a magnitude, so what passes this has one to read. */
+export function isNotable<T extends QuakeSummary>(
+  quake: T,
+): quake is T & { readonly magnitude: Magnitude } {
   return isEarthquake(quake) && (quake.magnitude?.value ?? -Infinity) >= NOTABLE_MAGNITUDE;
 }
 

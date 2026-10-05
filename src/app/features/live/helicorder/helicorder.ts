@@ -11,9 +11,9 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { placeName, reviewTag } from '@core/words/domain';
+import { formatMagnitude } from '@core/words/magnitude';
 import { magnitudeScale } from '@shared/domain/magnitude';
 import { NOTABLE_MAGNITUDE, isNotable, type QuakeSummary } from '@shared/domain/quake';
-import { formatDecimal } from '@ui/numbers';
 import { quakeLinkState, type QuakeLinkState } from '../../quake/quake-link';
 import { describeEvent, eventAt, place } from './reading';
 import {
@@ -99,7 +99,7 @@ export class Helicorder {
   readonly gridLines = Array.from({ length: 11 }, (_, i) => (i + 1) * FIVE_MINUTES);
   readonly quarterHour = FIVE_MINUTES * 3;
   /** The magnitude the pen turns red at, as the key names it. */
-  readonly notable = formatDecimal(NOTABLE_MAGNITUDE, this.#locale, '1.1-1');
+  readonly notable = formatMagnitude(NOTABLE_MAGNITUDE, this.#locale);
   readonly height = HOURS * ROW_HEIGHT;
   readonly line = 100 / HOURS;
   readonly hintId = `helicorder-keys-${nextId++}`;
@@ -118,14 +118,15 @@ export class Helicorder {
   readonly markers = computed<readonly Marker[]>(() => {
     const rows = this.rows();
     const first = rows[0]?.start ?? 0;
+    // On the drum first, then the largest: the feed reaches back past its top row.
     return (this.quakes() ?? [])
-      .filter(isNotable)
-      .sort((a, b) => (b.magnitude?.value ?? 0) - (a.magnitude?.value ?? 0))
-      .slice(0, LABELLED)
       .filter((quake) => quake.time >= first)
+      .filter(isNotable)
+      .sort((a, b) => b.magnitude.value - a.magnitude.value)
+      .slice(0, LABELLED)
       .map((quake) => {
-        const magnitude = quake.magnitude!;
-        const value = formatDecimal(magnitude.value, this.#locale, '1.1-1');
+        const { magnitude } = quake;
+        const value = formatMagnitude(magnitude.value, this.#locale);
         // Anchored where the burst ends, which can be on the next row.
         const end = quake.time + burstDuration(magnitude.value) - first;
         const row = Math.min(rows.length - 1, Math.floor(end / HOUR_MS));

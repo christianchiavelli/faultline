@@ -76,6 +76,21 @@ describe('Helicorder', () => {
     expect(markers[0]?.getAttribute('aria-label')).toBe('M6.1 Mww, South Sandwich Islands region');
   });
 
+  it('labels the largest events on the drum, whatever larger ones the feed holds above its top line', async () => {
+    // The feed reaches 24 hours back; the drum's top line starts at the hour after that.
+    const above = Array.from({ length: 6 }, (_, i) =>
+      aQuake({ id: `above${i}`, time: NOW - 23.75 * HOUR, magnitude: { value: 7, type: 'mww' } }),
+    );
+    const element = await render([
+      ...above,
+      aQuake({ id: 'on', time: NOW - 3 * HOUR, magnitude: { value: 5, type: 'mww' } }),
+    ]);
+
+    expect(
+      [...element.querySelectorAll('a.marker')].map((marker) => marker.getAttribute('href')),
+    ).toEqual(['/quakes/on']);
+  });
+
   it('draws notable events in the pen, and only those', async () => {
     const element = await render([
       aQuake({ id: 'big', time: NOW - 3 * HOUR, magnitude: { value: 5.1, type: 'mb' } }),
