@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/angular';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { Dialog } from './dialog';
 
 /** A modal dialog on the platform's own `<dialog>`: the page behind goes inert, and focus moves in and comes back. */
@@ -34,7 +34,9 @@ type Story = StoryObj<Dialog>;
 export const Modal: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Export' }));
-    await expect(canvas.getByRole('dialog', { name: 'Export this search' })).toBeVisible();
+    // It fades in, so it is visible from its first frame on rather than the instant it opens.
+    const dialog = canvas.getByRole('dialog', { name: 'Export this search' });
+    await waitFor(() => expect(dialog).toBeVisible());
   },
 };
 
@@ -44,7 +46,8 @@ export const Closed: Story = {
     const opener = canvas.getByRole('button', { name: 'Export' });
     await userEvent.click(opener);
     await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
-    await expect(canvas.queryByRole('dialog')).toBeNull();
+    // It fades out before it leaves.
+    await waitFor(() => expect(canvas.queryByRole('dialog')).toBeNull());
     await expect(opener).toHaveFocus();
   },
 };
@@ -55,6 +58,7 @@ export const Sheet: Story = {
   globals: { viewport: { value: 'mobile2' } },
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Filters' }));
-    await expect(canvas.getByRole('dialog', { name: 'Filter the log' })).toBeVisible();
+    const sheet = canvas.getByRole('dialog', { name: 'Filter the log' });
+    await waitFor(() => expect(sheet).toBeVisible());
   },
 };

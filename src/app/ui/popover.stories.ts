@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/angular';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { Icon } from './icon';
 import { Popover } from './popover';
 
@@ -30,6 +30,8 @@ export const Closed: Story = {};
 export const Open: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Theme' }));
-    await expect(canvas.getByRole('group', { name: 'Theme' })).toBeVisible();
+    // It fades in, so it is visible from its first frame on rather than the instant it opens.
+    const panel = canvas.getByRole('group', { name: 'Theme' });
+    await waitFor(() => expect(panel).toBeVisible());
   },
 };
