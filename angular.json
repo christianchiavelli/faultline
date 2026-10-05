@@ -93,6 +93,7 @@
             "coverageInclude": ["src/**/*.ts"],
             "coverageExclude": [
               "src/**/*.spec.ts",
+              "src/**/*.stories.ts",
               "src/**/*.d.ts",
               "src/**/testing/**",
               "src/main.ts",
@@ -109,6 +110,7 @@
               "src/**/*.ts",
               "src/**/*.html",
               "src/**/*.css",
+              ".storybook/**/*.ts",
               "e2e/**/*.ts",
               "scripts/**/*.ts",
               "playwright.config.ts",

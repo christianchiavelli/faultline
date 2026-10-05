@@ -16,6 +16,19 @@ allowBuilds:
   lmdb: false
   msgpackr-extract: false
 
+# Storybook builds with Vite, through @analogjs/storybook-angular, which renders
+# with @storybook/angular. That package still names the webpack builder and the
+# dynamic platform as required peers, yet only its webpack preset reaches for
+# them, and only when they are installed. Optional here, so pnpm does not pull
+# a second Angular build pipeline in for a preset that never runs.
+packageExtensions:
+  '@storybook/angular':
+    peerDependenciesMeta:
+      '@angular-devkit/build-angular':
+        optional: true
+      '@angular/platform-browser-dynamic':
+        optional: true
+
 # Two fixes to dependencies. Each is keyed by package rather than version, so
 # an upgrade that touches the patched file fails the install instead of
 # dropping the fix unnoticed; drop a patch once its fix ships upstream.

@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.app.json",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "types": ["node", "@angular/localize", "vite/client"]
+  },
+  "include": ["../src/**/*.ts", "./*.ts"],
+  "exclude": ["../src/**/*.spec.ts"]
+}

@@ -3,6 +3,7 @@ import css from '@eslint/css';
 import eslint from '@eslint/js';
 import angular from 'angular-eslint';
 import { defineConfig } from 'eslint/config';
+import storybook from 'eslint-plugin-storybook';
 import tseslint from 'typescript-eslint';
 
 /**
@@ -93,6 +94,8 @@ export default defineConfig([
     ignores: ['src/app/ui/**', 'src/app/core/api/in-process-backend.ts'],
     rules: { 'no-restricted-imports': restrict(noClassicZod, noServer) },
   },
+  // Storybook's own rules for stories: a default export, interactions awaited, addons installed.
+  storybook.configs['flat/recommended'],
   {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],
