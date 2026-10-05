@@ -70,6 +70,8 @@ pnpm install
 pnpm dev
 ```
 
+`pnpm storybook` opens the design system on its own: the tokens, every component and the charts, drawn from a recorded day in both themes.
+
 The scripts run on Node.js 24.15, which the Angular 22 CLI requires. It is pinned in `package.json` under `devEngines` and downloaded on the first install.
 
 For the production server:
@@ -133,9 +135,10 @@ Magnitude is not one scale: a single day mixes six, so every value carries its s
 ## Testing
 
 ```bash
-pnpm run ci    # format, lint, types, and unit tests with coverage
-pnpm run e2e   # Playwright on desktop and mobile, against a production build
-pnpm vitals    # the Core Web Vitals of each page, against a production build
+pnpm run ci           # format, lint, types, and unit tests with coverage
+pnpm storybook:test   # every story in Chromium, its interactions played and audited by axe
+pnpm run e2e          # Playwright on desktop and mobile, against a production build
+pnpm vitals           # the Core Web Vitals of each page, against a production build
 ```
 
 Vitest covers the domain, the USGS mapping, the cache, the API and the components, and the build fails if coverage drops under its floor. Playwright runs the production server against a USGS stub and checks what only a browser can: the page before any script runs, hydration without refetching, the live stream, exports, both languages, and an axe audit of every page in both themes.
