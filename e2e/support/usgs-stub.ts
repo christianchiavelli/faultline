@@ -26,6 +26,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { createServer, type ServerResponse } from 'node:http';
+import { STUB_PORT } from './ports.ts';
 
 interface StubEvent {
   readonly id: string;
@@ -43,7 +44,7 @@ interface StubEvent {
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
-const PORT = Number(process.env['PORT'] ?? 4310);
+const PORT = Number(process.env['PORT'] ?? STUB_PORT);
 const STARTED = Date.now();
 
 const EVENTS: readonly StubEvent[] = [

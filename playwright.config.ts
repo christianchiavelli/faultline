@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import { APP_PORT, OUTAGE_PORT, STUB_PORT } from './e2e/support/ports';
+import { APP_PORT, DEAD_PORT, OUTAGE_PORT, STUB_PORT } from './e2e/support/ports';
 import { appServer, usgsStub } from './e2e/support/servers';
 
 /**
@@ -33,7 +33,6 @@ export default defineConfig({
   webServer: [
     usgsStub(),
     appServer(APP_PORT, `http://localhost:${STUB_PORT}`),
-    // Port 9 is discard: nothing answers, so every USGS call fails fast.
-    appServer(OUTAGE_PORT, 'http://127.0.0.1:9'),
+    appServer(OUTAGE_PORT, `http://127.0.0.1:${DEAD_PORT}`),
   ],
 });
