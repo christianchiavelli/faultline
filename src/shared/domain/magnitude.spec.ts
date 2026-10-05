@@ -1,9 +1,9 @@
-import { energyRatio, expectedPerDay, magnitudeScale, radiatedEnergy } from './magnitude';
+import { expectedPerDay, magnitudeScale, radiatedEnergy } from './magnitude';
 
 describe('magnitude', () => {
   it('grows energy about 32 times per whole step and about 1,000 times per two', () => {
-    expect(energyRatio(6, 5)).toBeCloseTo(31.62, 2);
-    expect(energyRatio(7, 5)).toBeCloseTo(1000, 6);
+    expect(radiatedEnergy(6) / radiatedEnergy(5)).toBeCloseTo(31.62, 2);
+    expect(radiatedEnergy(7) / radiatedEnergy(5)).toBeCloseTo(1000, 6);
   });
 
   it('follows the Gutenberg-Richter relation in joules', () => {

@@ -57,11 +57,6 @@ export function radiatedEnergy(magnitude: number): number {
   return 10 ** (1.5 * magnitude + 4.8);
 }
 
-/** How many times more energy `a` radiates than `b`. */
-export function energyRatio(a: number, b: number): number {
-  return 10 ** (1.5 * (a - b));
-}
-
 /**
  * Earthquakes of M5 to 5.9 in an average year worldwide, in the USGS table of
  * how often each size happens, "based on observations since 1990". The
