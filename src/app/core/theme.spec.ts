@@ -3,10 +3,25 @@ import { TestBed } from '@angular/core/testing';
 import { Theme } from './theme';
 
 describe('Theme', () => {
+  beforeEach(() => {
+    // As `index.html` has them.
+    document.head.insertAdjacentHTML(
+      'beforeend',
+      '<meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)">' +
+        '<meta name="theme-color" content="#0f0d0a" media="(prefers-color-scheme: dark)">',
+    );
+  });
+
   afterEach(() => {
     document.cookie = 'fl-theme=; Path=/; Max-Age=0';
     document.documentElement.removeAttribute('data-theme');
+    document.head.querySelectorAll('meta[name="theme-color"]').forEach((meta) => meta.remove());
   });
+
+  const barColours = () =>
+    [...document.head.querySelectorAll('meta[name="theme-color"]')].map((meta) =>
+      meta.getAttribute('content'),
+    );
 
   it('follows the system until the reader picks a theme', () => {
     const theme = TestBed.inject(Theme);
@@ -39,5 +54,19 @@ describe('Theme', () => {
 
     theme.set('system');
     expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
+  });
+
+  it("colours the browser's bar in the theme picked, whatever the device asks for", () => {
+    const theme = TestBed.inject(Theme);
+    expect(barColours()).toEqual(['#f5f1e8', '#0f0d0a']);
+
+    theme.set('film');
+    expect(barColours()).toEqual(['#0f0d0a', '#0f0d0a']);
+
+    theme.set('paper');
+    expect(barColours()).toEqual(['#f5f1e8', '#f5f1e8']);
+
+    theme.set('system');
+    expect(barColours()).toEqual(['#f5f1e8', '#0f0d0a']);
   });
 });

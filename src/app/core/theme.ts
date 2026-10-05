@@ -7,6 +7,12 @@ export type ThemePreference = 'system' | 'paper' | 'film';
 const THEMES: readonly ThemePreference[] = ['system', 'paper', 'film'];
 const COOKIE = 'fl-theme';
 
+/** The page colour of each theme, `--surface-page`, for the browser's bar around it. */
+const BAR: Readonly<Record<Exclude<ThemePreference, 'system'>, string>> = {
+  paper: '#f5f1e8',
+  film: '#0f0d0a',
+};
+
 /**
  * The preference lives in a cookie rather than localStorage because the server
  * has to know it. The page is rendered with the right `data-theme` on `<html>`,
@@ -47,5 +53,11 @@ export class Theme {
     const root = this.#document.documentElement;
     if (preference === 'system') root.removeAttribute('data-theme');
     else root.setAttribute('data-theme', preference);
+
+    // `index.html` colours the bar for the scheme the device asks for; a theme picked here wins.
+    for (const meta of this.#document.head.querySelectorAll('meta[name="theme-color"]')) {
+      const device = meta.getAttribute('media')?.includes('dark') ? 'film' : 'paper';
+      meta.setAttribute('content', BAR[preference === 'system' ? device : preference]);
+    }
   }
 }
