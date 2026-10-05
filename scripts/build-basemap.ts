@@ -19,10 +19,13 @@
 import { writeFile } from 'node:fs/promises';
 import { MAP_HEIGHT, MAP_WIDTH, toMap } from '../src/shared/geo/equal-earth.ts';
 
+// Pinned to a commit each, so the map is built from the same data whenever it is built.
+// Natural Earth v5.1.2.
 const LAND_URL =
-  'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_land.geojson';
+  'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/f1890d9f152c896d250a77557a5751a93d494776/geojson/ne_110m_land.geojson';
+// The last commit to change the boundaries, in 2014.
 const PLATES_URL =
-  'https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json';
+  'https://raw.githubusercontent.com/fraxen/tectonicplates/b53c3b7d82afd764650ebdc4565b9666795b9d83/GeoJSON/PB2002_boundaries.json';
 const OUTPUT = new URL('../public/maps/earth.svg', import.meta.url);
 
 type Position = [number, number];
