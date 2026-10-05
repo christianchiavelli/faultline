@@ -26,15 +26,29 @@ export const handedOver: ResolveFn<QuakeSummary | null> = (route) => {
   return isSummaryOf(quake, route.paramMap.get('id')) ? quake : null;
 };
 
-/** A history entry outlives a deploy, so what it holds is checked, not trusted. */
+/**
+ * A history entry outlives a deploy, so what it holds is checked, not
+ * trusted: every field the page reads, in the shape it reads it.
+ */
 function isSummaryOf(value: unknown, id: string | null): value is QuakeSummary {
-  if (typeof value !== 'object' || value === null) return false;
-  const quake = value as Partial<Record<keyof QuakeSummary, unknown>>;
+  if (!isRecord(value) || value['id'] !== id) return false;
+  const { time, magnitude, place, location, review, kind } = value;
   return (
-    quake.id === id &&
-    typeof quake.time === 'number' &&
-    typeof quake.kind === 'string' &&
-    typeof quake.location === 'object' &&
-    quake.location !== null
+    typeof time === 'number' &&
+    (magnitude === null ||
+      (isRecord(magnitude) &&
+        typeof magnitude['value'] === 'number' &&
+        typeof magnitude['type'] === 'string')) &&
+    (place === null || typeof place === 'string') &&
+    isRecord(location) &&
+    typeof location['latitude'] === 'number' &&
+    typeof location['longitude'] === 'number' &&
+    (location['depthKm'] === null || typeof location['depthKm'] === 'number') &&
+    (review === 'automatic' || review === 'reviewed') &&
+    typeof kind === 'string'
   );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }

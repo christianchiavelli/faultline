@@ -37,7 +37,12 @@ describe('handedOver', () => {
     expect(resolve('us1ruteng', { ...quakeLinkState(quake) })).toBeNull();
   });
 
-  it('hands over nothing a history entry from another version left in another shape', () => {
-    expect(resolve('us1lata', { quake: { id: 'us1lata', magnitude: 5.1 } })).toBeNull();
+  it.each([
+    ['most of its fields missing', { id: 'us1lata', magnitude: 5.1 }],
+    ['a magnitude as a bare number', { ...quake, magnitude: 5.1 }],
+    ['a location in other words', { ...quake, location: { lat: 1, lon: 2 } }],
+    ['a review status the app never had', { ...quake, review: 'manual' }],
+  ])('hands over nothing a history entry from another version left with %s', (_, entry) => {
+    expect(resolve('us1lata', { quake: entry })).toBeNull();
   });
 });
