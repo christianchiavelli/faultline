@@ -12,7 +12,7 @@ A live seismograph of the planet: Angular 22 with SSR, an Express BFF over the U
 - `pnpm build` then `pnpm preview` — production build served by the real Express server on :4000
 - `pnpm basemap` — regenerates `public/maps/earth.svg` from Natural Earth and PB2002
 - `pnpm fonts` — copies the web fonts into `public/fonts` and writes their rules and fallbacks into the head of `src/index.html`, measuring in Chromium how narrow each font gets at the stretches the app sets. Run it after setting text in a weight or width the fallbacks do not cover (`FALLBACKS` in `scripts/build-fonts.ts`)
-- `pnpm screenshots` — recaptures `docs/screenshots` from a running production server (`pnpm build`, then `pnpm preview`)
+- `pnpm screenshots` — production build, then recaptures `docs/screenshots` from it, served by the script itself on a free port against the real USGS; `pnpm screenshots quake-paper` recaptures only the shots named
 - `docs/upstream-api.md` — how the two USGS services really behave, probed live. Read it before touching `src/server/usgs`, and update it when a probe says otherwise
 
 Node is pinned by `devEngines` (24.15+, required by the Angular 22 CLI). Always run through `pnpm`, never a bare `ng` or `node`, or the machine's older Node is used.

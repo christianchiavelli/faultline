@@ -1,9 +1,13 @@
 /**
- * Captures the README screenshots from a running production server:
+ * Captures the README screenshots from the production build, served by the
+ * real server against the real USGS, as a reader sees it:
  *
- *   pnpm build && pnpm preview    then, in another terminal:
- *   pnpm screenshots              every shot
- *   pnpm screenshots quake-paper  only the ones named
+ *   pnpm screenshots              builds, then every shot
+ *   pnpm screenshots quake-paper  builds, then only the ones named
+ *
+ * The server is started here, on a port nothing else holds, and stopped when
+ * the captures are done: nothing left running from an older build can answer
+ * instead.
  *
  * The live page shows whatever the planet did today. The event page shows a
  * past event instead, which the USGS keeps for good, so that screenshot and
@@ -12,10 +16,14 @@
  * Theme comes from the emulated colour scheme: the app follows the system
  * until a reader picks one, so `dark` is the film theme.
  */
-import { chromium, type Locator, type Page } from '@playwright/test';
+import { chromium, type Browser, type Locator, type Page } from '@playwright/test';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 import { mkdir } from 'node:fs/promises';
+import { createServer } from 'node:net';
+import { scrollThrough } from '../e2e/support/page.ts';
 
-const BASE_URL = process.env['SCREENSHOT_BASE_URL'] ?? 'http://localhost:4000';
+const SERVER = 'dist/faultline/server/server.mjs';
 const OUT_DIR = 'docs/screenshots';
 
 const DESKTOP = { width: 1440, height: 900 };
@@ -126,28 +134,48 @@ const SHOTS: readonly Shot[] = [
   },
 ];
 
-/**
- * Scrolls the page end to end, so every deferred section renders and hydrates
- * the way it does for a reader, then back to the top.
- */
-async function scrollThrough(page: Page): Promise<void> {
-  await page.evaluate(async () => {
-    for (let y = 0; y < document.body.scrollHeight; y += window.innerHeight / 2) {
-      window.scrollTo(0, y);
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-    }
-    window.scrollTo(0, 0);
-  });
+/** A port the system has just handed out, so free a moment ago. */
+async function freePort(): Promise<number> {
+  const probe = createServer().listen(0);
+  await once(probe, 'listening');
+  const { port } = probe.address() as { port: number };
+  probe.close();
+  return port;
 }
 
-const only = new Set(process.argv.slice(2));
-const unknown = [...only].filter((name) => !SHOTS.some((shot) => shot.name === name));
-if (unknown.length) throw new Error(`No such shot: ${unknown.join(', ')}`);
+/** Starts the production server, and resolves once it answers a page. */
+async function serve(): Promise<{ readonly url: string; readonly stop: () => Promise<void> }> {
+  const port = await freePort();
+  const server = spawn(process.execPath, [SERVER], {
+    env: { ...process.env, PORT: String(port) },
+    stdio: ['ignore', 'ignore', 'inherit'],
+  });
+  const exited = once(server, 'exit');
+  const url = `http://localhost:${port}`;
+  const stop = async () => {
+    if (server.exitCode !== null) return;
+    server.kill();
+    await exited;
+  };
 
-await mkdir(OUT_DIR, { recursive: true });
-const browser = await chromium.launch();
+  const answers = () =>
+    fetch(url).then(
+      ({ ok }) => ok,
+      () => false,
+    );
+  const deadline = Date.now() + 60_000;
+  while (!(await answers())) {
+    if (server.exitCode !== null) throw new Error(`${SERVER} exited with ${server.exitCode}`);
+    if (Date.now() > deadline) {
+      await stop();
+      throw new Error(`${SERVER} did not answer on ${url} within a minute`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  return { url, stop };
+}
 
-for (const shot of SHOTS.filter(({ name }) => only.size === 0 || only.has(name))) {
+async function capture(browser: Browser, url: string, shot: Shot): Promise<void> {
   const context = await browser.newContext({
     viewport: shot.viewport ?? DESKTOP,
     colorScheme: shot.scheme,
@@ -158,18 +186,7 @@ for (const shot of SHOTS.filter(({ name }) => only.size === 0 || only.has(name))
   // held open, would keep the network from ever falling quiet.
   await context.route(/\/api\/quakes\/recent\/stream\?/, (route) => route.fulfill({ status: 204 }));
   const page = await context.newPage();
-  await page.goto(`${BASE_URL}${shot.path}`, { waitUntil: 'networkidle' });
-
-  // Tokens are custom properties, so an unset one means the stylesheet never arrived.
-  const styled = await page.evaluate(
-    () => getComputedStyle(document.documentElement).getPropertyValue('--surface-page') !== '',
-  );
-  if (!styled) {
-    throw new Error(
-      `${shot.name}: the page loaded without its stylesheet. Restart the production ` +
-        `server so it serves the current build, then run this again.`,
-    );
-  }
+  await page.goto(`${url}${shot.path}`, { waitUntil: 'networkidle' });
 
   // A screenshot has no scrollbar over its gutter, where the page's bands would stop short of the edge.
   await page.addStyleTag({ content: 'html { scrollbar-width: none; }' });
@@ -199,4 +216,21 @@ for (const shot of SHOTS.filter(({ name }) => only.size === 0 || only.has(name))
   await context.close();
 }
 
-await browser.close();
+const only = new Set(process.argv.slice(2));
+const unknown = [...only].filter((name) => !SHOTS.some((shot) => shot.name === name));
+if (unknown.length) throw new Error(`No such shot: ${unknown.join(', ')}`);
+
+await mkdir(OUT_DIR, { recursive: true });
+const server = await serve();
+try {
+  const browser = await chromium.launch();
+  try {
+    for (const shot of SHOTS.filter(({ name }) => only.size === 0 || only.has(name))) {
+      await capture(browser, server.url, shot);
+    }
+  } finally {
+    await browser.close();
+  }
+} finally {
+  await server.stop();
+}

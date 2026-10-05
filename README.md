@@ -55,7 +55,7 @@ In English and in Portuguese. Angular 22, zoneless with signals, SSR with increm
 
 ![The export dialog past its limit: over 180,000 events, and two narrower searches that fit, each already counted](docs/screenshots/export-too-many-film.png)
 
-Regenerate with `pnpm run screenshots` against a production build.
+Regenerate with `pnpm screenshots`, which builds the app, serves it to itself and captures every screen from the real USGS.
 
 </details>
 
