@@ -5,6 +5,7 @@ import { Meta } from '@angular/platform-browser';
 import { NavigationEnd, Router, RouterOutlet, Scroll } from '@angular/router';
 import { filter } from 'rxjs';
 import { linkAlternateLanguages } from './core/languages';
+import { SITE_DESCRIPTION } from './core/page-description';
 import { SiteFooter } from './shell/site-footer';
 import { TopBar } from './shell/top-bar';
 
@@ -55,11 +56,8 @@ export class App {
   constructor() {
     scrollByPath(() => this.main().nativeElement.focus({ preventScroll: true }));
     linkAlternateLanguages();
-    // What a search result says of the site, in the language of the page it leads to.
-    inject(Meta).updateTag({
-      name: 'description',
-      content: $localize`:meta description of the site, shown under it in search results:Every earthquake the USGS recorded in the last 24 hours, drawn as a drum seismograph: one line per hour, one burst per event.`,
-    });
+    // Every page's, but those with something of their own to say (`describePage`).
+    inject(Meta).updateTag({ name: 'description', content: SITE_DESCRIPTION });
   }
 }
 

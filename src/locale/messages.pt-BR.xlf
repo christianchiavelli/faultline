@@ -1844,6 +1844,11 @@
         <note priority="1" from="description">the PAGER alert of its likely impact</note>
         <note priority="1" from="meaning">label of a fact of an event&apos;s record</note>
       </trans-unit>
+      <trans-unit id="7888040372836327688" datatype="html">
+        <source><x id="event" equiv-text="name"/>, <x id="date" equiv-text="when"/> UTC: its epicentre and depth, how well they are known, and the energy it radiated, from the USGS catalogue.</source>
+        <target state="translated"><x id="event" equiv-text="name"/>, <x id="date" equiv-text="when"/> UTC: o epicentro e a profundidade, com que precisão são conhecidos e a energia que irradiou, segundo o catálogo do USGS.</target>
+        <note priority="1" from="description">meta description of an event&apos;s page, shown under it in search results</note>
+      </trans-unit>
       <trans-unit id="6651975916914635595" datatype="html">
         <source>No such event</source>
         <target state="translated">Evento inexistente</target>

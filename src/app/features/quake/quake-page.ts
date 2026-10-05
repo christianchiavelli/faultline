@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   Component,
@@ -13,6 +13,7 @@ import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { quakeDetailResource } from '@core/api/quakes';
 import { Clock } from '@core/clock';
+import { describePage } from '@core/page-description';
 import { pageTitle } from '@core/page-title';
 import { alertLevelName, alertMeaning, kindName, placeName, reviewTag } from '@core/words/domain';
 import { describeScale } from '@core/words/magnitude';
@@ -168,15 +169,30 @@ export class QuakePage {
     };
   });
 
+  /** The event in a few words, for its tab and its search result: "M6.2 South of the Fiji Islands". */
+  readonly #name = computed(() => {
+    const view = this.view();
+    if (!view) return null;
+    return view.magnitude ? `M${view.magnitude} ${view.place}` : view.place;
+  });
+
   constructor() {
     const title = inject(Title);
     const response = inject(RESPONSE_INIT, { optional: true });
 
+    describePage(() => {
+      const name = this.#name();
+      const quake = this.quake();
+      if (!name || !quake) return null;
+      const when = formatDate(quake.time, DATES.dateAtTime, this.#locale, 'UTC');
+      return $localize`:meta description of an event's page, shown under it in search results:${name}:event:, ${when}:date: UTC: its epicentre and depth, how well they are known, and the energy it radiated, from the USGS catalogue.`;
+    });
+
     effect(() => {
-      const view = this.view();
+      const name = this.#name();
       const problem = this.problem();
-      if (view) {
-        title.setTitle(pageTitle(view.magnitude ? `M${view.magnitude} ${view.place}` : view.place));
+      if (name) {
+        title.setTitle(pageTitle(name));
       } else if (problem) {
         title.setTitle(pageTitle(problemPageName(problem.status)));
       }

@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { RESPONSE_INIT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Title } from '@angular/platform-browser';
+import { Meta, Title } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import type { QuakeDetailResponse } from '@shared/api/contracts';
 import type { QuakeSummary } from '@shared/domain/quake';
@@ -101,6 +101,20 @@ describe('QuakePage', () => {
     expect(element.querySelector('.scale')?.textContent).toContain('Moment W-phase magnitude');
     expect(element.querySelector('h1')?.textContent).toBe('North of Svalbard');
     expect(TestBed.inject(Title).getTitle()).toBe('M5.4 North of Svalbard | Faultline');
+  });
+
+  it('tells a search result what this event was, and hands the site its own words back on leaving', async () => {
+    const { fixture, http } = start();
+    const description = () => TestBed.inject(Meta).getTag('name="description"')?.content;
+    http.expectOne('/api/quakes/us6000ty57').flush(detail);
+    await fixture.whenStable();
+
+    expect(description()).toBe(
+      'M5.4 North of Svalbard, 29 Sept 2026 at 04:16 UTC: its epicentre and depth, how well they are known, and the energy it radiated, from the USGS catalogue.',
+    );
+
+    fixture.destroy();
+    expect(description()).toMatch(/^Every earthquake the USGS recorded in the last 24 hours/);
   });
 
   it('says when the depth was fixed by the analyst rather than measured', async () => {
