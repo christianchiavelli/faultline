@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import {
   FEED_STREAM,
+  nextFrames,
   recordApiCalls,
   recordErrors,
   scrollThrough,
@@ -39,7 +40,10 @@ for (const { path, live } of PAGES) {
     await page.goto(path);
     await waitForHydration(page);
     await scrollThrough(page);
-    await page.waitForLoadState('networkidle');
+    // Every component drops its hydration marker as it hydrates, the deferred
+    // sections last; the network having gone quiet once says nothing of them.
+    await expect(page.locator('[ngh]')).toHaveCount(0);
+    await nextFrames(page);
 
     expect(calls).toEqual(live ? [expect.stringMatching(SINCE_ITS_COPY)] : []);
     expect(errors).toEqual([]);

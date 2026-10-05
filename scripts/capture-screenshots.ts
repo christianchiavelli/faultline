@@ -21,7 +21,7 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { mkdir } from 'node:fs/promises';
 import { createServer } from 'node:net';
-import { scrollThrough } from '../e2e/support/page.ts';
+import { nextFrames, scrollThrough } from '../e2e/support/page.ts';
 
 const SERVER = 'dist/faultline/server/server.mjs';
 const OUT_DIR = 'docs/screenshots';
@@ -191,17 +191,18 @@ async function capture(browser: Browser, url: string, shot: Shot): Promise<void>
   // A screenshot has no scrollbar over its gutter, where the page's bands would stop short of the edge.
   await page.addStyleTag({ content: 'html { scrollbar-width: none; }' });
   await scrollThrough(page);
+  // Every section hydrated, the deferred ones last, each dropping its marker as
+  // it does; the network having gone quiet once says nothing of them.
+  await page.waitForFunction(() => !document.querySelector('[ngh]'));
   await page.evaluate(async () => {
     await document.fonts.ready;
   });
-  await page.waitForLoadState('networkidle');
   const area = shot.area ? page.locator(shot.area) : null;
   // Before `prepare`: scrolling afterwards would move the page under a pointer it placed.
   await area?.evaluate((element) => element.scrollIntoView({ block: 'center' }));
-  if (shot.prepare) {
-    await shot.prepare(page);
-    await page.waitForLoadState('networkidle');
-  }
+  // Each waits for what it shows; then a frame for it to be painted.
+  await shot.prepare?.(page);
+  await nextFrames(page);
 
   const box = await area?.boundingBox();
   await page.screenshot({
