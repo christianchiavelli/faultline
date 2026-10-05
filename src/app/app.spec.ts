@@ -59,7 +59,6 @@ describe('App', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     document.querySelector('fl-root')?.remove();
-    history.replaceState(null, '', '/');
   });
 
   it('links past the bar to the content of the page it is on, not to the base', async () => {

@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { LOCALE_ID, computed, effect, inject, type Signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { currentPage } from './current-page';
 
 export interface Language {
   /** The locale it is built in, as `angular.json` names it: its pages' `lang`. */
@@ -36,18 +36,16 @@ export interface PageInLanguage extends Language {
 
 /** The page the reader is on, in every language, kept to the page as they move. Needs an injection context. */
 export function pageInEveryLanguage(): Signal<readonly PageInLanguage[]> {
-  const router = inject(Router);
+  const page = currentPage();
   // The language is what counts, whichever country's conventions the build follows.
   const current = inject(LOCALE_ID).split('-')[0];
-  return computed(() => {
-    router.lastSuccessfulNavigation();
-    const page = router.url;
-    return LANGUAGES.map((language) => ({
+  return computed(() =>
+    LANGUAGES.map((language) => ({
       ...language,
       current: language.hreflang === current,
-      href: `${language.prefix}${page}`,
-    }));
-  });
+      href: `${language.prefix}${page()}`,
+    })),
+  );
 }
 
 /**

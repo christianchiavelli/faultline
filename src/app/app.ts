@@ -11,6 +11,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Meta } from '@angular/platform-browser';
 import { NavigationEnd, Router, RouterOutlet, Scroll } from '@angular/router';
 import { filter } from 'rxjs';
+import { currentPage } from './core/current-page';
 import { linkAlternateLanguages } from './core/languages';
 import { SITE_DESCRIPTION } from './core/page-description';
 import { SiteFooter } from './shell/site-footer';
@@ -75,12 +76,9 @@ export class App {
  * app has hydrated: the browser scrolls to the content and focuses it.
  */
 function linkToContent(): Signal<string> {
-  const router = inject(Router);
+  const page = currentPage();
   const location = inject(Location);
-  return computed(() => {
-    router.lastSuccessfulNavigation();
-    return `${location.prepareExternalUrl(pageOf(router.url))}#main`;
-  });
+  return computed(() => `${location.prepareExternalUrl(page())}#main`);
 }
 
 /**
