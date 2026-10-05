@@ -16,9 +16,21 @@ import tseslint from 'typescript-eslint';
  * The one sanctioned crossing is the in-process SSR backend, which calls the
  * API router directly and is only ever provided on the server.
  */
-const restrict = (...patterns) => ['error', { patterns }];
+/** A rule per crossing: `name` bans one module, `group` a family of them. */
+const restrict = (...rules) => [
+  'error',
+  {
+    paths: rules.filter((rule) => 'name' in rule),
+    patterns: rules.filter((rule) => 'group' in rule),
+  },
+];
 
 const noAngular = { group: ['@angular/*', 'rxjs', 'rxjs/*'], message: 'Framework-free layer.' };
+const noNode = { group: ['node:*'], message: 'Shared code runs in the browser too.' };
+const noClassicZod = {
+  name: 'zod',
+  message: 'Code the browser loads uses zod/mini: classic Zod does not tree-shake.',
+};
 const noServer = {
   group: ['@server/*', '**/server/*'],
   message: 'Browser code reaches the BFF over HTTP, not by import.',
@@ -28,7 +40,7 @@ const noApp = {
   message: 'This layer sits below the app.',
 };
 const noDomain = {
-  group: ['@shared/*', '@core/*', '**/features/*'],
+  group: ['@shared/*', '@core/*', '../**/shared/*', '../**/core/*', '**/features/*'],
   message: 'The design system knows nothing about earthquakes.',
 };
 
@@ -66,7 +78,7 @@ export default defineConfig([
   },
   {
     files: ['src/shared/**/*.ts'],
-    rules: { 'no-restricted-imports': restrict(noAngular, noServer, noApp) },
+    rules: { 'no-restricted-imports': restrict(noAngular, noNode, noClassicZod, noServer, noApp) },
   },
   {
     files: ['src/server/**/*.ts'],
@@ -79,7 +91,7 @@ export default defineConfig([
   {
     files: ['src/app/**/*.ts'],
     ignores: ['src/app/ui/**', 'src/app/core/api/in-process-backend.ts'],
-    rules: { 'no-restricted-imports': restrict(noServer) },
+    rules: { 'no-restricted-imports': restrict(noClassicZod, noServer) },
   },
   {
     files: ['**/*.html'],
