@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { audit } from './support/a11y';
 import {
   EVENT_API,
   arriveEmptyHanded,
@@ -19,11 +19,14 @@ const PAGES = [
   '/quakes/us7000big',
   '/quakes/us7000tonga',
   '/quakes/zz404',
+  '/quakes/zzgone',
+  '/nowhere',
   // Portuguese words run longer, and its pages are a build of their own.
   '/pt/',
   '/pt/?mag=any&rows=all',
   '/pt/quakes/us7000big',
   '/pt/quakes/zz404',
+  '/pt/nowhere',
 ];
 const THEMES = ['paper', 'film'] as const;
 
@@ -38,17 +41,6 @@ const DIALOGS = [
   },
   { path: '/pt/?mag=any', button: 'Exportar…', heading: 'Exportar eventos', period: '30 dias' },
 ];
-
-/** Every violation, readable on failure: which rule, and where. */
-async function audit(page: Page) {
-  const { violations } = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'])
-    .analyze();
-  return violations.map(({ id, nodes }) => ({
-    id,
-    targets: nodes.map((node) => node.target.join(' ')),
-  }));
-}
 
 for (const theme of THEMES) {
   test.describe(theme, () => {
