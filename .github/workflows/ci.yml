@@ -12,6 +12,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Reading the code is all any job does: no step needs the token for more.
+permissions:
+  contents: read
+
 jobs:
   verify:
     name: Format, lint, types, unit tests and build
@@ -21,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
 
       # Only to start pnpm: the runtime the scripts use is pinned by
       # `devEngines` and downloaded by the install, like on a laptop.
@@ -45,7 +49,7 @@ jobs:
         run: pnpm run build
 
       - name: Upload coverage
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: coverage
@@ -60,7 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
 
       - uses: actions/setup-node@v7
         with:
@@ -70,9 +74,9 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # Only the browser the suite runs, plus the system libraries a bare runner lacks.
+      # Only the headless shell the suite runs in, plus the system libraries a bare runner lacks.
       - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps --only-shell chromium
 
       - name: Build and run
         run: pnpm e2e
@@ -94,7 +98,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
 
       - uses: actions/setup-node@v7
         with:
