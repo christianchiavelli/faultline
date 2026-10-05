@@ -47,13 +47,21 @@ const SUBSETS = ['latin', 'latin-ext'] as const;
 
 const { archivo, arial, roboto, martianMono, courierNew } = metrics;
 
+/** How wide a face's Latin letters run on average, which Capsize sizes a fallback by. */
+interface Widths {
+  readonly subsets: { readonly latin: { readonly xWidthAvg: number } };
+}
+
+/** A variable font as Capsize measured it: once whole, and at each hundred of weight. */
+type VariableFont = Metrics & Widths & { readonly variants: Readonly<Record<string, Widths>> };
+
 /**
  * A web font's metrics at a weight, and at a stretch that keeps `width` of
  * its normal width. Capsize measured each whole hundred of weight at normal
  * width; a variable font moves smoothly between them.
  */
-function at(font: typeof archivo, weight: number, width = 1): Metrics {
-  const average = (w: number) => (font.variants[w] ?? font).subsets.latin.xWidthAvg;
+function at(font: VariableFont, weight: number, width = 1): Metrics {
+  const average = (w: number) => (font.variants[String(w)] ?? font).subsets.latin.xWidthAvg;
   const below = Math.floor(weight / 100) * 100;
   const xWidthAvg =
     width * (average(below) + ((average(below + 100) - average(below)) * (weight - below)) / 100);

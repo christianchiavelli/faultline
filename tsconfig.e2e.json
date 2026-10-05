@@ -1,8 +1,23 @@
-/* The Playwright suite and its config. Playwright compiles them itself; this is only for `pnpm typecheck`. */
+/*
+ * The Playwright suite and its configs, and the scripts in `scripts/`. Nothing
+ * here is compiled by tsc: Playwright compiles the suite, and Node runs the
+ * scripts as they are written, stripping their types. This is for
+ * `pnpm typecheck` and the editor.
+ */
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node"],
+    "noEmit": true,
+    // What Node's type stripping asks of a script: imports that name their .ts
+    // file, and no syntax it would have to compile, such as an enum.
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
   },
-  "include": ["e2e/**/*.ts", "playwright.config.ts", "playwright.vitals.config.ts"]
+  "include": [
+    "e2e/**/*.ts",
+    "scripts/**/*.ts",
+    "playwright.config.ts",
+    "playwright.vitals.config.ts"
+  ]
 }
