@@ -89,6 +89,35 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  # The design system's catalogue: every story rendered in Chromium, its
+  # interactions played and its page audited by axe, then the whole built.
+  storybook:
+    name: Storybook
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps --only-shell chromium
+
+      - name: Stories as tests
+        run: pnpm storybook:test
+
+      - name: Build
+        run: pnpm storybook:build
+
   # A runner of its own: a measurement shares the machine with nothing else.
   vitals:
     name: Web Vitals
