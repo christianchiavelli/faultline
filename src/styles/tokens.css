@@ -127,9 +127,10 @@
     /* Above and below the content of a band: more than inside a section, so each reads as one. */
     --band-space: clamp(3rem, 2rem + 2.5vw, 4rem);
 
-    /* Paper has no rounded corners and casts no shadows. */
+    /* Paper has no rounded corners, and casts a shadow only where it floats over the page. */
     --radius-tag: 2px;
     --hairline: 1px;
+    --shadow-overlay: 0 1.5rem 3.5rem -1.5rem color-mix(in oklch, var(--ink-900) 50%, transparent);
 
     /*
      * Motion, by role. A duration in a component is one of these, never a

@@ -7,7 +7,7 @@
   border: var(--hairline) solid var(--rule-strong);
   background: var(--surface-page);
   color: var(--content-primary);
-  box-shadow: 0 1.5rem 3.5rem -1.5rem color-mix(in oklch, var(--ink-900) 50%, transparent);
+  box-shadow: var(--shadow-overlay);
   overflow: hidden;
   /* Closed: how it leaves, faster than it came, kept on the screen until it has faded. */
   opacity: 0;
