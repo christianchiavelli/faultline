@@ -282,6 +282,20 @@ describe('EventLog, live', () => {
     expect(element.querySelector('.fresh')).toBeNull();
   });
 
+  it("keeps today's rows where they are when a new event comes in at the top", async () => {
+    logAt(2_400);
+    const { fixture, element } = await renderLog(aDay(12));
+    const today = element.querySelector('tbody');
+    const row = element.querySelector('[data-id="q0"]')?.closest('tr');
+
+    fixture.componentRef.setInput('quakes', [arrival, ...aDay(12)]);
+    TestBed.tick();
+
+    expect(element.querySelector('[data-id="new"]')).not.toBeNull();
+    expect(element.querySelector('tbody')).toBe(today);
+    expect(element.querySelector('[data-id="q0"]')?.closest('tr')).toBe(row);
+  });
+
   it('only calls out held events the filter would show, and lets them in with a new filter', async () => {
     logAt(0);
     const small = aQuake({ id: 'new', time: NOW + 60_000, magnitude: { value: 1.1, type: 'md' } });

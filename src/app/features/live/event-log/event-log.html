@@ -149,7 +149,7 @@
             </th>
           </tr>
         </thead>
-        @for (day of days(); track day.day) {
+        @for (day of days(); track day.key) {
           <tbody role="rowgroup">
             @if (day.day !== null) {
               <tr class="day" role="row">

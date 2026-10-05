@@ -220,12 +220,13 @@ export class EventLog {
     const fresh = this.#fresh();
     if (this.order() !== 'newest') {
       const rows = this.shown().map((quake) => toRow(quake, fresh.has(quake.id), this.#locale));
-      return rows.length ? [{ day: null, rows }] : [];
+      return rows.length ? [{ key: 'all', day: null, rows }] : [];
     }
-    const days = new Map<string, { day: number | null; rows: Row[] }>();
+    // Keyed by its date, not its first event: a new event at the top keeps today's rows in place.
+    const days = new Map<string, { key: string; day: number | null; rows: Row[] }>();
     for (const quake of this.shown()) {
       const key = new Date(quake.time).toISOString().slice(0, 10);
-      const day = days.get(key) ?? { day: quake.time, rows: [] };
+      const day = days.get(key) ?? { key, day: quake.time, rows: [] };
       day.rows.push(toRow(quake, fresh.has(quake.id), this.#locale));
       days.set(key, day);
     }
