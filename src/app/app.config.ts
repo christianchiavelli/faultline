@@ -21,8 +21,9 @@ export const appConfig: ApplicationConfig = {
     provideRouter(
       routes,
       withComponentInputBinding(),
-      // Scrolling is handled in `App`: the built-in restoration treats a filter change as a new page.
-      withInMemoryScrolling({ scrollPositionRestoration: 'disabled', anchorScrolling: 'enabled' }),
+      // The router only reports where each navigation would scroll; `App` scrolls, since the
+      // built-in restoration treats a filter change as a new page.
+      withInMemoryScrolling(),
       withViewTransitions({
         skipInitialTransition: true,
         onViewTransitionCreated: crossFadeNewPages,
