@@ -42,12 +42,12 @@ describe('transferApiErrors', () => {
     network.expectOne('/api/quakes/zz404').flush(PROBLEM, { status: 404, statusText: 'Not Found' });
 
     expect((await error)?.status).toBe(404);
-    expect(state.get(KEY, null)).toEqual({ status: 404, statusText: 'Not Found', body: PROBLEM });
+    expect(state.get(KEY, null)).toEqual({ status: 404, body: PROBLEM });
   });
 
   it('answers the first browser request from the record, and every later one from the network', async () => {
     const { http, network, state } = setUp('browser');
-    state.set(KEY, { status: 404, statusText: 'Not Found', body: PROBLEM });
+    state.set(KEY, { status: 404, body: PROBLEM });
 
     const hydrated = await failure(firstValueFrom(http.get('/api/quakes/zz404')));
     network.expectNone('/api/quakes/zz404');

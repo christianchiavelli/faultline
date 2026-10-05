@@ -23,7 +23,7 @@ export interface Language {
  * Portuguese under `/pt`. Every page has an address in each, and nobody is
  * sent from one to the other.
  */
-export const LANGUAGES: readonly Language[] = [
+const LANGUAGES: readonly Language[] = [
   { locale: 'en-GB', hreflang: 'en', prefix: '', short: 'EN', readIn: 'Read in English' },
   { locale: 'pt-BR', hreflang: 'pt', prefix: '/pt', short: 'PT', readIn: 'Ler em português' },
 ];

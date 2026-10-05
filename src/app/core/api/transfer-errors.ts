@@ -5,7 +5,6 @@ import { catchError, throwError } from 'rxjs';
 
 interface TransferredError {
   readonly status: number;
-  readonly statusText: string;
   readonly body: unknown;
 }
 
@@ -29,7 +28,7 @@ export const transferApiErrors: HttpInterceptorFn = (request, next) => {
     return next(request).pipe(
       catchError((error: unknown) => {
         if (error instanceof HttpErrorResponse) {
-          state.set(key, { status: error.status, statusText: error.statusText, body: error.error });
+          state.set(key, { status: error.status, body: error.error });
         }
         return throwError(() => error);
       }),
@@ -40,8 +39,8 @@ export const transferApiErrors: HttpInterceptorFn = (request, next) => {
   if (!transferred) return next(request);
 
   state.remove(key);
-  const { status, statusText, body } = transferred;
+  const { status, body } = transferred;
   return throwError(
-    () => new HttpErrorResponse({ status, statusText, error: body, url: request.urlWithParams }),
+    () => new HttpErrorResponse({ status, error: body, url: request.urlWithParams }),
   );
 };

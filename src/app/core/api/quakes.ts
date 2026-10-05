@@ -16,13 +16,6 @@ import { applyFeedChange, feedVersion } from '@shared/api/feed-change';
  * During SSR these requests never touch the network; see `in-process-backend.ts`.
  */
 
-export function recentQuakesResource(window: () => FeedWindow) {
-  return httpResource<RecentQuakesResponse>(() => ({
-    url: '/api/quakes/recent',
-    params: { window: window() },
-  }));
-}
-
 /**
  * A feed kept current: the copy the page was rendered with, then each change
  * the BFF pushes as it happens (`/api/quakes/recent/stream`).
@@ -34,7 +27,10 @@ export function recentQuakesResource(window: () => FeedWindow) {
  * copy, and the stream writes into it.
  */
 export function liveQuakesResource(window: FeedWindow) {
-  const feed = recentQuakesResource(() => window);
+  const feed = httpResource<RecentQuakesResponse>(() => ({
+    url: '/api/quakes/recent',
+    params: { window },
+  }));
   followFeed(feed, window);
   return feed;
 }

@@ -1,11 +1,6 @@
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideBrowserGlobalErrorListeners, type ApplicationConfig } from '@angular/core';
-import {
-  provideClientHydration,
-  withEventReplay,
-  withI18nSupport,
-  withIncrementalHydration,
-} from '@angular/platform-browser';
+import { provideClientHydration, withI18nSupport } from '@angular/platform-browser';
 import {
   PreloadAllModules,
   TitleStrategy,
@@ -36,8 +31,9 @@ export const appConfig: ApplicationConfig = {
       withPreloading(PreloadAllModules),
     ),
     { provide: TitleStrategy, useClass: PageTitleStrategy },
-    provideHttpClient(withFetch(), withInterceptors([transferApiErrors])),
+    provideHttpClient(withInterceptors([transferApiErrors])),
+    // Incremental hydration, and the event replay it needs, are on by default since Angular 22.
     // Without i18n support, hydration skips every component that holds a translated message.
-    provideClientHydration(withEventReplay(), withIncrementalHydration(), withI18nSupport()),
+    provideClientHydration(withI18nSupport()),
   ],
 };
