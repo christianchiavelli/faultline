@@ -29,8 +29,12 @@ const HEARTBEAT = ':\n\n';
 export type StreamWrite = (chunk: string) => void;
 
 export interface FeedStream {
-  /** Starts the reader's messages; the function it returns stops them, once the connection closes. */
-  readonly subscribe: (write: StreamWrite) => () => void;
+  /**
+   * Starts the reader's messages; the function it returns stops them, once the
+   * connection closes. `end` closes the connection from this side, when the
+   * server shuts down.
+   */
+  readonly subscribe: (write: StreamWrite, end: () => void) => () => void;
 }
 
 export interface FeedStreamOptions {
@@ -43,6 +47,7 @@ export interface FeedStreamOptions {
 
 interface Reader {
   readonly write: StreamWrite;
+  readonly end: () => void;
   /** The version of the feed the reader holds, `null` while it holds none. */
   version: string | null;
 }
@@ -67,6 +72,7 @@ export function createFeedStreams(options: FeedStreamOptions) {
   const { perClient, load = recentQuakes, every = everyCheck } = options;
   const hubs = new Map<FeedWindow, Hub>();
   const held = new Map<string, number>();
+  let closed = false;
 
   /**
    * `GET /api/quakes/recent/stream`. Refused before the first byte, with a
@@ -76,6 +82,10 @@ export function createFeedStreams(options: FeedStreamOptions) {
   function open(url: URL, client: string, lastEventId: string | null): ApiResult | FeedStream {
     const window = feedWindowOf(url);
     if (typeof window !== 'string') return window;
+    if (closed) {
+      const leaving = problem(503, 'Shutting down', 'Open the stream again in a few seconds.');
+      return { ...leaving, headers: { ...leaving.headers, 'retry-after': '5' } };
+    }
 
     // The rate limit only counts how fast streams are opened, and each one is held for hours.
     if ((held.get(client) ?? 0) >= perClient) {
@@ -94,9 +104,9 @@ export function createFeedStreams(options: FeedStreamOptions) {
     const since = lastEventId ?? url.searchParams.get('since');
 
     return {
-      subscribe(write) {
+      subscribe(write, end) {
         held.set(client, (held.get(client) ?? 0) + 1);
-        const leave = joined.join({ write, version: since });
+        const leave = joined.join({ write, end, version: since });
         return () => {
           leave();
           const count = (held.get(client) ?? 1) - 1;
@@ -107,7 +117,17 @@ export function createFeedStreams(options: FeedStreamOptions) {
     };
   }
 
-  return { open };
+  /**
+   * Ends every stream, for a server shutting down, and refuses new ones. Each
+   * browser opens its stream again after the wait the stream set, wherever
+   * the address leads by then.
+   */
+  function close(): void {
+    closed = true;
+    for (const hub of hubs.values()) hub.close();
+  }
+
+  return { open, close };
 }
 
 export type FeedStreams = ReturnType<typeof createFeedStreams>;
@@ -177,7 +197,12 @@ function createHub(
     };
   }
 
-  return { join };
+  function close(): void {
+    // Each reader leaves as its connection closes, so not from the set being read.
+    for (const reader of [...readers]) reader.end();
+  }
+
+  return { join, close };
 }
 
 function everyCheck(tick: () => void): () => void {

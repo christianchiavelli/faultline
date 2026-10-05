@@ -1,5 +1,6 @@
-import type { Request, RequestHandler, Response } from 'express';
+import type { ErrorRequestHandler, Request, RequestHandler, Response } from 'express';
 import { once } from 'node:events';
+import { isIPv6 } from 'node:net';
 import type { RateLimiter } from '../http/rate-limit';
 import { problem, type ApiResult } from '../http/result';
 import { prepareExport } from './export';
@@ -8,6 +9,9 @@ import { handleApiRequest } from './router';
 
 /** What `compression` adds to a response: a way to send what it holds without waiting for more. */
 type Flushable = Response & { flush?: () => void };
+
+/** A reader who has taken nothing of a file for this long has gone, whatever the connection says. */
+const DRAIN_TIMEOUT_MS = 30_000;
 
 /** Express is only the transport here; routing and caching live in `router.ts`. */
 export function apiHandler(): RequestHandler {
@@ -25,7 +29,10 @@ export function apiHandler(): RequestHandler {
  * The only route that is not a plain `ApiResult`, because its body can run to
  * 20 MB and should reach the reader long before the last page does.
  */
-export function exportHandler(prepare = prepareExport): RequestHandler {
+export function exportHandler(
+  prepare = prepareExport,
+  drainTimeoutMs = DRAIN_TIMEOUT_MS,
+): RequestHandler {
   return (req, res, next) => {
     // The reader cancelled the download or closed the tab: stop asking the
     // USGS for pages nobody will read.
@@ -45,7 +52,10 @@ export function exportHandler(prepare = prepareExport): RequestHandler {
 
         let first = true;
         for await (const chunk of result.chunks) {
-          if (!res.write(chunk)) await once(res, 'drain', { signal: controller.signal });
+          if (!res.write(chunk)) {
+            const gone = AbortSignal.timeout(drainTimeoutMs);
+            await once(res, 'drain', { signal: AbortSignal.any([controller.signal, gone]) });
+          }
           // Past compression's buffer, so the download starts before the first page arrives.
           if (first) (res as Flushable).flush?.();
           first = false;
@@ -83,11 +93,37 @@ export function feedStreamHandler(streams: FeedStreams): RequestHandler {
     });
     if (req.method === 'HEAD') return void res.end();
 
-    const leave = stream.subscribe((chunk) => {
-      res.write(chunk);
-      (res as Flushable).flush?.();
-    });
+    const leave = stream.subscribe(
+      (chunk) => {
+        // The last message is still on its way: this reader has stopped reading.
+        // Cut off, its browser opens the stream again and is sent what it missed.
+        if (res.writableNeedDrain) return void res.destroy();
+        res.write(chunk);
+        (res as Flushable).flush?.();
+      },
+      () => res.end(),
+    );
     res.on('close', leave);
+  };
+}
+
+/**
+ * The last word on a failure nothing else answered: logged whole, answered
+ * without a trace of it. Express's own handler writes the stack trace into the
+ * page wherever `NODE_ENV` is not `production`.
+ */
+export function errorHandler(): ErrorRequestHandler {
+  return (error: unknown, req, res, next) => {
+    console.error(`[server] ${req.method} ${req.originalUrl}`, error);
+    // Too late for a status: Express cuts the connection, so the reader sees it fail.
+    if (res.headersSent) return next(error);
+
+    const failed = problem(500, 'Something went wrong on our side');
+    if (req.path.startsWith('/api/')) {
+      res.status(500).set(failed.headers).send(JSON.stringify(failed.body));
+    } else {
+      res.status(500).type('text/plain').send('Something went wrong on our side.');
+    }
   };
 }
 
@@ -99,7 +135,41 @@ function send(res: Response, result: ApiResult, head: boolean): void {
 
 /** Who is asking, as far as limits go: the address, or what the proxy says it is under `trust proxy`. */
 function clientOf(req: Request): string {
-  return req.ip ?? req.socket.remoteAddress ?? 'unknown';
+  return clientKey(req.ip ?? req.socket.remoteAddress ?? 'unknown');
+}
+
+/**
+ * The address limits count by. An IPv4 address reached over IPv6 is the IPv4
+ * address. An IPv6 address counts by its first 56 bits: a home or a phone is
+ * handed a /56 or a /64 of its own, and taking a new address from it would
+ * otherwise be a new client to every limit.
+ */
+export function clientKey(address: string): string {
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(address);
+  if (mapped) return mapped[1]!;
+  if (!isIPv6(address)) return address;
+  const groups = expandIPv6(address);
+  return `${groups.slice(0, 3).join(':')}:${groups[3]!.slice(0, 2)}00::/56`;
+}
+
+/** The eight groups of an IPv6 address, four hex digits each: "2001:db8::1" in full. */
+function expandIPv6(address: string): string[] {
+  let text = address.split('%')[0]!.toLowerCase();
+  // An IPv4 address in the last 32 bits, as in "64:ff9b::192.0.2.1", is two groups.
+  const ipv4 = /(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(text);
+  if (ipv4) {
+    const [a, b, c, d] = ipv4.slice(1).map(Number) as [number, number, number, number];
+    text =
+      text.slice(0, ipv4.index) + `${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+  }
+  const [head = '', tail] = text.split('::');
+  const left = head ? head.split(':') : [];
+  const right = tail ? tail.split(':') : [];
+  const groups =
+    tail === undefined
+      ? left
+      : [...left, ...Array(8 - left.length - right.length).fill('0'), ...right];
+  return groups.map((group) => group.padStart(4, '0'));
 }
 
 /**

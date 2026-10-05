@@ -79,17 +79,20 @@ pnpm build
 NG_ALLOWED_HOSTS=faultline.example.com pnpm preview
 ```
 
-Angular's server refuses requests for hostnames it was not told about, as protection against server-side request forgery. `localhost` is allowed in `angular.json`; anything else comes from `NG_ALLOWED_HOSTS`. Everything else has a default:
+Angular's server refuses requests for hostnames it was not told about, as protection against server-side request forgery. `localhost` is allowed in `angular.json`; anything else comes from `NG_ALLOWED_HOSTS`. Everything else has a default, and a value the server cannot use stops it at start-up rather than running on the default:
 
 | Variable | Default | What it is for |
 | --- | --- | --- |
 | `PORT` | `4000` | The port the server listens on |
 | `NG_ALLOWED_HOSTS` | none | Hostnames to answer for besides `localhost`, comma-separated |
-| `TRUST_PROXY` | off | Express `trust proxy`. Set it behind a proxy, or every client shares the proxy's address and its rate limit |
-| `RATE_LIMIT_BURST` | `60` | Requests one client can make at once, page renders and API calls alike |
+| `TRUST_PROXY` | off | Express `trust proxy`. Set it behind a proxy, or every client shares the proxy's address and its rate limit. It also has pages written for the address the reader asked for, from `X-Forwarded-Host` and `X-Forwarded-Proto` |
+| `RATE_LIMIT_BURST` | `60` | Requests one client can make at once, page renders and API calls alike. A client is an IPv4 address, or an IPv6 /56 |
 | `RATE_LIMIT_PER_SECOND` | `1` | How fast that allowance refills |
+| `STREAMS_PER_CLIENT` | `20` | Live feeds one client may follow at once. A tab follows one while it is in view; the rest is for an address a household or an office shares |
 | `USGS_BASE_URL` | `https://earthquake.usgs.gov` | Where the USGS is. The end-to-end suite points it at a stub |
 | `UPSTREAM_USER_AGENT` | `Faultline/0.1 (+repo URL)` | Sent with every USGS request, so the provider can reach the operator before reaching for a block list |
+
+A deploy's `SIGTERM` stops the server taking connections, ends the live streams, which every browser opens again on its own, and gives a render or an export in flight ten seconds to finish.
 
 ---
 

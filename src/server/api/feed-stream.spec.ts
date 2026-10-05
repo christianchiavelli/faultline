@@ -60,8 +60,15 @@ function setUp(options: Partial<FeedStreamOptions> = {}) {
     const stream = streams.open(url('?window=day'), client, since);
     if (!('subscribe' in stream)) throw new Error(`Refused: ${stream.status}`);
     const chunks: string[] = [];
-    const leave = stream.subscribe((chunk) => chunks.push(chunk));
-    return { chunks, leave };
+    const reader = { chunks, ended: false, leave: () => undefined as void };
+    reader.leave = stream.subscribe(
+      (chunk) => chunks.push(chunk),
+      () => {
+        reader.ended = true;
+        reader.leave();
+      },
+    );
+    return reader;
   }
 
   return {
@@ -141,7 +148,10 @@ describe('createFeedStreams', () => {
     if (!('subscribe' in stream)) throw new Error('Refused');
     const chunks: string[] = [];
 
-    stream.subscribe((chunk) => chunks.push(chunk));
+    stream.subscribe(
+      (chunk) => chunks.push(chunk),
+      () => undefined,
+    );
     await settle();
 
     expect(messages(chunks)).toEqual([]);
@@ -205,6 +215,22 @@ describe('createFeedStreams', () => {
     expect('subscribe' in streams.open(url(), '198.51.100.4', null)).toBe(true);
     first.leave();
     expect('subscribe' in streams.open(url(), '203.0.113.7', null)).toBe(true);
+  });
+
+  it('ends every stream when the server shuts down, and opens no more', async () => {
+    const { streams, read, ticks } = setUp();
+    const first = read();
+    const second = read(null, '198.51.100.4');
+    await settle();
+
+    streams.close();
+
+    expect([first.ended, second.ended]).toEqual([true, true]);
+    expect(ticks.size).toBe(0);
+    expect(streams.open(url('?window=day'), '203.0.113.7', null)).toMatchObject({
+      status: 503,
+      headers: { 'retry-after': '5' },
+    });
   });
 
   it('refuses a window there is no feed for', () => {
