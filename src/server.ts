@@ -1,3 +1,4 @@
+import { isDevMode } from '@angular/core';
 import {
   AngularNodeAppEngine,
   createNodeRequestHandler,
@@ -16,6 +17,7 @@ import {
 } from './server/api/express';
 import { createFeedStreams } from './server/api/feed-stream';
 import { serverConfig } from './server/config';
+import { withContentSecurityPolicy } from './server/http/content-security-policy';
 import { createRateLimiter } from './server/http/rate-limit';
 import { gracefulShutdown } from './server/http/shutdown';
 
@@ -48,9 +50,9 @@ app.use((_req, res, next) => {
     'x-content-type-options': 'nosniff',
     'referrer-policy': 'strict-origin-when-cross-origin',
     'permissions-policy': 'camera=(), microphone=(), geolocation=()',
-    // What holds without listing the page's scripts: no framing, no plugins, no
-    // <base> or form pointing elsewhere. Scripts and styles stay unlisted for
-    // now, since Angular inlines some of each into the page it renders.
+    'cross-origin-opener-policy': 'same-origin',
+    // For what is not a page: a rendered page gets a policy of its own, its
+    // scripts and styles listed by nonce (`withContentSecurityPolicy`).
     'content-security-policy':
       "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
   });
@@ -90,7 +92,14 @@ app.use(clientRateLimit(clients));
 app.use((req, res, next) => {
   angularApp
     .handle(req)
-    .then((response) => (response ? writeResponseToNodeResponse(response, res) : next()))
+    .then(async (response) => {
+      if (!response) return next();
+      // The dev server's own scripts and styles carry no nonce.
+      await writeResponseToNodeResponse(
+        isDevMode() ? response : await withContentSecurityPolicy(response),
+        res,
+      );
+    })
     .catch(next);
 });
 

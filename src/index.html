@@ -199,6 +199,7 @@
     <!-- fonts:end -->
   </head>
   <body>
-    <fl-root></fl-root>
+    <!-- The server puts a fresh nonce in place of this one on every page it renders. -->
+    <fl-root ngCspNonce="__CSP_NONCE__"></fl-root>
   </body>
 </html>
